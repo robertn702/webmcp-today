@@ -136,3 +136,38 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
   `include` list didn't pull in `.wxt/wxt.d.ts`, so WXT's generated `ImportMetaEnv`
   ambient type never applied to `tsc --noEmit` for this project's own tsconfig (only
   mattered once code first referenced `import.meta.env`, in `background.ts`).
+- 2026-07-23 — Full e2e loop verified live: registry (verified snapshot) → lookup API →
+  extension background fetch → content-script `registerTool` → page WebMCP →
+  chrome-devtools-mcp → opencode invoked `wiki_summary` and got real article text.
+  Enablers: repo-root `opencode.json` registering chrome-devtools-mcp
+  (`--browser-url=http://127.0.0.1:9222`, `--category-experimental-webmcp`) and
+  `--remote-debugging-port=9222` in the dev browser launch args. The first real
+  invocation immediately caught a rotted selector (Wikipedia's Parsoid `<section>`
+  DOM) — concrete evidence for the health/canary metadata the schema reserves room
+  for. See "Dev workflow gotchas" below.
+- 2026-07-23 — Captured the day's dev-workflow lessons as **nested AGENTS.md**
+  files (`apps/extension/AGENTS.md`, `apps/web/AGENTS.md`) rather than growing
+  the root file: the agents.md convention is nearest-file-wins, so app-specific
+  gotchas live next to the code they describe. Root keeps cross-cutting notes +
+  pointers. The pre-commit drift guard auto-creates sibling `CLAUDE.md` symlinks
+  for Claude Code parity. Also noted the chrome://flags red herring in the
+  extension README (command-line features show "Default" there; chrome://version
+  is ground truth).
+
+## Dev workflow gotchas
+
+Hard-won on 2026-07-23; check the **nested AGENTS.md** files before debugging
+"haunted" dev behavior — app-specific detail lives next to the code
+(nearest-file-wins, per the agents.md convention; sibling `CLAUDE.md` symlinks
+are auto-created by the pre-commit hook):
+
+- `apps/extension/AGENTS.md` — one-dev-instance rule (Chrome profile lock,
+  corrupted `.output/`), silent-fallback trap (registry vs bundled log line),
+  selector-rot debugging recipe, dev-browser flags/ports.
+- `apps/web/AGENTS.md` — verification snapshots are the served truth (editing
+  `tools` rows changes nothing user-visible), seeds start unverified, env
+  requirements.
+
+Cross-cutting: ports are web 3000 / wxt 5173 / CDP 9222; find strays with
+`lsof -nP -i :3000 -i :5173 -i :9222`; killing a bun wrapper does NOT kill its
+node child.
