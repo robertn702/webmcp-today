@@ -27,7 +27,12 @@ export class CafeClient {
     return this.request(`/api/configs/lookup?${params}`);
   }
 
-  list(opts: { domain?: string; page?: number; pageSize?: number; yolo?: boolean }): Promise<unknown> {
+  list(opts: {
+    domain?: string;
+    page?: number;
+    pageSize?: number;
+    yolo?: boolean;
+  }): Promise<unknown> {
     const params = new URLSearchParams();
     if (opts.domain) params.set("domain", opts.domain);
     if (opts.page) params.set("page", String(opts.page));

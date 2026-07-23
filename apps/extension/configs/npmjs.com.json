@@ -30,9 +30,7 @@
       "execution": {
         "selector": "body",
         "autosubmit": false,
-        "steps": [
-          { "action": "navigate", "url": "https://www.npmjs.com/search?q={{query}}" }
-        ]
+        "steps": [{ "action": "navigate", "url": "https://www.npmjs.com/search?q={{query}}" }]
       }
     }
   ]

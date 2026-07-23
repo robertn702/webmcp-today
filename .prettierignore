@@ -9,3 +9,5 @@ bun.lock
 .agents
 .claude
 skills-lock.json
+packages/db/migrations
+SPEC.md

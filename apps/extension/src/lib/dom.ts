@@ -5,7 +5,10 @@ export function interpolate(template: string, params: Record<string, unknown>): 
   return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(params[key] ?? ""));
 }
 
-export function deepQuery(selector: string, root: Document | ShadowRoot = document): Element | null {
+export function deepQuery(
+  selector: string,
+  root: Document | ShadowRoot = document,
+): Element | null {
   const el = root.querySelector(selector);
   if (el) return el;
   for (const host of root.querySelectorAll("*")) {
