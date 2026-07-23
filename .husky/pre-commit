@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+# Staged-file lint/format. The hook is an optimization, never a hard blocker:
+# CI validates typecheck/lint/test on every PR, so skip gracefully when the
+# toolchain is missing (e.g. committing from a machine without bun).
+if ! command -v bunx >/dev/null 2>&1; then
+  echo "bun not found — skipping lint-staged. CI will validate on the PR."
+  exit 0
+fi
+
+bunx lint-staged

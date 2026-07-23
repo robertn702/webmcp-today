@@ -111,3 +111,6 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
   runs `bun install`. Modeled on nexus's setup.sh.
 - 2026-07-23 — Symlinked `CLAUDE.md -> AGENTS.md` (nexus pattern) so CLAUDE.md-only
   tooling reads the same guidance.
+- 2026-07-23 — Added husky + lint-staged pre-commit (runbook default, initially skipped):
+  eslint + prettier on staged source files, prettier alone on json/md/css/yaml. Hook
+  skips gracefully when bun is missing (nexus pattern) — CI remains the hard gate.
