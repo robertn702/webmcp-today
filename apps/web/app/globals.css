@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", monospace;
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 antialiased;
+}

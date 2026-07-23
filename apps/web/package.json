@@ -1,0 +1,32 @@
+{
+  "name": "@webmcp-cafe/web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-auth/api-key": "^1.6.25",
+    "@robertn702/webmcp-cafe-schema": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "@webmcp-cafe/db": "workspace:*",
+    "better-auth": "^1.3.4",
+    "drizzle-orm": "^0.44.4",
+    "next": "^15.4.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^22",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.9.2"
+  }
+}
