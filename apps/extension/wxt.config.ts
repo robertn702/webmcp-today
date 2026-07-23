@@ -13,7 +13,7 @@ export default defineConfig({
     // The dev browser is a separate Chrome instance with its own profile, so
     // chrome://flags set in your main profile don't apply. Enable WebMCP via
     // launch args instead (DevToolsWebMCPSupport is needed on Chrome 149).
-    chromiumArgs: ["--enable-features=WebMCP,DevToolsWebMCPSupport"],
+    chromiumArgs: ["--enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport"],
     // Persist the dev profile (default is a fresh temp profile per run) so the
     // Model Context Tool Inspector extension survives restarts — install it
     // once in the dev browser. .wxt/ is gitignored.
