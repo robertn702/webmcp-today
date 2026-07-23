@@ -35,6 +35,15 @@ logged-in page.
   origins, since manifest permissions are fixed at build time and can't read
   the env var.
 
+## Dev browser
+
+`bun run dev` launches a **separate** Chrome instance with its own profile —
+flags and extensions from your main profile don't apply there. The WXT config
+handles this: WebMCP is force-enabled via `--enable-features` launch args (no
+chrome://flags needed), and the profile persists in `.wxt/chrome-profile`, so
+install the Model Context Tool Inspector once in that browser and it sticks.
+Requires Chrome 149+ (any channel).
+
 ## Full-loop manual test (publish → extension serves it)
 
 This exercises the real path: a config published through the registry API
