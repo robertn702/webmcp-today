@@ -1,5 +1,5 @@
 import { defineContentScript } from "wxt/utils/define-content-script";
-import { findConfigsForUrl } from "../lib/configs.js";
+import { getConfigsForUrl } from "../lib/configs.js";
 import { executeTool } from "../lib/executor.js";
 import { getModelContext } from "../lib/model-context.js";
 
@@ -15,7 +15,7 @@ async function registerTools(): Promise<void> {
   const mc = getModelContext();
   if (!mc) return;
 
-  const configs = findConfigsForUrl(window.location.href);
+  const configs = await getConfigsForUrl(window.location.href);
   if (configs.length === 0) return;
 
   // Site-declared declarative tools — skip ours on name collision.

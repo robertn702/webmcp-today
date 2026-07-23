@@ -118,3 +118,21 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
   AGENTS.md auto-creates a missing sibling `CLAUDE.md -> AGENTS.md` symlink and warns
   (without clobbering) on a real file or wrong-target symlink. POSIX-only, runs even
   without bun.
+- 2026-07-23 — Wired the extension to the registry API (full loop: publish → extension
+  serves it). Fetch runs in a new `background.ts` service-worker entrypoint rather than
+  the content script — background fetches hit the registry's own origin directly, which
+  sidesteps page CSP `connect-src` restrictions entirely instead of relying on
+  `host_permissions` to override them. The content script requests configs via
+  `browser.runtime.sendMessage`. Base URL is the `WXT_REGISTRY_API_URL` build-time env
+  var (WXT/Vite inlines `WXT_`-prefixed vars into `import.meta.env`), defaulting to
+  `http://localhost:3000` in code; added it to turbo.json `globalEnv` for the
+  `turbo/no-undeclared-env-vars` lint rule. `host_permissions` in `wxt.config.ts` lists
+  both the dev and `https://webmcp.cafe` production origins since manifest permissions
+  are fixed at build time. The registry response is validated at the boundary with
+  `webMcpConfigSchema` from `@robertn702/webmcp-cafe-schema`; any failure (network,
+  non-2xx, schema mismatch, or zero configs for the domain) falls back to the bundled
+  `configs/` dir, unchanged from the spike. `yolo=true` is never sent — only verified
+  configs are requested. Also fixed a latent gap: the extension's `tsconfig.json`
+  `include` list didn't pull in `.wxt/wxt.d.ts`, so WXT's generated `ImportMetaEnv`
+  ambient type never applied to `tsc --noEmit` for this project's own tsconfig (only
+  mattered once code first referenced `import.meta.env`, in `background.ts`).
