@@ -114,3 +114,7 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
 - 2026-07-23 — Added husky + lint-staged pre-commit (runbook default, initially skipped):
   eslint + prettier on staged source files, prettier alone on json/md/css/yaml. Hook
   skips gracefully when bun is missing (nexus pattern) — CI remains the hard gate.
+  Follow-up same day: ported nexus's CLAUDE.md drift guard into the hook — staging an
+  AGENTS.md auto-creates a missing sibling `CLAUDE.md -> AGENTS.md` symlink and warns
+  (without clobbering) on a real file or wrong-target symlink. POSIX-only, runs even
+  without bun.
