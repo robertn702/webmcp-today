@@ -1,0 +1,44 @@
+{
+  "domain": "github.com",
+  "urlPattern": "github.com/:owner/:repo",
+  "title": "GitHub repository",
+  "description": "Read-only tools for GitHub repository pages: extract the README and jump to code search.",
+  "tools": [
+    {
+      "name": "gh_read_readme",
+      "description": "Read the README content of the repository page currently open.",
+      "inputSchema": { "type": "object", "properties": {} },
+      "annotations": { "readOnlyHint": true },
+      "execution": {
+        "selector": "body",
+        "autosubmit": false,
+        "resultSelector": "article.markdown-body",
+        "resultExtract": "text"
+      }
+    },
+    {
+      "name": "gh_search_code",
+      "description": "Search code in this repository. Navigates to GitHub code search scoped to the current repository.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "owner": { "type": "string", "description": "Repository owner (from the URL)" },
+          "repo": { "type": "string", "description": "Repository name (from the URL)" },
+          "query": { "type": "string", "description": "Code search query" }
+        },
+        "required": ["owner", "repo", "query"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": {
+        "selector": "body",
+        "autosubmit": false,
+        "steps": [
+          {
+            "action": "navigate",
+            "url": "https://github.com/search?q=repo%3A{{owner}}%2F{{repo}}+{{query}}&type=code"
+          }
+        ]
+      }
+    }
+  ]
+}

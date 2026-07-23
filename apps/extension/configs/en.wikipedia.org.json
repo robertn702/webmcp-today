@@ -1,0 +1,51 @@
+{
+  "domain": "en.wikipedia.org",
+  "urlPattern": "en.wikipedia.org/wiki/:title",
+  "title": "Wikipedia article",
+  "description": "Read-only tools for English Wikipedia articles: summary extraction, section listing, and search.",
+  "tools": [
+    {
+      "name": "wiki_summary",
+      "description": "Extract the lead paragraphs of the Wikipedia article currently open.",
+      "inputSchema": { "type": "object", "properties": {} },
+      "annotations": { "readOnlyHint": true },
+      "execution": {
+        "selector": "body",
+        "autosubmit": false,
+        "resultSelector": "#mw-content-text .mw-parser-output > p:not(.mw-empty-elt)",
+        "resultExtract": "text"
+      }
+    },
+    {
+      "name": "wiki_list_sections",
+      "description": "List the section headings of the Wikipedia article currently open.",
+      "inputSchema": { "type": "object", "properties": {} },
+      "annotations": { "readOnlyHint": true },
+      "execution": {
+        "selector": "body",
+        "autosubmit": false,
+        "resultSelector": "#mw-content-text .mw-heading h2, #mw-content-text .mw-heading h3",
+        "resultExtract": "list"
+      }
+    },
+    {
+      "name": "wiki_search",
+      "description": "Search English Wikipedia. Navigates to the search results page (or straight to a matching article).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search query" }
+        },
+        "required": ["query"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": {
+        "selector": "body",
+        "autosubmit": false,
+        "steps": [
+          { "action": "navigate", "url": "https://en.wikipedia.org/w/index.php?search={{query}}" }
+        ]
+      }
+    }
+  ]
+}
