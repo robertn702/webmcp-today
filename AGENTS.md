@@ -90,3 +90,24 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
   cascade-deletes snapshots, so edits always reset verification. Multi-reviewer later.
 - 2026-07-23 — CI gate is typecheck + lint + test. `bun run build` of apps/web needs
   real env vars (t3-env validates at build); verified green with dummy values.
+- 2026-07-23 — Added root `LICENSE` (MIT, © Robert Niimi) with an attribution block
+  for the ported MIT code from Joakim Selemyr's web-mcp-hub / webmcp-extension. Copied
+  the LICENSE into `packages/schema` and `packages/mcp` and added it to each `files`
+  array so the published npm tarballs carry it (a root-only LICENSE isn't packed from a
+  workspace subdir).
+- 2026-07-23 — Fixed a previously unrecorded lint-coverage gap: the root ESLint config
+  had only `@eslint/js` + `typescript-eslint` + prettier, so React 19 hooks (apps/web)
+  and Next.js/monorepo rules went unchecked. Kept the single root config and wired in
+  `eslint-plugin-react-hooks` + `@next/eslint-plugin-next` scoped to `apps/web/**`, and
+  `eslint-plugin-turbo` repo-wide. Used react-hooks' classic pair (rules-of-hooks +
+  exhaustive-deps) rather than v7's full React-Compiler `recommended` suite (simplicity
+  bias — the suite only flagged a benign set-state-in-effect). Turned off
+  `@next/next/no-html-link-for-pages` (app-router-only). Declared `DATABASE_URL`,
+  `WEBMCP_CAFE_API_URL`, `WEBMCP_CAFE_API_KEY` in turbo.json `globalEnv` to satisfy
+  `turbo/no-undeclared-env-vars`.
+- 2026-07-23 — Added `.superset/config.json` + `.superset/setup.sh` (chmod +x) so fresh
+  Superset worktrees self-provision: copies `.env*` (incl. apps/web/.env) and
+  `.claude/settings.local.json` from the main worktree, symlinks `.scratch/shared`, and
+  runs `bun install`. Modeled on nexus's setup.sh.
+- 2026-07-23 — Symlinked `CLAUDE.md -> AGENTS.md` (nexus pattern) so CLAUDE.md-only
+  tooling reads the same guidance.
