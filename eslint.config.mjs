@@ -12,6 +12,7 @@ export default tseslint.config(
       "**/.output/**",
       "**/.wxt/**",
       "**/coverage/**",
+      "**/next-env.d.ts",
       ".agents/**",
       ".claude/**",
       ".context/**",
