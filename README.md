@@ -44,10 +44,35 @@ cd apps/extension && bun run dev
   reset verification)
 - `POST /api/configs/:id/vote` (±1), `POST /api/configs/:id/verify`, `GET /api/stats`
 
-## Required environment (see `apps/web/.env.example`)
+## Development
 
-`DATABASE_URL` (Neon), `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` (OAuth app),
-`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`.
+**Prerequisites:** `bun@1.3.14` (pinned in root `package.json` `packageManager`), Node for Next.js/WXT and some CLIs.
+
+**Setup:**
+
+```bash
+bun install
+cp apps/web/.env.example apps/web/.env   # then fill real values
+```
+
+`apps/web/.env` needs `DATABASE_URL` (Neon), `BETTER_AUTH_SECRET` (`openssl rand -base64 32`), `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` (GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`), and `BETTER_AUTH_URL=http://localhost:3000`.
+
+```bash
+bun run --filter @webmcp-cafe/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon
+# schema changes: bun run --filter @webmcp-cafe/db db:generate && db:migrate (db:push for quick prototyping)
+
+bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter configs (unverified)
+```
+
+**Running locally:**
+
+- Web: `cd apps/web && bun run dev` → `http://localhost:3000` (Next.js). Extension's default registry URL points here.
+- Extension: `cd apps/extension && bun run dev` → WXT dev server on `http://localhost:5173`, launches a dedicated Chrome profile at `.wxt/chrome-profile/` with `--enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport` force-enabled (`chrome://flags` still shows "Default" — check `chrome://version`). One instance only — second crashes on profile lock and corrupts `.output/`. Model Context Tool Inspector is installed once into that profile and persists.
+- Ports: web 3000 / WXT 5173 / CDP 9222. Find strays with `lsof -nP -i :3000 -i :5173 -i :9222`; killing a bun wrapper does NOT kill its node child.
+
+**Quality gates:** `bun run typecheck && bun run lint && bun run test` before every commit — same as CI (`.github/workflows/ci.yml` via `oven-sh/setup-bun@v2` `1.3.14` + `--frozen-lockfile`). Pre-commit runs `husky` + `lint-staged` (eslint + prettier on staged source, prettier on json/md/css/yaml) and enforces `CLAUDE.md -> AGENTS.md` symlink drift.
+
+**Deeper context:** root `AGENTS.md` (stack, conventions, decisions log, cross-cutting gotchas) and nested `apps/web/AGENTS.md` (verification snapshots are served truth, seeds unverified, env/t3-env notes) + `apps/extension/AGENTS.md` (dev browser, silent-fallback trap, selector-rot recipe).
 
 ## License
 
