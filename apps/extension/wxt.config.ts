@@ -4,6 +4,11 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   srcDir: "src",
   imports: false,
+  dev: {
+    // Keep WXT's dev server off port 3000 — that's the registry web app's
+    // port, and the extension's default WXT_REGISTRY_API_URL points there.
+    server: { port: 5173 },
+  },
   webExt: {
     // The dev browser is a separate Chrome instance with its own profile, so
     // chrome://flags set in your main profile don't apply. Enable WebMCP via

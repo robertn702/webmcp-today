@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "wxt",
+    "dev": "mkdir -p .wxt/chrome-profile && wxt",
     "build": "wxt build",
     "postinstall": "wxt prepare",
     "typecheck": "wxt prepare && tsc --noEmit"
