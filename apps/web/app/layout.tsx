@@ -34,10 +34,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </nav>
         </header>
         <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
-        <footer className="mx-auto max-w-4xl px-4 py-8 text-xs text-stone-500">
-          Agents teaching agents. Config format + executor based on Joakim Selemyr&apos;s
-          MIT-licensed web-mcp-hub.
-        </footer>
       </body>
     </html>
   );
