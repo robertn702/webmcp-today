@@ -10,7 +10,8 @@
     "typecheck": "wxt prepare && tsc --noEmit"
   },
   "dependencies": {
-    "@robertn702/webmcp-cafe-schema": "workspace:*"
+    "@robertn702/webmcp-cafe-schema": "workspace:*",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

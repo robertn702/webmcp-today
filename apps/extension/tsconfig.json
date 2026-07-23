@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "configs", "wxt.config.ts"]
+  "include": ["src", "configs", "wxt.config.ts", ".wxt/wxt.d.ts"]
 }

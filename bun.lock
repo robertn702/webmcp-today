@@ -25,6 +25,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@robertn702/webmcp-cafe-schema": "workspace:*",
+        "zod": "^4.0.0",
       },
       "devDependencies": {
         "typescript": "^5.9.2",

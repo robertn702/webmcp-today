@@ -8,11 +8,12 @@ import rawHackerNews from "../../configs/news.ycombinator.com.json";
 import rawMdn from "../../configs/developer.mozilla.org.json";
 import rawNpm from "../../configs/npmjs.com.json";
 import rawWikipedia from "../../configs/en.wikipedia.org.json";
+import { fetchRegistryConfigs } from "./registry-client.js";
 
-// Spike mode: configs are bundled from the local configs/ dir. Later the
-// extension will fetch them from the webmcp.cafe registry API instead.
+// Configs bundled from the local configs/ dir — used when the registry is
+// unreachable or has nothing for the current domain.
 
-const allConfigs: CreateConfigInput[] = [
+const bundledConfigs: CreateConfigInput[] = [
   rawHackerNews,
   rawGithub,
   rawWikipedia,
@@ -27,14 +28,37 @@ const allConfigs: CreateConfigInput[] = [
   return [parsed.data];
 });
 
-/** Configs whose domain + urlPattern match the URL, most specific first. */
-export function findConfigsForUrl(url: string): CreateConfigInput[] {
-  let hostname: string;
+function hostnameOf(url: string): string | undefined {
   try {
-    hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
   } catch {
-    return [];
+    return undefined;
   }
-  const domainConfigs = allConfigs.filter((c) => c.domain === hostname);
+}
+
+/** Bundled configs whose domain + urlPattern match the URL, most specific first. */
+function findBundledConfigsForUrl(url: string): CreateConfigInput[] {
+  const hostname = hostnameOf(url);
+  if (!hostname) return [];
+  const domainConfigs = bundledConfigs.filter((c) => c.domain === hostname);
   return rankConfigsByUrl(domainConfigs, url, hostname);
+}
+
+/**
+ * Configs for the current page: prefer the registry (verified configs for
+ * this URL, already ranked server-side), falling back to the bundled
+ * configs/ dir when the fetch fails or the registry has nothing for this
+ * domain.
+ */
+export async function getConfigsForUrl(url: string): Promise<CreateConfigInput[]> {
+  const registryConfigs = await fetchRegistryConfigs(url);
+  if (registryConfigs && registryConfigs.length > 0) {
+    console.info(`[webmcp-cafe] Using ${registryConfigs.length} config(s) from the registry`);
+    return registryConfigs;
+  }
+  const bundled = findBundledConfigsForUrl(url);
+  if (bundled.length > 0) {
+    console.info(`[webmcp-cafe] Using ${bundled.length} bundled config(s) (registry had none)`);
+  }
+  return bundled;
 }
