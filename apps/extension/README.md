@@ -44,6 +44,10 @@ chrome://flags needed), and the profile persists in `.wxt/chrome-profile`, so
 install the Model Context Tool Inspector once in that browser and it sticks.
 Requires Chrome 149+ (any channel).
 
+Note: `chrome://flags` in the dev browser will still show WebMCP entries as
+"Default" — features set via `--enable-features` bypass that UI entirely. The
+ground truth is `chrome://version` → Command Line, which lists the live flags.
+
 ## Full-loop manual test (publish → extension serves it)
 
 This exercises the real path: a config published through the registry API
