@@ -12,7 +12,7 @@
       "execution": {
         "selector": "body",
         "autosubmit": false,
-        "resultSelector": "#mw-content-text .mw-parser-output > p:not(.mw-empty-elt)",
+        "resultSelector": "#mw-content-text .mw-parser-output > section:first-of-type > p:not(.mw-empty-elt)",
         "resultExtract": "text"
       }
     },
