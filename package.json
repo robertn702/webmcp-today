@@ -1,0 +1,24 @@
+{
+  "name": "webmcp-cafe",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "eslint . --max-warnings 0",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.5",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0"
+  }
+}
