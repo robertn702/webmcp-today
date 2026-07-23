@@ -1,5 +1,32 @@
 #!/usr/bin/env sh
 
+# Keep CLAUDE.md in sync with AGENTS.md (nexus pattern). AGENTS.md is canonical;
+# CLAUDE.md must be a relative symlink to it in the same dir. Needs no toolchain,
+# so it always runs. Grep the staged list rather than a '**/AGENTS.md' pathspec,
+# which would depend on git's glob config.
+AGENTS_STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)AGENTS\.md$' || true)
+
+if [ -n "$AGENTS_STAGED" ]; then
+  echo "$AGENTS_STAGED" | while IFS= read -r agents_path; do
+    [ -n "$agents_path" ] || continue
+    claude_path="$(dirname "$agents_path")/CLAUDE.md"
+
+    if [ ! -e "$claude_path" ] && [ ! -L "$claude_path" ]; then
+      echo "AGENTS.md staged without a sibling CLAUDE.md — creating symlink $claude_path -> AGENTS.md"
+      ln -s AGENTS.md "$claude_path"
+      git add "$claude_path"
+    elif [ -L "$claude_path" ]; then
+      link_target=$(readlink "$claude_path")
+      if [ "$link_target" != "AGENTS.md" ]; then
+        echo "Warning: $claude_path is a symlink to '$link_target', not 'AGENTS.md' — leaving it as-is."
+      fi
+    else
+      echo "Warning: $claude_path is a real file, not a symlink to AGENTS.md — leaving it as-is."
+      echo "         If it should mirror AGENTS.md: rm $claude_path && ln -s AGENTS.md $claude_path"
+    fi
+  done
+fi
+
 # Staged-file lint/format. The hook is an optimization, never a hard blocker:
 # CI validates typecheck/lint/test on every PR, so skip gracefully when the
 # toolchain is missing (e.g. committing from a machine without bun).
