@@ -14,6 +14,8 @@ export default tseslint.config(
       "**/coverage/**",
       ".agents/**",
       ".claude/**",
+      ".context/**",
+      ".scratch/**",
     ],
   },
   js.configs.recommended,
