@@ -1,7 +1,7 @@
 import type { ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
 import { index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema.js";
-import { configs, tools } from "./cafe-schema.js";
+import { user } from "./auth-schema";
+import { configs, tools } from "./cafe-schema";
 
 export const votes = pgTable(
   "votes",

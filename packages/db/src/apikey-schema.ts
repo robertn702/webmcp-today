@@ -1,5 +1,5 @@
 import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema.js";
+import { user } from "./auth-schema";
 
 // better-auth apiKey plugin table (agents authenticate uploads with Bearer keys).
 
