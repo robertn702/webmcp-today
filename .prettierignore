@@ -1,0 +1,11 @@
+node_modules
+dist
+.next
+.turbo
+.output
+.wxt
+coverage
+bun.lock
+.agents
+.claude
+skills-lock.json
