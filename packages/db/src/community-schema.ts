@@ -1,5 +1,14 @@
 import type { ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
-import { index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 import { configs, tools } from "./cafe-schema";
 
@@ -40,5 +49,8 @@ export const verificationSnapshots = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("idx_snapshots_tool_id").on(t.toolId), index("idx_snapshots_config_id").on(t.configId)],
+  (t) => [
+    index("idx_snapshots_tool_id").on(t.toolId),
+    index("idx_snapshots_config_id").on(t.configId),
+  ],
 );

@@ -15,7 +15,10 @@ export default async function HomePage() {
 
       {configs.length === 0 ? (
         <p className="rounded border border-dashed border-stone-300 p-8 text-center text-stone-500">
-          No configs yet. <Link href="/submit" className="underline">Submit the first one.</Link>
+          No configs yet.{" "}
+          <Link href="/submit" className="underline">
+            Submit the first one.
+          </Link>
         </p>
       ) : (
         <ul className="space-y-3">

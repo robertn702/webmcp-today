@@ -16,11 +16,7 @@ describe("matchUrlPattern", () => {
   });
 
   it("captures :param segments", () => {
-    const r = matchUrlPattern(
-      "example.com/items/:id",
-      "https://example.com/items/abc-123",
-      domain,
-    );
+    const r = matchUrlPattern("example.com/items/:id", "https://example.com/items/abc-123", domain);
     expect(r.matched).toBe(true);
     expect(r.params).toEqual({ id: "abc-123" });
     expect(r.score).toBe(5);

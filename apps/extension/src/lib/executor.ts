@@ -86,7 +86,9 @@ async function executeToolInner(
       exec.resultAttribute,
     );
     if (Array.isArray(result)) {
-      return mcpResult(result.map((row) => (Array.isArray(row) ? row.join(" | ") : String(row))).join("\n"));
+      return mcpResult(
+        result.map((row) => (Array.isArray(row) ? row.join(" | ") : String(row))).join("\n"),
+      );
     }
     return mcpResult(result != null ? String(result) : "No result found");
   }

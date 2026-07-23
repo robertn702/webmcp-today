@@ -28,7 +28,10 @@ export async function insertConfig(
   return row.id;
 }
 
-async function insertTools(configId: string, toolInputs: CreateConfigInput["tools"]): Promise<void> {
+async function insertTools(
+  configId: string,
+  toolInputs: CreateConfigInput["tools"],
+): Promise<void> {
   await db.insert(tools).values(
     toolInputs.map((tool) => ({
       configId,

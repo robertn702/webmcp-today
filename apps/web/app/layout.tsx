@@ -25,6 +25,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/submit" className="text-sm hover:underline">
               Submit
             </Link>
+            <Link href="/leaderboard" className="text-sm hover:underline">
+              Leaderboard
+            </Link>
             <Link href="/settings" className="text-sm hover:underline">
               Settings
             </Link>

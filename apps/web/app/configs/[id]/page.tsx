@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { VerifyButton } from "@/components/verify-button";
 import { VoteButtons } from "@/components/vote-buttons";
 import { getConfigById } from "@/lib/configs-repo";
 
@@ -35,9 +36,12 @@ export default async function ConfigPage({ params }: { params: Promise<{ id: str
                   verified
                 </span>
               ) : (
-                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
-                  unverified
-                </span>
+                <>
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+                    unverified
+                  </span>
+                  <VerifyButton configId={config.id} toolName={tool.name} />
+                </>
               )}
             </div>
             <p className="mt-1 text-sm text-stone-600">{tool.description}</p>
