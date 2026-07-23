@@ -58,16 +58,26 @@ ends up injected as a tool in a live page.
    default, and a contributor can't verify their own config, so sign in
    with a _second_ GitHub account (or ask a teammate) and, per tool name in
    the config:
+
    ```bash
    curl -X POST http://localhost:3000/api/configs/<id>/verify \
      -H "Cookie: <second account's session cookie>" \
      -H "Content-Type: application/json" \
-     -d '{"toolName": "wiki_read_summary"}'
+     -d '{"toolName": "wiki_summary"}'
    ```
+
    (Repeat per tool. For a quick solo smoke test instead of verifying, you
    can hit `GET /api/configs/lookup?url=...&yolo=true` directly in a browser
    to confirm the unverified config is retrievable — the extension itself
    never sets `yolo`.)
+
+   **Solo shortcut — no second account needed:** the seeded configs'
+   contributor is the synthetic seed user, so _your_ signed-in account is a
+   valid verifier for them. Skip steps 3–4, open the seeded config's detail
+   page (`http://localhost:3000/configs/<id>`, find it from the homepage
+   list), and click **Verify** per tool. The non-`yolo` lookup then serves
+   it, which is all the extension needs.
+
 5. **Load the extension** — Chrome Canary/Dev (149+) with
    `chrome://flags/#enable-webmcp-testing`, install the Model Context Tool
    Inspector extension from the Chrome Web Store, then `bun run dev` here
