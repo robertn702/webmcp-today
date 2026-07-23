@@ -81,3 +81,12 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
 - 2026-07-23 — Spec says to confirm the extension-spike site list with Robert; running
   autonomously, chose read-only configs for: Hacker News, GitHub, Wikipedia, MDN, npm.
   Swap freely if Robert prefers others.
+- 2026-07-23 — better-auth resolved to 1.6.x, where the apiKey plugin moved to the
+  scoped package `@better-auth/api-key` (server: root export; client: `/client`).
+- 2026-07-23 — Spike UI is plain Tailwind; shadcn/ui CLI adoption deferred until the UI
+  grows (stack default stands — don't hand-roll complex components later).
+- 2026-07-23 — Verification v1 policy: any signed-in user except the contributor can
+  verify a tool, freezing a snapshot served to non-yolo consumers. Editing tools
+  cascade-deletes snapshots, so edits always reset verification. Multi-reviewer later.
+- 2026-07-23 — CI gate is typecheck + lint + test. `bun run build` of apps/web needs
+  real env vars (t3-env validates at build); verified green with dummy values.
