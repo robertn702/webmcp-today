@@ -5,7 +5,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createConfigSchema } from "@robertn702/webmcp-cafe-schema";
-import { configs, createDb, tools, user } from "@webmcp-cafe/db";
+import { createDb, definitionVersions, user, webmcpDefinitions } from "@webmcp-cafe/db";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
@@ -31,11 +31,10 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
     continue;
   }
   const input = parsed.data;
-  const [row] = await db
-    .insert(configs)
+  const [definition] = await db
+    .insert(webmcpDefinitions)
     .values({
       domain: input.domain,
-      urlPattern: input.urlPattern,
       pageType: input.pageType,
       title: input.title,
       description: input.description,
@@ -43,21 +42,17 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
       minEngine: input.minEngine,
       contributorId: SEED_USER_ID,
     })
-    .onConflictDoNothing()
-    .returning({ id: configs.id });
-  if (!row) {
-    console.log(`exists ${file}`);
+    .returning({ id: webmcpDefinitions.id });
+  if (!definition) {
+    console.log(`skip ${file}: insert returned no row`);
     continue;
   }
-  await db.insert(tools).values(
-    input.tools.map((tool) => ({
-      configId: row.id,
-      name: tool.name,
-      description: tool.description,
-      inputSchema: tool.inputSchema,
-      annotations: tool.annotations,
-      execution: tool.execution,
-    })),
-  );
-  console.log(`seeded ${file} → ${row.id}`);
+  await db.insert(definitionVersions).values({
+    definitionId: definition.id,
+    version: 1,
+    urlPatterns: input.urlPatterns,
+    tools: input.tools,
+    changelog: input.changelog,
+  });
+  console.log(`seeded ${file} → ${definition.id} (0 installs)`);
 }

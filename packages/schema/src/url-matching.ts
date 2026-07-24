@@ -1,95 +1,98 @@
-// URL pattern matching — `:param` dynamic segments and `**` wildcards.
-// Ported from Joakim Selemyr's web-mcp-hub (MIT).
+// URL pattern matching — Chrome extension `@match` style patterns:
+// "<scheme>://<host><path>", e.g. "*://*.wikipedia.org/wiki/*".
+
+export interface ParsedUrlPattern {
+  /** "*" (http or https) | "http" | "https" */
+  scheme: string;
+  /** "*" (any host) | "*.example.com" (subdomains) | "example.com" (exact) */
+  host: string;
+  /** Always starts with "/"; may contain "*" wildcards. */
+  path: string;
+}
+
+const URL_PATTERN_RE = /^(\*|https?):\/\/(\*|(?:\*\.)?[^/*]+)(\/.*)$/;
+
+export function parseUrlPattern(pattern: string): ParsedUrlPattern | null {
+  const match = URL_PATTERN_RE.exec(pattern);
+  if (!match) return null;
+  const [, scheme, host, path] = match;
+  if (scheme === undefined || host === undefined || path === undefined) return null;
+  return { scheme: scheme.toLowerCase(), host: host.toLowerCase(), path };
+}
 
 export interface MatchResult {
   matched: boolean;
-  /** Static segments score 3, dynamic (:param) 2, wildcard (**) 0. */
+  /** Higher = more specific. Host specificity dominates; path breaks ties. */
   score: number;
-  params: Record<string, string>;
 }
 
-/** "example.com/dashboard/:id" → "/dashboard/:id"; "example.com" → "/". */
-export function extractPath(urlPattern: string, domain: string): string {
-  let path = urlPattern;
-  if (path.toLowerCase().startsWith(domain)) path = path.slice(domain.length);
-  if (!path.startsWith("/")) path = "/" + path;
-  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
-  return path;
-}
+const NO_MATCH: MatchResult = { matched: false, score: 0 };
 
-/** Full or partial URL → pathname ("https://a.com/x/y?q=1" → "/x/y"). */
-export function normalizeUrlToPath(url: string): string {
-  let path: string;
-  try {
-    path = new URL(url).pathname;
-  } catch {
-    path = url.replace(/^https?:\/\//, "");
-    const slashIdx = path.indexOf("/");
-    path = slashIdx >= 0 ? path.slice(slashIdx) : "/";
+function matchHost(patternHost: string, urlHost: string): { matched: boolean; score: number } {
+  if (patternHost === "*") return { matched: true, score: 0 };
+  if (patternHost.startsWith("*.")) {
+    const base = patternHost.slice(2);
+    const matched = urlHost === base || urlHost.endsWith(`.${base}`);
+    return { matched, score: matched ? 1 : 0 };
   }
-  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
-  return path;
+  return { matched: patternHost === urlHost, score: 2 };
 }
 
-const NO_MATCH: MatchResult = { matched: false, score: 0, params: {} };
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-/**
- * Segment types: static (exact, case-insensitive, +3), `:param` (any single
- * segment, captured, +2), `**` (all remaining segments, must be last, +0).
- * Domain-only patterns always match with score 0. Segment counts must match
- * exactly unless `**` is used.
- */
-export function matchUrlPattern(
-  urlPattern: string,
-  actualUrl: string,
-  domain: string,
-): MatchResult {
-  const patternPath = extractPath(urlPattern, domain);
-  const urlPath = normalizeUrlToPath(actualUrl);
+function matchPath(patternPath: string, urlPath: string): { matched: boolean; score: number } {
+  const regex = new RegExp(`^${patternPath.split("*").map(escapeRegExp).join(".*")}$`);
+  if (!regex.test(urlPath)) return { matched: false, score: 0 };
+  const wildcardCount = (patternPath.match(/\*/g) ?? []).length;
+  return { matched: true, score: patternPath.length - wildcardCount };
+}
 
-  if (patternPath === "/") return { matched: true, score: 0, params: {} };
+/** Match a single Chrome-style pattern against a full page URL. */
+export function matchUrlPattern(pattern: string, url: string): MatchResult {
+  const parsed = parseUrlPattern(pattern);
+  if (!parsed) return NO_MATCH;
 
-  const patternSegments = patternPath.split("/").filter(Boolean);
-  const urlSegments = urlPath.split("/").filter(Boolean);
-
-  const params: Record<string, string> = {};
-  let score = 0;
-
-  for (let i = 0; i < patternSegments.length; i++) {
-    const ps = patternSegments[i];
-    if (ps === undefined) continue;
-
-    // Wildcard adds no score so exact patterns outrank it at the same depth
-    if (ps === "**") return { matched: true, score, params };
-
-    const us = urlSegments[i];
-    if (us === undefined) return NO_MATCH;
-
-    if (ps.startsWith(":")) {
-      params[ps.slice(1)] = us;
-      score += 2;
-      continue;
-    }
-    if (ps.toLowerCase() === us.toLowerCase()) {
-      score += 3;
-      continue;
-    }
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
     return NO_MATCH;
   }
 
-  if (urlSegments.length > patternSegments.length) return NO_MATCH;
-  return { matched: true, score, params };
+  const scheme = target.protocol.replace(/:$/, "");
+  if (scheme !== "http" && scheme !== "https") return NO_MATCH;
+  if (parsed.scheme !== "*" && parsed.scheme !== scheme) return NO_MATCH;
+
+  const host = matchHost(parsed.host, target.hostname.toLowerCase());
+  if (!host.matched) return NO_MATCH;
+
+  const path = matchPath(parsed.path, target.pathname);
+  if (!path.matched) return NO_MATCH;
+
+  return { matched: true, score: host.score * 10_000 + path.score };
 }
 
-/** Matching configs only, sorted most-specific-first (domain-only last). */
-export function rankConfigsByUrl<T extends { urlPattern: string }>(
-  configs: T[],
-  actualUrl: string,
-  domain: string,
+/**
+ * Rank items with one or more urlPatterns against a page URL, using each
+ * item's best-matching pattern. Non-matching items are dropped; matches sort
+ * most-specific-first.
+ */
+export function rankConfigsByUrl<T extends { urlPatterns: string[] }>(
+  items: T[],
+  url: string,
 ): T[] {
-  return configs
-    .map((config) => ({ config, ...matchUrlPattern(config.urlPattern, actualUrl, domain) }))
+  return items
+    .map((item) => {
+      let best: MatchResult = NO_MATCH;
+      for (const pattern of item.urlPatterns) {
+        const result = matchUrlPattern(pattern, url);
+        if (result.matched && (!best.matched || result.score > best.score)) best = result;
+      }
+      return { item, ...best };
+    })
     .filter((r) => r.matched)
     .sort((a, b) => b.score - a.score)
-    .map((s) => s.config);
+    .map((r) => r.item);
 }

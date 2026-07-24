@@ -13,17 +13,35 @@ const baseTool = {
 
 const baseConfig = {
   domain: "Example.com",
-  urlPattern: "https://example.com/search/",
+  urlPatterns: ["*://example.com/search*"],
   title: "Example search",
   description: "Search tools for example.com",
   tools: [baseTool],
 };
 
 describe("createConfigSchema", () => {
-  it("normalizes domain (lowercase, strips www.) and urlPattern (protocol, trailing slash)", () => {
+  it("normalizes domain (lowercase, strips www.)", () => {
     const parsed = createConfigSchema.parse({ ...baseConfig, domain: "WWW.Example.com" });
     expect(parsed.domain).toBe("example.com");
-    expect(parsed.urlPattern).toBe("example.com/search");
+  });
+
+  it("rejects urlPatterns that aren't valid match patterns", () => {
+    const result = createConfigSchema.safeParse({
+      ...baseConfig,
+      urlPatterns: ["example.com/search"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty urlPatterns array", () => {
+    const result = createConfigSchema.safeParse({ ...baseConfig, urlPatterns: [] });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an optional changelog", () => {
+    expect(
+      createConfigSchema.safeParse({ ...baseConfig, changelog: "Fixed a rotted selector" }).success,
+    ).toBe(true);
   });
 
   it("rejects duplicate tool names", () => {

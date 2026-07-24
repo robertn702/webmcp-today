@@ -36,12 +36,12 @@ function hostnameOf(url: string): string | undefined {
   }
 }
 
-/** Bundled configs whose domain + urlPattern match the URL, most specific first. */
+/** Bundled configs whose domain + urlPatterns match the URL, most specific first. */
 function findBundledConfigsForUrl(url: string): CreateConfigInput[] {
   const hostname = hostnameOf(url);
   if (!hostname) return [];
   const domainConfigs = bundledConfigs.filter((c) => c.domain === hostname);
-  return rankConfigsByUrl(domainConfigs, url, hostname);
+  return rankConfigsByUrl(domainConfigs, url);
 }
 
 /**

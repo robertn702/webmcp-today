@@ -1,6 +1,6 @@
 {
   "domain": "developer.mozilla.org",
-  "urlPattern": "developer.mozilla.org/**",
+  "urlPatterns": ["*://developer.mozilla.org/*"],
   "title": "MDN Web Docs",
   "description": "Read-only tools for MDN: extract the current page's headings and article text, and search MDN.",
   "tools": [

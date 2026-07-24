@@ -1,6 +1,6 @@
 {
   "domain": "github.com",
-  "urlPattern": "github.com/:owner/:repo",
+  "urlPatterns": ["*://github.com/*"],
   "title": "GitHub repository",
   "description": "Read-only tools for GitHub repository pages: extract the README and jump to code search.",
   "tools": [

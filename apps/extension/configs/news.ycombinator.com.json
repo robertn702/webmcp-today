@@ -1,6 +1,6 @@
 {
   "domain": "news.ycombinator.com",
-  "urlPattern": "news.ycombinator.com",
+  "urlPatterns": ["*://news.ycombinator.com/*"],
   "title": "Hacker News",
   "description": "Read-only tools for browsing Hacker News: extract front-page stories and search via the on-page Algolia search box.",
   "tools": [

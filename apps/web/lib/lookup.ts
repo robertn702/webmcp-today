@@ -1,18 +1,31 @@
 import { rankConfigsByUrl, type WebMcpConfig } from "@robertn702/webmcp-cafe-schema";
-import { configs } from "@webmcp-cafe/db";
+import { webmcpDefinitions } from "@webmcp-cafe/db";
 import { eq } from "drizzle-orm";
-import { hydrateConfigs } from "./configs-repo";
+import { getInstalledConfigs, hydrateConfigs } from "./configs-repo";
 import { db } from "./db";
 
-/** Configs matching a page URL, most specific urlPattern first. */
-export async function lookupConfigs(url: string, yolo: boolean): Promise<WebMcpConfig[]> {
-  let hostname: string;
+function hostnameOf(url: string): string | null {
   try {
-    hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
   } catch {
-    return [];
+    return null;
   }
-  const rows = await db.select().from(configs).where(eq(configs.domain, hostname));
-  const hydrated = await hydrateConfigs(rows, yolo);
-  return rankConfigsByUrl(hydrated, url, hostname);
+}
+
+/** Definitions matching a page URL at their latest version, most specific first. */
+export async function lookupConfigs(url: string): Promise<WebMcpConfig[]> {
+  const hostname = hostnameOf(url);
+  if (!hostname) return [];
+  const rows = await db
+    .select()
+    .from(webmcpDefinitions)
+    .where(eq(webmcpDefinitions.domain, hostname));
+  const hydrated = await hydrateConfigs(rows);
+  return rankConfigsByUrl(hydrated, url);
+}
+
+/** A signed-in user's installed configs (pinned versions) matching a page URL. */
+export async function lookupInstalledConfigs(userId: string, url: string): Promise<WebMcpConfig[]> {
+  const installed = await getInstalledConfigs(userId);
+  return rankConfigsByUrl(installed, url);
 }

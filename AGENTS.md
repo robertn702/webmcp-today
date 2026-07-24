@@ -58,14 +58,29 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
 
 ## Config format ground rules
 
-- Based on Joakim's format: `{ domain, urlPattern, title, description, tools[] }`; tool
-  `execution` is simple mode (fields/autosubmit/resultSelector) or multi-step
+- Based on Joakim's format, extended: `{ domain, urlPatterns[], title, description,
+tools[], changelog? }`. `urlPatterns` is Chrome extension `@match`-style
+  (`scheme://host/path`, e.g. `*://*.wikipedia.org/wiki/*`), versioned alongside `tools`
+  — see "Registry data model" below. Tool `execution` is simple mode
+  (fields/autosubmit/resultSelector) or multi-step
   (`navigate | click | fill | select | wait | extract | scroll | condition`).
 - **No `evaluate` step in v1** (arbitrary code execution in the user's logged-in page).
-- Schema leaves room for health/canary metadata and multi-reviewer verification
-  snapshots; `minEngine` field so the format can evolve.
-- Registry API serves verified configs only by default; `yolo=true` opts into unverified.
+- `minEngine` field so the format can evolve.
 - Extension must skip + warn on tool-name collision with site-registered tools.
+
+## Registry data model (package-install model, replaces per-tool verification)
+
+- Trust = install count, not per-tool verification. Three tables: `webmcp_definitions`
+  (mutable metadata), `definition_versions` (append-only: urlPatterns + tools +
+  changelog), `installs` (auth-only, pins a user to a version; doubles as the trust
+  signal via `COUNT ... GROUP BY`). Full diagram + reading notes: `docs/erd.md`.
+- **Served truth is `definition_versions` rows directly** — no snapshot table. Browse and
+  fresh (`GET /api/configs/lookup`) serve each definition's latest version. Installed
+  users stay pinned to `installs.version_id` (npm-style, user-initiated updates) until
+  they call the update endpoint; rollback is just moving the pin back.
+- **No `(domain, url_pattern)` uniqueness by design** — rival packages may target the
+  same site; install counts + pattern specificity rank them, not a first-come
+  registration.
 
 ## Credentials Robert must supply (placeholders in `.env.example`)
 
@@ -233,6 +248,29 @@ client"` despite being presentational — their `Slot` import from the
   shadcn `sonner` component's next-themes dependency was removed —
   `components/ui/sonner.tsx` observes the `.dark` class on `<html>` to match
   the repo's existing theme mechanism.
+- 2026-07-24 — Replaced the per-tool verification model with the package-install model
+  (`docs/erd.md`, decisions in `.scratch/erd-proposal.md`, not committed). Dropped
+  `configs`/`tools`/`verification_snapshots`/`votes` and `yolo` everywhere; added
+  `webmcp_definitions` / `definition_versions` (append-only) / `installs` (auth-only,
+  doubles as the derived trust signal). `packages/schema`'s `urlPattern` (single
+  domain-relative string) became `urlPatterns` (string array, Chrome `@match`-style
+  `scheme://host/path`); `url-matching.ts` was rewritten around that format and
+  `rankConfigsByUrl` dropped its `domain` param (patterns are self-contained). Migration
+  `packages/db/migrations/0003_webmcp_erd_redesign.sql` was hand-written (drizzle-kit
+  `generate --custom`) — the meta snapshot was also hand-authored (see the file's git
+  history) because `--custom` migrations don't diff schema.ts, so `generate --custom`
+  alone leaves the snapshot stale for the _next_ `generate`; verified by rerunning plain
+  `generate` afterward and confirming "No schema changes, nothing to migrate". Endpoints:
+  `POST /api/configs` (new definition + v1), `POST /api/configs/:id/versions` (append a
+  version, owner-only), `PATCH /api/configs/:id` (metadata only, never touches
+  versions), `POST`/`DELETE /api/configs/:id/install`, `POST /api/configs/:id/update`
+  (move an install's pin; also rollback), `GET /api/configs/lookup?url=&installed=true`
+  (authenticated variant serving the caller's pinned versions). Deleted
+  `verify`/`vote` routes and the `VerifyButton`/`VoteButtons` components; added
+  `InstallButton`. `packages/mcp` write tools follow the same split (`upload_config`,
+  `update_config_meta`, `publish_config_version`, `install_config`/`uninstall_config`/
+  `update_config_install`). Public API route paths under `/api/configs/*` were kept
+  as-is even though the underlying tables renamed — renaming the path is a follow-up.
 
 ## Dev workflow gotchas
 
@@ -244,8 +282,8 @@ are auto-created by the pre-commit hook):
 - `apps/extension/AGENTS.md` — one-dev-instance rule (Chrome profile lock,
   corrupted `.output/`), silent-fallback trap (registry vs bundled log line),
   selector-rot debugging recipe, dev-browser flags/ports.
-- `apps/web/AGENTS.md` — verification snapshots are the served truth (editing
-  `tools` rows changes nothing user-visible), seeds start unverified, env
+- `apps/web/AGENTS.md` — served truth is `definition_versions` at latest version
+  (or the caller's `installs.version_id` pin), seeds start with zero installs, env
   requirements.
 
 Cross-cutting: ports are web 3000 / wxt 5173 / CDP 9222; find strays with
