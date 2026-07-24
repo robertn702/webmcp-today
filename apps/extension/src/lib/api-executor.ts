@@ -132,10 +132,10 @@ function projectSegments(value: unknown, segments: string[]): unknown {
   return projectSegments(next, rest);
 }
 
-/** Apply a `returns` projection to trim output toward the tool-output budget.
+/** Apply a `returns` projection to trim output for density and relevance.
  *  SMALLEST useful grammar only (see PROJECTION_SEGMENT_RE); anything outside
  *  it, or a path that resolves to nothing, falls back to the whole response
- *  (truncation then handles size). */
+ *  (output is uncapped in v1 — see docs/DECISIONS.md 2026-07-24). */
 export function applyProjection(value: unknown, returns?: string): unknown {
   if (returns === undefined || returns.length === 0) return value;
   const segments = returns.split(".");
@@ -287,7 +287,7 @@ async function resolveAuthToken(
 }
 
 /** Interpret a completed response: HTTP status, then `errorPath` (GraphQL
- *  200-with-errors default to "errors"), then `returns` projection + budgeting.
+ *  200-with-errors default to "errors"), then `returns` projection.
  *  Throws on failure so the outer wrapper formats a single error result. */
 export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): McpResult {
   let json: unknown;

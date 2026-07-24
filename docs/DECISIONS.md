@@ -283,3 +283,17 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   rendered HTML truncated at budget — candidate for a minimal `returns`
   (errors/permalink) later; (5) listing reads clip the last item around
   5 × ~300 chars — agents should pass limit 3–4.
+- 2026-07-24 — Removed the tool-output character cap entirely for v1. The
+  executors previously truncated every result to 1.5K chars (`TOOL_OUTPUT_MAX`
+  in `packages/schema/src/budgets.ts`, applied in `mcpResult`); that export and
+  the truncation are gone — `mcpResult` now returns text as-is. Rationale: the
+  right output budget is model-dependent (a 1M-context model should be far less
+  conservative than a 256K one), and Chrome's 1.5K is guidance, not an enforced
+  limit — so a single hard cap was the wrong default and was silently clipping
+  read tools mid-JSON. Verbose output is acceptable for v1. The publish-time
+  metadata caps (`TOOL_NAME_MAX` 30, `TOOL_DESCRIPTION_MAX` 500,
+  `PARAM_DESCRIPTION_MAX` 150) are untouched and stay hard. The `returns`
+  projection stays valuable for output density/relevance, just no longer for
+  fitting a fixed budget. Follow-up: design output-budget customization later
+  (e.g. a per-user extension setting for output budget, possibly model-aware);
+  the budget question is deferred, not answered.

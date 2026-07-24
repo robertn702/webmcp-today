@@ -19,7 +19,7 @@
     },
     {
       "name": "mdn_read_article",
-      "description": "Extract the text content of the MDN article currently open (truncated to the WebMCP output budget).",
+      "description": "Extract the text content of the MDN article currently open.",
       "inputSchema": { "type": "object", "properties": {} },
       "annotations": { "readOnlyHint": true },
       "execution": {

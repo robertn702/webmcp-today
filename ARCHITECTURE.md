@@ -140,7 +140,7 @@ sequenceDiagram
         EX->>S: same-origin fetch (user's cookies ride along)
         S-->>EX: JSON (errorPath checked, returns projection applied)
     end
-    EX-->>A: tool output (≤ 1.5K chars)
+    EX-->>A: tool output (uncapped in v1)
 ```
 
 Two execution modes, selected per tool:
@@ -197,8 +197,8 @@ validated by zod in `packages/schema`:
 - `urlPatterns` — Chrome `@match`-style; used for lookup, ranking
   (`rankConfigsByUrl`), and same-origin enforcement of `api.baseUrl`.
 - `tools[]` — `{ name, description, inputSchema, annotations?, execution? }` with
-  WebMCP character budgets enforced (500/description, 150/param, 30/name, 1.5K output
-  — `packages/schema/src/budgets.ts`).
+  WebMCP metadata budgets enforced (500/description, 150/param, 30/name — tool output
+  is uncapped in v1; `packages/schema/src/budgets.ts`).
 - `minEngine` — positive-integer capability level per version; lets the format evolve
   without old executors silently mis-running new configs.
 - Placeholders (`{{param}}`, double-brace) may only name `inputSchema` properties —
