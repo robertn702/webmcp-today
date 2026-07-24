@@ -52,7 +52,7 @@ export function SubmitForm() {
         onChange={(e) => setJson(e.target.value)}
         rows={20}
         spellCheck={false}
-        placeholder='{"domain": "example.com", "urlPattern": "example.com", "title": "...", "description": "...", "tools": []}'
+        placeholder='{"domain": "example.com", "urlPatterns": ["*://example.com/*"], "title": "...", "description": "...", "tools": []}'
         className="font-mono text-xs"
       />
       {error && (

@@ -21,41 +21,57 @@ export class CafeClient {
     return text ? JSON.parse(text) : null;
   }
 
-  lookup(url: string, yolo: boolean): Promise<unknown> {
+  lookup(url: string, installed: boolean): Promise<unknown> {
     const params = new URLSearchParams({ url });
-    if (yolo) params.set("yolo", "true");
+    if (installed) params.set("installed", "true");
     return this.request(`/api/configs/lookup?${params}`);
   }
 
-  list(opts: {
-    domain?: string;
-    page?: number;
-    pageSize?: number;
-    yolo?: boolean;
-  }): Promise<unknown> {
+  list(opts: { domain?: string; page?: number; pageSize?: number }): Promise<unknown> {
     const params = new URLSearchParams();
     if (opts.domain) params.set("domain", opts.domain);
     if (opts.page) params.set("page", String(opts.page));
     if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
-    if (opts.yolo) params.set("yolo", "true");
     return this.request(`/api/configs?${params}`);
+  }
+
+  get(id: string): Promise<unknown> {
+    return this.request(`/api/configs/${encodeURIComponent(id)}`);
   }
 
   create(config: unknown): Promise<unknown> {
     return this.request("/api/configs", { method: "POST", body: JSON.stringify(config) });
   }
 
-  update(id: string, patch: unknown): Promise<unknown> {
+  updateMeta(id: string, meta: unknown): Promise<unknown> {
     return this.request(`/api/configs/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify(patch),
+      body: JSON.stringify(meta),
     });
   }
 
-  vote(id: string, value: 1 | -1): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}/vote`, {
+  publishVersion(id: string, version: unknown): Promise<unknown> {
+    return this.request(`/api/configs/${encodeURIComponent(id)}/versions`, {
       method: "POST",
-      body: JSON.stringify({ value }),
+      body: JSON.stringify(version),
+    });
+  }
+
+  install(id: string, versionId?: string): Promise<unknown> {
+    return this.request(`/api/configs/${encodeURIComponent(id)}/install`, {
+      method: "POST",
+      body: JSON.stringify(versionId ? { versionId } : {}),
+    });
+  }
+
+  uninstall(id: string): Promise<unknown> {
+    return this.request(`/api/configs/${encodeURIComponent(id)}/install`, { method: "DELETE" });
+  }
+
+  updateInstall(id: string, versionId?: string): Promise<unknown> {
+    return this.request(`/api/configs/${encodeURIComponent(id)}/update`, {
+      method: "POST",
+      body: JSON.stringify(versionId ? { versionId } : {}),
     });
   }
 

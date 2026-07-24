@@ -6,7 +6,7 @@ import { listConfigs } from "@/lib/configs-repo";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { configs, total } = await listConfigs({ page: 1, pageSize: 50, yolo: true });
+  const { configs, total } = await listConfigs({ page: 1, pageSize: 50 });
 
   return (
     <div>
@@ -33,13 +33,9 @@ export default async function HomePage() {
                       {config.title}
                     </Link>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {config.urlPattern}
+                      {config.urlPatterns.join(", ")}
                     </span>
-                    {config.verified ? (
-                      <Badge variant="success">verified</Badge>
-                    ) : (
-                      <Badge variant="warning">unverified</Badge>
-                    )}
+                    <Badge variant="success">{config.installCount ?? 0} installs</Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{config.description}</p>
                   <p className="mt-2 text-xs text-muted-foreground">

@@ -1,5 +1,5 @@
-import { configs, user, votes } from "@webmcp-cafe/db";
-import { count, desc, eq, sum } from "drizzle-orm";
+import { installs, user, webmcpDefinitions } from "@webmcp-cafe/db";
+import { count, desc, eq } from "drizzle-orm";
 import {
   Table,
   TableBody,
@@ -13,21 +13,21 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
-  const [contributorRows, voteRows] = await Promise.all([
+  const [contributorRows, installRows] = await Promise.all([
     db
-      .select({ id: configs.contributorId, name: user.name, configCount: count() })
-      .from(configs)
-      .innerJoin(user, eq(configs.contributorId, user.id))
-      .groupBy(configs.contributorId, user.name)
+      .select({ id: webmcpDefinitions.contributorId, name: user.name, configCount: count() })
+      .from(webmcpDefinitions)
+      .innerJoin(user, eq(webmcpDefinitions.contributorId, user.id))
+      .groupBy(webmcpDefinitions.contributorId, user.name)
       .orderBy(desc(count()))
       .limit(20),
     db
-      .select({ id: configs.contributorId, score: sum(votes.value) })
-      .from(votes)
-      .innerJoin(configs, eq(votes.configId, configs.id))
-      .groupBy(configs.contributorId),
+      .select({ id: webmcpDefinitions.contributorId, installCount: count() })
+      .from(installs)
+      .innerJoin(webmcpDefinitions, eq(installs.definitionId, webmcpDefinitions.id))
+      .groupBy(webmcpDefinitions.contributorId),
   ]);
-  const scores = new Map(voteRows.map((r) => [r.id, Number(r.score ?? 0)]));
+  const installCounts = new Map(installRows.map((r) => [r.id, r.installCount]));
 
   return (
     <div>
@@ -40,7 +40,7 @@ export default async function LeaderboardPage() {
             <TableRow>
               <TableHead>Contributor</TableHead>
               <TableHead>Configs</TableHead>
-              <TableHead>Net votes</TableHead>
+              <TableHead>Installs</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -48,7 +48,7 @@ export default async function LeaderboardPage() {
               <TableRow key={row.id}>
                 <TableCell>{row.name}</TableCell>
                 <TableCell>{row.configCount}</TableCell>
-                <TableCell>{scores.get(row.id) ?? 0}</TableCell>
+                <TableCell>{installCounts.get(row.id) ?? 0}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -23,10 +23,10 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   server isn't on — extension loads but nothing works). Find strays with
   `lsof -nP -i :3000 -i :5173 -i :9222`; killing the bun wrapper does NOT kill
   the node child.
-- **Silent-fallback trap.** The background fetch requests verified configs only
-  (never `yolo=true`); unverified configs make it fall back to the bundled
-  `configs/` dir. A "working" test may never touch the registry. Any full-loop
-  claim must cite the service-worker log line
+- **Silent-fallback trap.** The background fetch requests each definition's latest
+  version from the registry; any failure (network, non-2xx, zero matches, or schema
+  mismatch) silently falls back to the bundled `configs/` dir. A "working" test may
+  never touch the registry. Any full-loop claim must cite the service-worker log line
   `[webmcp-cafe] Using N config(s) from the registry` (vs the fallback variant).
 - **Selector-rot debugging recipe.** Evaluate the config's `resultSelector`
   against the live page via the chrome-devtools bridge (`evaluate_script`)

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { toolDescriptorSchema } from "./tool.js";
+import { parseUrlPattern } from "./url-matching.js";
 
 // Config format v1 — based on Joakim Selemyr's web-mcp-hub (MIT), extended
 // with minEngine (format evolution) and room for health/verification metadata.
@@ -15,12 +16,14 @@ export const domainSchema = z
   .max(253)
   .transform((d) => d.toLowerCase().replace(/^www\./, ""));
 
-/** Strip protocol and trailing slashes so patterns are always "domain/path". */
-function normalizeUrlPattern(val: string): string {
-  return val.replace(/^https?:\/\//, "").replace(/\/+$/, "") || val;
-}
-
-export const urlPatternSchema = z.string().min(1).max(2048).transform(normalizeUrlPattern);
+/** Chrome extension `@match`-style pattern, e.g. "*://*.wikipedia.org/wiki/*". */
+export const urlPatternSchema = z
+  .string()
+  .min(1)
+  .max(2048)
+  .refine((v) => parseUrlPattern(v) !== null, {
+    message: 'must be a match pattern like "*://*.example.com/*" (scheme://host/path)',
+  });
 
 const toolsArraySchema = z
   .array(toolDescriptorSchema)
@@ -43,16 +46,32 @@ const toolsArraySchema = z
 /** What contributors submit (contributor identity comes from auth, not the body). */
 export const createConfigSchema = z.object({
   domain: domainSchema,
-  urlPattern: urlPatternSchema,
+  urlPatterns: z.array(urlPatternSchema).min(1).max(20),
   pageType: z.string().max(100).optional(),
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   tools: toolsArraySchema,
   tags: z.array(z.string().max(50)).max(10).optional(),
   minEngine: semverSchema.optional(),
+  /** What changed in this version; shown to installed users deciding whether to update. */
+  changelog: z.string().max(2000).optional(),
 });
 
 export const updateConfigSchema = createConfigSchema.partial();
 
+/** Metadata-only edits (webmcp_definitions row) — excludes versioned fields. */
+export const updateDefinitionMetaSchema = createConfigSchema
+  .omit({ urlPatterns: true, tools: true, changelog: true })
+  .partial();
+
+/** A new version of an existing definition (definition_versions row) — append-only. */
+export const publishVersionSchema = createConfigSchema.pick({
+  urlPatterns: true,
+  tools: true,
+  changelog: true,
+});
+
 export type CreateConfigInput = z.infer<typeof createConfigSchema>;
 export type UpdateConfigInput = z.infer<typeof updateConfigSchema>;
+export type UpdateDefinitionMetaInput = z.infer<typeof updateDefinitionMetaSchema>;
+export type PublishVersionInput = z.infer<typeof publishVersionSchema>;

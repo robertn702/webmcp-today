@@ -1,6 +1,6 @@
 {
   "domain": "en.wikipedia.org",
-  "urlPattern": "en.wikipedia.org/wiki/:title",
+  "urlPatterns": ["*://en.wikipedia.org/wiki/*"],
   "title": "Wikipedia article",
   "description": "Read-only tools for English Wikipedia articles: summary extraction, section listing, and search.",
   "tools": [

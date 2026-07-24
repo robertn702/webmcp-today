@@ -1,6 +1,6 @@
 {
   "domain": "npmjs.com",
-  "urlPattern": "npmjs.com/package/:name",
+  "urlPatterns": ["*://*.npmjs.com/package/*"],
   "title": "npm package page",
   "description": "Read-only tools for npm package pages: read the README and search the registry.",
   "tools": [

@@ -2,17 +2,24 @@
 
 Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first).
 
-## Verification model (the served truth)
+## Registry model (the served truth)
 
-- **Lookup serves `verification_snapshots`, not `tools` rows.** Editing `tools`
-  alone changes nothing user-visible. The product flow is edit → verification
-  reset (snapshots cascade-delete) → re-verify; a direct DB edit must patch both
-  the tool row and its snapshot to take effect.
-- Non-yolo `GET /api/configs/lookup` returns **verified configs only**;
-  `yolo=true` opts into unverified. Seeded configs start **unverified**, so a
-  fresh DB serves nothing to the extension until tools are verified.
-- v1 policy: any signed-in user except the contributor can verify a tool. The
-  seed contributor is a synthetic user, so any real account can verify seeds.
+- **`definition_versions` rows are the served truth directly** — no snapshot table.
+  `GET /api/configs/lookup` and browse (`GET /api/configs`) both serve each
+  definition's _latest_ version (`max(version)`); there is no unverified/verified
+  split and no `yolo` param. Seeded configs are immediately servable (0 installs, but
+  visible) — see `docs/erd.md`.
+- **Versions are append-only.** `POST /api/configs/:id/versions` (owner-only) inserts
+  the next version; nothing is ever mutated or deleted. `PATCH /api/configs/:id` only
+  touches `webmcp_definitions` metadata (title/description/tags/domain/minEngine) and
+  never touches urlPatterns/tools.
+- **Installs are auth-only and pin-by-default.** `POST`/`DELETE /api/configs/:id/install`
+  install/uninstall (pinned to latest unless a `versionId` is given);
+  `POST /api/configs/:id/update` moves an existing install's pin to a different version
+  (also how rollback works — pass an older `versionId`). `GET
+/api/configs/lookup?url=&installed=true` (authenticated) returns the caller's pinned
+  versions instead of latest. Install count (the trust signal) is derived via
+  `COUNT(*) ... GROUP BY definition_id` on `installs`, not a denormalized counter.
 
 ## Env & dev
 
