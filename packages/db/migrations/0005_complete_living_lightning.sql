@@ -1,0 +1,1 @@
+ALTER TABLE "definition_versions" ADD COLUMN "api" jsonb;

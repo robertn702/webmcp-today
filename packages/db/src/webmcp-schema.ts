@@ -1,4 +1,4 @@
-import type { ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
+import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
 import {
   index,
   integer,
@@ -50,6 +50,8 @@ export const definitionVersions = pgTable(
     version: integer("version").notNull(),
     urlPatterns: jsonb("url_patterns").$type<string[]>().notNull(),
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
+    /** Tier-1 API execution surface for this version's API-mode tools (see docs/api-execution-model.md). */
+    api: jsonb("api").$type<ApiBlock>(),
     /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). */
     minEngine: integer("min_engine"),
     changelog: text("changelog"),

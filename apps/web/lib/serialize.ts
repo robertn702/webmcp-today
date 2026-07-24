@@ -19,6 +19,7 @@ export function serializeConfig(
     title: definition.title,
     description: definition.description,
     tools: version.tools,
+    ...(version.api ? { api: version.api } : {}),
     ...(definition.tags ? { tags: definition.tags } : {}),
     ...(version.minEngine ? { minEngine: version.minEngine } : {}),
     ...(version.changelog ? { changelog: version.changelog } : {}),

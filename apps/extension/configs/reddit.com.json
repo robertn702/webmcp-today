@@ -1,0 +1,155 @@
+{
+  "domain": "reddit.com",
+  "urlPatterns": ["*://*.reddit.com/*"],
+  "title": "Reddit (JSON API)",
+  "description": "Read and write Reddit via its own JSON API: list subreddit posts, read threads, search, comment, and vote — executed as the logged-in user. Tier-1 API execution (no DOM selectors).",
+  "tags": ["reddit", "api", "read-write"],
+  "minEngine": 2,
+  "changelog": "Initial version: reads (me, subreddit hot, search, thread) and writes (comment, vote) via Reddit's JSON API with the modhash CSRF flow.",
+  "api": {
+    "baseUrl": "https://www.reddit.com",
+    "auth": {
+      "csrf": {
+        "source": { "endpoint": "me", "extract": "data.modhash" },
+        "sendAs": { "header": "X-Modhash" }
+      }
+    },
+    "endpoints": {
+      "me": {
+        "method": "GET",
+        "path": "/api/me.json",
+        "returns": "data.{name,total_karma,created_utc}"
+      },
+      "subredditHot": {
+        "method": "GET",
+        "path": "/r/{{subreddit}}/hot.json",
+        "query": { "limit": "{{limit}}", "raw_json": "1" },
+        "returns": "data.children[].data.{id,name,title,author,score,num_comments,permalink,url,created_utc}"
+      },
+      "search": {
+        "method": "GET",
+        "path": "/search.json",
+        "query": {
+          "q": "{{query}}",
+          "type": "link",
+          "sort": "relevance",
+          "limit": "{{limit}}",
+          "raw_json": "1"
+        },
+        "returns": "data.children[].data.{id,name,subreddit,title,author,score,num_comments,permalink,created_utc}"
+      },
+      "thread": {
+        "method": "GET",
+        "path": "/comments/{{postId}}.json",
+        "query": { "limit": "{{limit}}", "depth": "{{depth}}", "sort": "top", "raw_json": "1" },
+        "returns": "1.data.children[].data.{id,name,author,score,body,created_utc}"
+      },
+      "comment": {
+        "method": "POST",
+        "path": "/api/comment",
+        "form": { "thing_id": "{{thingId}}", "text": "{{text}}", "api_type": "json" },
+        "auth": ["csrf"],
+        "errorPath": "json.errors"
+      },
+      "vote": {
+        "method": "POST",
+        "path": "/api/vote",
+        "form": { "id": "{{thingId}}", "dir": "{{direction}}" },
+        "auth": ["csrf"]
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "reddit_me",
+      "description": "Get the logged-in Reddit user's username and total karma. Proves the session works; write tools need a logged-in session.",
+      "inputSchema": { "type": "object", "properties": {} },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "me" }
+    },
+    {
+      "name": "reddit_subreddit_hot",
+      "description": "List the current hot posts in a subreddit: title, author, score, comment count, permalink, and fullname (use with reddit_comment/reddit_vote).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "subreddit": { "type": "string", "description": "Subreddit name, without the r/ prefix" },
+          "limit": { "type": "integer", "description": "Max posts to return (1-25)" }
+        },
+        "required": ["subreddit", "limit"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "subredditHot" }
+    },
+    {
+      "name": "reddit_search",
+      "description": "Search all of Reddit for posts matching a query, ranked by relevance: title, subreddit, author, score, comment count, permalink, and fullname.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Search query" },
+          "limit": { "type": "integer", "description": "Max posts to return (1-25)" }
+        },
+        "required": ["query", "limit"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "search" }
+    },
+    {
+      "name": "reddit_read_thread",
+      "description": "Read the top comments of a Reddit post: author, score, and body per comment. Take the post ID from a permalink (/comments/<id>/).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "postId": {
+            "type": "string",
+            "description": "Base36 post ID from the URL, e.g. 1abc2de (no t3_ prefix)"
+          },
+          "limit": { "type": "integer", "description": "Max top-level comments (1-25)" },
+          "depth": { "type": "integer", "description": "Reply nesting depth to include (1-10)" }
+        },
+        "required": ["postId", "limit", "depth"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "thread" }
+    },
+    {
+      "name": "reddit_comment",
+      "description": "Post a comment on a Reddit post, or reply to a comment, as the logged-in user. Use a fullname (t3_... or t1_...) from the read tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "thingId": {
+            "type": "string",
+            "description": "Fullname of the target: t3_... for a post, t1_... for a comment"
+          },
+          "text": { "type": "string", "description": "Comment body (Reddit markdown)" }
+        },
+        "required": ["thingId", "text"]
+      },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true },
+      "execution": { "mode": "api", "endpoint": "comment" }
+    },
+    {
+      "name": "reddit_vote",
+      "description": "Upvote, downvote, or clear a vote on a Reddit post or comment, as the logged-in user. Use a fullname (t3_... or t1_...) from the read tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "thingId": {
+            "type": "string",
+            "description": "Fullname of the target: t3_... for a post, t1_... for a comment"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Vote direction: 1 = upvote, 0 = clear, -1 = downvote",
+            "enum": ["1", "0", "-1"]
+          }
+        },
+        "required": ["thingId", "direction"]
+      },
+      "annotations": { "readOnlyHint": false },
+      "execution": { "mode": "api", "endpoint": "vote" }
+    }
+  ]
+}

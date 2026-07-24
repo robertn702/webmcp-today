@@ -121,9 +121,23 @@ describe("applyProjection", () => {
     expect(applyProjection(response, undefined)).toBe(response);
   });
 
+  it("picks fields with a {a,b} picker segment", () => {
+    expect(applyProjection(response, "data.children[].data.{title}")).toEqual([
+      { title: "a" },
+      { title: "b" },
+    ]);
+  });
+
+  it("picks fields directly off an object", () => {
+    expect(applyProjection({ data: { name: "x", karma: 5 } }, "data.{name,karma}")).toEqual({
+      name: "x",
+      karma: 5,
+    });
+  });
+
   it("falls back to the whole value for grammar it cannot interpret", () => {
-    // Field-picker syntax is deliberately not implemented (future decision).
-    expect(applyProjection(response, "data.children[].data.{title,author}")).toBe(response);
+    // Wildcards/filters are deliberately not implemented (future decision).
+    expect(applyProjection(response, "data.children[].data.*")).toBe(response);
   });
 
   it("falls back to the whole value when the path resolves to nothing", () => {

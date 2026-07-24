@@ -24,12 +24,13 @@ import type { McpResult } from "./model-context.js";
 
 const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
 const DOCUMENT_REF_RE = /^@documents\/(.+)$/;
-// The tiny `returns` grammar we interpret: dot-separated `\w+` segments, each
-// optionally suffixed with `[]` ("map over this array"), plus a bare `[]`.
-// Anything richer (field pickers like `{a,b}`, wildcards) is NOT interpreted —
-// projection falls back to the whole response. Richer projection is a
-// deliberate future decision (docs open question "Output projection language").
-const PROJECTION_SEGMENT_RE = /^\w+(\[\])?$|^\[\]$/;
+// The tiny `returns` grammar we interpret: dot-separated segments, each either
+// `\w+` optionally suffixed with `[]` ("map over this array"), a bare `[]`, or
+// a field picker `{a,b,c}` (keep only those keys; maps over arrays). Anything
+// richer (wildcards, filters) is NOT interpreted — projection falls back to the
+// whole response. Richer projection is a deliberate future decision (docs open
+// question "Output projection language").
+const PROJECTION_SEGMENT_RE = /^\w+(\[\])?$|^\[\]$|^\{\w+(,\w+)*\}$/;
 
 export interface DerivedRequest {
   url: string;
@@ -108,6 +109,18 @@ function projectSegments(value: unknown, segments: string[]): unknown {
   if (segment === "[]") {
     if (!Array.isArray(value)) return undefined;
     return value.map((item) => projectSegments(item, rest));
+  }
+  if (segment.startsWith("{") && segment.endsWith("}")) {
+    // Field picker: keep only the named keys. Maps over arrays so
+    // "children[].data.{a,b}" works without a trailing bare "[]".
+    const keys = segment.slice(1, -1).split(",");
+    const pick = (item: unknown): unknown => {
+      if (item === null || typeof item !== "object" || Array.isArray(item)) return undefined;
+      const out: Record<string, unknown> = {};
+      for (const key of keys) out[key] = Reflect.get(item, key);
+      return projectSegments(out, rest);
+    };
+    return Array.isArray(value) ? value.map(pick) : pick(value);
   }
   const mapsArray = segment.endsWith("[]");
   const key = mapsArray ? segment.slice(0, -2) : segment;

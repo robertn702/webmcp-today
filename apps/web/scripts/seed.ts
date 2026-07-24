@@ -51,6 +51,7 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
     version: 1,
     urlPatterns: input.urlPatterns,
     tools: input.tools,
+    api: input.api,
     minEngine: input.minEngine,
     changelog: input.changelog,
   });
