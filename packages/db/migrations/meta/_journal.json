@@ -29,6 +29,13 @@
       "when": 1784866395441,
       "tag": "0003_webmcp_erd_redesign",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784908843428,
+      "tag": "0004_min_engine_to_versions",
+      "breakpoints": true
     }
   ]
 }

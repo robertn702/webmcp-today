@@ -26,7 +26,6 @@ export const webmcpDefinitions = pgTable(
     title: text("title").notNull(),
     description: text("description").notNull(),
     tags: jsonb("tags").$type<string[]>(),
-    minEngine: text("min_engine"),
     contributorId: text("contributor_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -51,6 +50,8 @@ export const definitionVersions = pgTable(
     version: integer("version").notNull(),
     urlPatterns: jsonb("url_patterns").$type<string[]>().notNull(),
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
+    /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). */
+    minEngine: integer("min_engine"),
     changelog: text("changelog"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
