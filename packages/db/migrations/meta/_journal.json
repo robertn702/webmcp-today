@@ -8,6 +8,20 @@
       "when": 1784833825929,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784854141386,
+      "tag": "0001_apikey_reference_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784854299952,
+      "tag": "0002_light_bedlam",
+      "breakpoints": true
     }
   ]
 }
