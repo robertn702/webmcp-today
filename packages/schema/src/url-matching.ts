@@ -43,6 +43,31 @@ export function hostCoversHostname(patternHost: string, hostname: string): boole
   return patternHost === host;
 }
 
+/**
+ * Expand a hostname into the candidate `domain` lookup keys a stored config
+ * might use: the full hostname plus each parent domain down to the registrable
+ * domain (naively the last two labels — no public-suffix list). Leading `www.`
+ * is stripped and the host is lowercased first.
+ *
+ * `domain` is only a lookup index; urlPatterns are the matching authority
+ * (`rankConfigsByUrl`), so over-generating a key at worst misses (no row keyed
+ * to it) — it can never mis-serve a config whose patterns don't cover the URL.
+ *
+ * e.g. "old.reddit.com" → ["old.reddit.com", "reddit.com"].
+ */
+export function domainLookupKeys(hostname: string): string[] {
+  const host = hostname.toLowerCase().replace(/^www\./, "");
+  const labels = host.split(".");
+  const keys: string[] = [];
+  // Walk parent suffixes down to the last two labels (naive registrable domain).
+  for (let i = 0; i + 2 <= labels.length; i++) {
+    keys.push(labels.slice(i).join("."));
+  }
+  // Single-label hosts (e.g. "localhost") still key on themselves.
+  if (keys.length === 0) keys.push(host);
+  return keys;
+}
+
 function matchHost(patternHost: string, urlHost: string): { matched: boolean; score: number } {
   if (patternHost === "*") return { matched: true, score: 0 };
   const matched = hostCoversHostname(patternHost, urlHost);

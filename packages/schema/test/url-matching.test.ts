@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { matchUrlPattern, parseUrlPattern, rankConfigsByUrl } from "../src/index.js";
+import {
+  domainLookupKeys,
+  matchUrlPattern,
+  parseUrlPattern,
+  rankConfigsByUrl,
+} from "../src/index.js";
 
 describe("parseUrlPattern", () => {
   it("parses scheme, host, and path", () => {
@@ -82,5 +87,64 @@ describe("rankConfigsByUrl", () => {
     const configs = [{ id: "multi", urlPatterns: ["*://*.example.com/*", "*://example.com/a"] }];
     const ranked = rankConfigsByUrl(configs, "https://example.com/a");
     expect(ranked).toHaveLength(1);
+  });
+});
+
+describe("domainLookupKeys", () => {
+  it("expands a subdomain to itself plus the registrable domain", () => {
+    expect(domainLookupKeys("old.reddit.com")).toEqual(["old.reddit.com", "reddit.com"]);
+  });
+
+  it("returns just the registrable domain for a two-label host", () => {
+    expect(domainLookupKeys("reddit.com")).toEqual(["reddit.com"]);
+  });
+
+  it("walks every parent down to the last two labels", () => {
+    expect(domainLookupKeys("a.b.reddit.com")).toEqual([
+      "a.b.reddit.com",
+      "b.reddit.com",
+      "reddit.com",
+    ]);
+  });
+
+  it("strips a leading www. and lowercases", () => {
+    expect(domainLookupKeys("WWW.Reddit.com")).toEqual(["reddit.com"]);
+  });
+
+  it("keeps a single-label host as its own key", () => {
+    expect(domainLookupKeys("localhost")).toEqual(["localhost"]);
+  });
+});
+
+describe("subdomain config lookup (domainLookupKeys + rankConfigsByUrl)", () => {
+  // Emulates the prefilter both apps run: keep configs whose `domain` lookup key
+  // matches the hostname's candidate keys, then rank the survivors by urlPattern.
+  function lookup<T extends { domain: string; urlPatterns: string[] }>(
+    configs: T[],
+    url: string,
+  ): T[] {
+    const keys = domainLookupKeys(new URL(url).hostname);
+    return rankConfigsByUrl(
+      configs.filter((c) => keys.includes(c.domain)),
+      url,
+    );
+  }
+
+  const reddit = { domain: "reddit.com", urlPatterns: ["*://*.reddit.com/*"] };
+
+  it("serves a registrable-domain config on a subdomain via its *.host pattern", () => {
+    const ranked = lookup([reddit], "https://old.reddit.com/r/programming");
+    expect(ranked).toEqual([reddit]);
+  });
+
+  it("still serves it on the bare registrable domain", () => {
+    const ranked = lookup([reddit], "https://reddit.com/r/programming");
+    expect(ranked).toEqual([reddit]);
+  });
+
+  it("ranks an exact-host config above the wildcard one on that subdomain", () => {
+    const oldReddit = { domain: "old.reddit.com", urlPatterns: ["*://old.reddit.com/*"] };
+    const ranked = lookup([reddit, oldReddit], "https://old.reddit.com/r/programming");
+    expect(ranked).toEqual([oldReddit, reddit]);
   });
 });
