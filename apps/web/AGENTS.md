@@ -30,5 +30,20 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Its 1.6.25 table schema keys the owner as `reference_id` (+ `config_id`),
   not `user_id` — keep `packages/db/src/apikey-schema.ts` matched to the
   plugin's expected fields or every api-key endpoint 500s.
-- Agent writes use `Authorization: Bearer <api key>` (created at `/settings`);
-  browser flows use session cookies.
+- Agent writes use `Authorization: Bearer <api key>` (created at
+  `/settings/security`); browser flows use session cookies.
+- Auth UI is **better-auth-ui** (vendored shadcn registry components in
+  `components/auth/`, wired by `components/providers.tsx`):
+  - `/auth/[path]` — sign-in (GitHub-only; `emailAndPassword.enabled: false`
+    so password views redirect to sign-in) and sign-out.
+  - `/settings/[path]` — account + security tabs (API keys live under
+    security). Server-gated with `ensureSession` + `HydrationBoundary`;
+    `/settings` redirects to `/settings/account`.
+  - Navbar identity is `<UserButton size="icon" />`.
+- `useAuth().authClient` is typed as the _base_ client. Vendored components
+  that need plugin-typed hooks import the app's typed `@/lib/auth-client`
+  directly instead of casting (repo no-`as` rule). `auth-client.ts` registers
+  `usernameClient()` + `multiSessionClient()` only to satisfy those hook
+  types — the server runs neither plugin.
+- Toasts: shadcn `sonner`, but `components/ui/sonner.tsx` observes the `.dark`
+  class on `<html>` (repo theme mechanism) — next-themes is not installed.
