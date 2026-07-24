@@ -10,6 +10,9 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema }),
+  // Email/password alongside GitHub OAuth. No email sender is configured, so
+  // verification and password-reset emails are off (the UI hides those flows).
+  emailAndPassword: { enabled: true },
   socialProviders: {
     github: {
       clientId: env.GITHUB_CLIENT_ID,

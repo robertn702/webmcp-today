@@ -114,9 +114,12 @@ export function UserProfile({ className }: UserProfileProps) {
                   onInvalid={(e) => {
                     e.preventDefault();
 
+                    // Capture now: `currentTarget` is null by the time the
+                    // state updater runs.
+                    const { validationMessage } = e.currentTarget;
                     setFieldErrors((prev) => ({
                       ...prev,
-                      name: e.currentTarget.validationMessage,
+                      name: validationMessage,
                     }));
                   }}
                   aria-invalid={!!fieldErrors.name}

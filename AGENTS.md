@@ -271,6 +271,22 @@ client"` despite being presentational — their `Slot` import from the
   `update_config_meta`, `publish_config_version`, `install_config`/`uninstall_config`/
   `update_config_install`). Public API route paths under `/api/configs/*` were kept
   as-is even though the underlying tables renamed — renaming the path is a follow-up.
+- 2026-07-24 — Enabled email/password auth alongside GitHub OAuth (branch
+  `login-email-support`). Two-line change: `emailAndPassword: { enabled: true }`
+  in `apps/web/lib/auth.ts` and `emailAndPassword={{ enabled: true,
+forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
+  components adapt entirely off the `emailAndPassword` context (sign-in form,
+  sign-up view, ChangeEmail/ChangePassword in settings). No migration: the
+  `account` table already had the `password` column. No email sender is
+  configured, so forgot/reset-password is hidden in the UI and email
+  verification is not required; adding an email provider later means setting
+  `emailAndPassword.sendResetPassword` server-side and flipping
+  `forgotPassword`/`requireEmailVerification` back on. Follow-up fix: the
+  settings components' `onInvalid` handlers read `e.currentTarget` inside
+  `setState` updaters, which crash (`currentTarget` is null by the time the
+  updater runs) — capture `validationMessage` in a local first, matching the
+  `const el = e.currentTarget` pattern already used in the sign-in/sign-up
+  forms.
 
 ## Dev workflow gotchas
 
