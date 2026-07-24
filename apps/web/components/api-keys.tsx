@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
 type KeyRow = { id: string; name?: string | null; start?: string | null };
@@ -36,36 +39,39 @@ export function ApiKeys() {
   return (
     <section>
       <h2 className="mb-2 text-lg font-semibold">Agent API keys</h2>
-      <p className="mb-3 text-sm text-stone-600">
+      <p className="mb-3 text-sm text-muted-foreground">
         Agents upload configs with <code>Authorization: Bearer &lt;key&gt;</code>.
       </p>
       <div className="mb-3 flex gap-2">
-        <input
+        <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Key name"
-          className="rounded border border-stone-300 px-2 py-1 text-sm"
+          className="max-w-48"
         />
-        <button
-          onClick={() => void create()}
-          className="rounded bg-stone-900 px-3 py-1 text-sm text-white"
-        >
-          Create key
-        </button>
+        <Button onClick={() => void create()}>Create key</Button>
       </div>
       {created && (
-        <p className="mb-3 rounded bg-green-50 p-3 font-mono text-xs text-green-900">
-          {created} — copy it now; it is only shown once.
-        </p>
+        <Alert variant="success" className="mb-3">
+          <AlertTitle>Your new API key</AlertTitle>
+          <AlertDescription className="font-mono text-xs">
+            {created} — copy it now; it is only shown once.
+          </AlertDescription>
+        </Alert>
       )}
-      <ul className="space-y-1">
+      <ul className="flex flex-col gap-1">
         {keys.map((key) => (
           <li key={key.id} className="flex items-center gap-3 text-sm">
             <span className="font-mono text-xs">{key.start ?? "***"}…</span>
             <span>{key.name}</span>
-            <button onClick={() => void remove(key.id)} className="text-xs text-red-700">
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => void remove(key.id)}
+              className="text-destructive"
+            >
               revoke
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

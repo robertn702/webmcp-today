@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function VoteButtons({ configId }: { configId: string }) {
   const [status, setStatus] = useState<string | null>(null);
@@ -22,19 +23,13 @@ export function VoteButtons({ configId }: { configId: string }) {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <button
-        onClick={() => void vote(1)}
-        className="rounded border border-stone-300 px-2 py-1 hover:bg-stone-100"
-      >
+      <Button variant="outline" size="sm" onClick={() => void vote(1)}>
         👍 Works
-      </button>
-      <button
-        onClick={() => void vote(-1)}
-        className="rounded border border-stone-300 px-2 py-1 hover:bg-stone-100"
-      >
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => void vote(-1)}>
         👎 Broken
-      </button>
-      {status && <span className="text-xs text-stone-500">{status}</span>}
+      </Button>
+      {status && <span className="text-xs text-muted-foreground">{status}</span>}
     </div>
   );
 }

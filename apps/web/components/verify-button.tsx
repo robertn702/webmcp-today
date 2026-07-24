@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function VerifyButton({ configId, toolName }: { configId: string; toolName: string }) {
   const [status, setStatus] = useState<string | null>(null);
@@ -19,13 +20,10 @@ export function VerifyButton({ configId, toolName }: { configId: string; toolNam
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button
-        onClick={() => void verify()}
-        className="rounded border border-green-700 px-1.5 py-0.5 text-xs text-green-800 hover:bg-green-50"
-      >
+      <Button variant="outline" size="xs" onClick={() => void verify()}>
         I tested this — verify
-      </button>
-      {status && <span className="text-xs text-stone-500">{status}</span>}
+      </Button>
+      {status && <span className="text-xs text-muted-foreground">{status}</span>}
     </span>
   );
 }

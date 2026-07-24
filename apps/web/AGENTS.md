@@ -27,5 +27,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 
 - better-auth 1.6.x with GitHub OAuth; apiKey plugin lives in the separate
   package `@better-auth/api-key` (server: root export; client: `/client`).
+  Its 1.6.25 table schema keys the owner as `reference_id` (+ `config_id`),
+  not `user_id` — keep `packages/db/src/apikey-schema.ts` matched to the
+  plugin's expected fields or every api-key endpoint 500s.
 - Agent writes use `Authorization: Bearer <api key>` (created at `/settings`);
   browser flows use session cookies.
