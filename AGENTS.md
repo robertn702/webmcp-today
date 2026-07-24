@@ -206,6 +206,33 @@ client"` despite being presentational — their `Slot` import from the
   column renames (needs a TTY) — used `generate --custom` + hand-filled SQL
   instead. Any worktree running pre-rename code against the migrated DB will
   500 on /settings API keys until it picks up this change.
+- 2026-07-24 — Auth UI migrated to better-auth-ui (shadcn registry: `auth`,
+  `settings`, `user-button`, `api-key` + `sonner`). Replaces the hand-rolled
+  `AccountMenu`/`api-keys.tsx` with vendored components under
+  `components/auth/`. New routes: `/auth/[path]` (dedicated sign-in/sign-out;
+  `AuthProvider` sets `emailAndPassword.enabled: false`, so password views
+  redirect to the social-only sign-in) and `/settings/[path]` (account +
+  security tabs; `/settings` redirects to `/settings/account`). `/settings/*`
+  is now gated server-side via `ensureSession` + `HydrationBoundary` (no more
+  client-side auth flash); `Settings` also calls `useAuthenticate` for
+  reactive sign-out. Navbar uses `<UserButton size="icon" />`. Key learnings:
+  (1) `useAuth().authClient` is typed as the _base_ better-auth client, so
+  plugin-typed hooks (`useListApiKeys`, `useSetActiveSession`) can't be fed
+  from context without casts — vendored components import the app's typed
+  `@/lib/auth-client` directly instead, which keeps the no-`as` rule intact
+  (upstream uses `as` widenings here). (2) `auth-client.ts` registers
+  `usernameClient()` + `multiSessionClient()` purely as type-level enablers
+  for those hooks (`displayUsername` etc.); the server runs neither plugin.
+  (3) ~30 upstream `as` assertions were rewritten to narrowing
+  (`e.currentTarget`, `formString` helpers in `lib/form-data.ts`,
+  `Reflect.get`, type predicates, an `AdditionalFieldRegister` render
+  augmentation in `components/auth/auth-provider.tsx`) — expect conflicts to
+  re-appear on registry re-syncs. (4) Organization-owned API keys are
+  deliberately not wired (no org plugin server-side);
+  `organization-api-keys.tsx` was dropped from the vendored set. (5) The
+  shadcn `sonner` component's next-themes dependency was removed —
+  `components/ui/sonner.tsx` observes the `.dark` class on `<html>` to match
+  the repo's existing theme mechanism.
 
 ## Dev workflow gotchas
 
