@@ -1,3 +1,9 @@
 {
-  "setup": ["./.superset/setup.sh"]
+  "setup": [
+    "./.superset/setup.sh"
+  ],
+  "teardown": [],
+  "run": [
+    "cd apps/web && bun dev"
+  ]
 }
