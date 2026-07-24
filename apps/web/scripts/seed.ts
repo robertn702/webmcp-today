@@ -39,7 +39,6 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
       title: input.title,
       description: input.description,
       tags: input.tags,
-      minEngine: input.minEngine,
       contributorId: SEED_USER_ID,
     })
     .returning({ id: webmcpDefinitions.id });
@@ -52,6 +51,7 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
     version: 1,
     urlPatterns: input.urlPatterns,
     tools: input.tools,
+    minEngine: input.minEngine,
     changelog: input.changelog,
   });
   console.log(`seeded ${file} → ${definition.id} (0 installs)`);

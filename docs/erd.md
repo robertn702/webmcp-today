@@ -23,7 +23,6 @@ erDiagram
         text title
         text description
         jsonb tags "string[]"
-        text min_engine
         text contributor_id FK "-> user.id"
         timestamptz created_at
         timestamptz updated_at
@@ -35,6 +34,7 @@ erDiagram
         int version "uq: definition_id+version"
         jsonb url_patterns "string[] — Chrome @match style, e.g. *://*.wikipedia.org/wiki/*"
         jsonb tools "ToolDescriptor[] — matches zod schema"
+        int min_engine "capability floor this version's content requires"
         text changelog "optional, shown to installed users deciding whether to update"
         timestamptz created_at "immutable: no updated_at"
     }
@@ -127,8 +127,10 @@ erDiagram
   to `installs.version_id` until they explicitly call the update endpoint (npm-style, no
   auto-update); rollback is just setting `version_id` back to an older version.
 - **Append-only versions:** publishing a new version never mutates or deletes an old one.
-  `webmcp_definitions` (title/description/tags/domain/minEngine) is the one mutable row
-  per package and is edited independently of publishing a version.
+  `webmcp_definitions` (title/description/tags/domain) is the one mutable row per
+  package and is edited independently of publishing a version. `minEngine` lives on
+  `definition_versions`, not the definition, since it's a property of a version's
+  content.
 - **No `(domain, url_pattern)` uniqueness — by design.** Packages are opinions, not
   registrations: rival packages may target the same site. Install counts + pattern
   specificity rank them at lookup time (`rankConfigsByUrl` in `@robertn702/webmcp-cafe-schema`);

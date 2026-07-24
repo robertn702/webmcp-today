@@ -20,7 +20,7 @@ export function serializeConfig(
     description: definition.description,
     tools: version.tools,
     ...(definition.tags ? { tags: definition.tags } : {}),
-    ...(definition.minEngine ? { minEngine: definition.minEngine } : {}),
+    ...(version.minEngine ? { minEngine: version.minEngine } : {}),
     ...(version.changelog ? { changelog: version.changelog } : {}),
     contributor: opts.contributorName ?? definition.contributorId,
     version: version.version,

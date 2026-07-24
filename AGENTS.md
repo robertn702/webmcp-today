@@ -79,7 +79,9 @@ tools[], changelog? }`. `urlPatterns` is Chrome extension `@match`-style
   (fields/autosubmit/resultSelector) or multi-step
   (`navigate | click | fill | select | wait | extract | scroll | condition`).
 - **No `evaluate` step in v1** (arbitrary code execution in the user's logged-in page).
-- `minEngine` field so the format can evolve.
+- `minEngine` field (positive integer capability level, like an Android API level — not
+  semver) so the format can evolve; version-scoped (`definition_versions`), not
+  definition metadata, since a version's content determines what it requires.
 - Extension must skip + warn on tool-name collision with site-registered tools.
 
 ## Registry data model (package-install model, replaces per-tool verification)
@@ -284,7 +286,7 @@ client"` despite being presentational — their `Slot` import from the
   `InstallButton`. `packages/mcp` write tools follow the same split (`upload_config`,
   `update_config_meta`, `publish_config_version`, `install_config`/`uninstall_config`/
   `update_config_install`). Public API route paths under `/api/configs/*` were kept
-  as-is even though the underlying tables renamed — renaming the path is a follow-up.
+   as-is even though the underlying tables renamed — renaming the path is a follow-up.
 - 2026-07-24 — Enabled email/password auth alongside GitHub OAuth (branch
   `login-email-support`). Two-line change: `emailAndPassword: { enabled: true }`
   in `apps/web/lib/auth.ts` and `emailAndPassword={{ enabled: true,
@@ -312,8 +314,26 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
 - 2026-07-24 — Added a "Status: PRE-PRODUCTION" section up top: the app isn't
   deployed, production-grade caution (data-preserving migrations, API backwards
   compat) is wasted effort, and DB wipes/resets are always fine — iterate fast
-  until launch. The section instructs agents to update it when we do ship to
+   until launch. The section instructs agents to update it when we do ship to
   production.
+- 2026-07-24 — Reworked `minEngine`: (A) semver string → positive integer capability
+  level (`engineLevelSchema` in `packages/schema/src/config.ts`), compared with plain
+  `>=` against `ENGINE_VERSION` in `budgets.ts` — the format has no patch releases, so
+  semver's extra dimensions were meaningless; (B) moved from `webmcp_definitions`
+  (mutable metadata) to `definition_versions` (append-only) — engine requirements are
+  a property of a version's content (e.g. a version adding the `api` block needs a
+  higher level than a DOM-only version), so a user pinned to an older version must not
+  be told their engine is too old because of a newer version's requirements.
+  `updateDefinitionMetaSchema` now omits `minEngine`; `publishVersionSchema` picks it
+  alongside `urlPatterns`/`tools`/`api`/`changelog`. Removed `semverSchema` and
+  `SCHEMA_VERSION` (the latter was unused outside `packages/schema` and only ever
+  described the old semver shape). Migration `0004_min_engine_to_versions.sql`
+  (hand-written via `generate --custom` + hand-edited meta snapshot, same recipe as 0003) carries over any existing `webmcp_definitions.min_engine` semver text onto all
+  of that definition's versions by casting the leading major-version digits to an
+  integer (`'1.0.0'` → `1`); applied clean to the dev DB (no rows had a value set, so
+  it was a no-op in practice). No engine-enforcement logic was added — the extension
+   still doesn't check `minEngine` at all; that's a later step.
+
 
 ## Dev workflow gotchas
 

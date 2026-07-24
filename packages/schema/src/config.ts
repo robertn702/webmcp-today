@@ -6,10 +6,17 @@ import { parseUrlPattern } from "./url-matching.js";
 // Config format v1 — based on Joakim Selemyr's web-mcp-hub (MIT), extended
 // with minEngine (format evolution) and room for health/verification metadata.
 
-/** Version of the config format itself; configs may declare `minEngine`. */
-export const SCHEMA_VERSION = "1.0.0";
-
-export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/, "must be semver (x.y.z)");
+/**
+ * Capability floor, like an Android API level — an implementation-neutral
+ * integer compared with plain `>=` against `ENGINE_VERSION` (see budgets.ts).
+ * Not semver: the format has no patch releases, so semver's extra dimensions
+ * are meaningless here. Lives on `definition_versions` (see publishVersionSchema),
+ * not definition metadata, since engine requirements are a property of a
+ * version's content (e.g. a version using the `api` block needs a higher level
+ * than a DOM-only version) — a user pinned to an older version must not be
+ * told their engine is too old because of a newer version's requirements.
+ */
+export const engineLevelSchema = z.number().int().positive();
 
 export const domainSchema = z
   .string()
@@ -60,7 +67,7 @@ export const createConfigObjectSchema = z.object({
   /** Tier-1 API execution surface; tools bind to it via their `endpoint`. */
   api: apiBlockSchema.optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
-  minEngine: semverSchema.optional(),
+  minEngine: engineLevelSchema.optional(),
   /** What changed in this version; shown to installed users deciding whether to update. */
   changelog: z.string().max(2000).optional(),
 });
@@ -76,13 +83,15 @@ export const updateConfigSchema = createConfigObjectSchema.partial();
 
 /** Metadata-only edits (webmcp_definitions row) — excludes versioned fields. */
 export const updateDefinitionMetaSchema = createConfigObjectSchema
-  .omit({ urlPatterns: true, tools: true, api: true, changelog: true })
+  .omit({ urlPatterns: true, tools: true, api: true, changelog: true, minEngine: true })
   .partial();
 
 /** A new version of an existing definition (definition_versions row) — append-only.
- * `api` travels with tools (it is execution data), so it is version-scoped too. */
+ * `api` travels with tools (it is execution data), so it is version-scoped too.
+ * `minEngine` is also version-scoped: it describes what a specific version's
+ * content requires, not the package as a whole. */
 export const publishVersionSchema = createConfigObjectSchema
-  .pick({ urlPatterns: true, tools: true, api: true, changelog: true })
+  .pick({ urlPatterns: true, tools: true, api: true, changelog: true, minEngine: true })
   .superRefine((config, ctx) => {
     for (const issue of collectApiIssues(config)) {
       ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });

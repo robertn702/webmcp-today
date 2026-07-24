@@ -23,7 +23,6 @@ export async function insertDefinition(
       title: input.title,
       description: input.description,
       tags: input.tags,
-      minEngine: input.minEngine,
       contributorId,
     })
     .returning({ id: webmcpDefinitions.id });
@@ -36,6 +35,7 @@ export async function insertDefinition(
       version: 1,
       urlPatterns: input.urlPatterns,
       tools: input.tools,
+      minEngine: input.minEngine,
       changelog: input.changelog,
     })
     .returning({ id: definitionVersions.id });
@@ -74,6 +74,7 @@ export async function publishVersion(
       version: nextVersion,
       urlPatterns: input.urlPatterns,
       tools: input.tools,
+      minEngine: input.minEngine,
       changelog: input.changelog,
     })
     .returning({ id: definitionVersions.id });

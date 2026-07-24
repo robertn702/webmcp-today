@@ -57,11 +57,11 @@ describe("createConfigSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts optional minEngine semver and rejects garbage", () => {
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: "1.0.0" }).success).toBe(true);
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: "latest" }).success).toBe(
-      false,
-    );
+  it("accepts optional minEngine integer level and rejects non-integer/non-positive", () => {
+    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 1 }).success).toBe(true);
+    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 0 }).success).toBe(false);
+    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 1.5 }).success).toBe(false);
+    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: "1.0.0" }).success).toBe(false);
   });
 
   it("rejects tool names over the 30-char budget", () => {
