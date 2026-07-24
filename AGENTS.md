@@ -90,11 +90,12 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## References
 
-| Need                         | File                                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Web app + API notes          | `apps/web/AGENTS.md`                                                                                                            |
-| Extension notes              | `apps/extension/AGENTS.md`                                                                                                      |
-| Data model ERD               | `docs/erd.md`                                                                                                                   |
-| API execution model          | `docs/api-execution-model.md`                                                                                                   |
-| Decision history (archive)   | `docs/DECISIONS.md`                                                                                                             |
-| Reference impl (MIT, ported) | [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub) + [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) |
+| Need                           | File                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| System architecture + diagrams | `ARCHITECTURE.md`                                                                                                               |
+| Web app + API notes            | `apps/web/AGENTS.md`                                                                                                            |
+| Extension notes                | `apps/extension/AGENTS.md`                                                                                                      |
+| Data model ERD                 | `docs/erd.md`                                                                                                                   |
+| API execution model            | `docs/api-execution-model.md`                                                                                                   |
+| Decision history (archive)     | `docs/DECISIONS.md`                                                                                                             |
+| Reference impl (MIT, ported)   | [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub) + [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) |
