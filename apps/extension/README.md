@@ -1,9 +1,10 @@
 # WebMCP Cafe extension
 
 WXT extension that injects community WebMCP tool configs into sites that haven't
-implemented WebMCP themselves. It fetches verified configs for the current page from
-the webmcp.cafe registry API, falling back to the bundled configs in `configs/` when
-the registry has nothing for the domain or is unreachable.
+implemented WebMCP themselves. It fetches each definition's latest published
+version for the current page from the webmcp.cafe registry API, falling back to
+the bundled configs in `configs/` when the registry has nothing for the domain
+or is unreachable.
 
 The DOM executor is ported from Joakim Selemyr's MIT-licensed
 [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) — credit to
@@ -24,8 +25,9 @@ logged-in page.
   `@robertn702/webmcp-cafe-schema` (`webMcpConfigSchema`); anything that
   fails to parse, along with network errors and non-2xx responses, falls
   back to the bundled `configs/` dir.
-- `yolo=true` (unverified configs) is intentionally never sent — the
-  extension only asks for verified configs.
+- The lookup endpoint serves each definition's latest published version; the
+  extension fetches unauthenticated, so it never sends `installed=true` (the
+  authenticated variant that serves a user's pinned versions).
 - Base URL: `WXT_REGISTRY_API_URL` build-time env var (see `.env.example`),
   defaulting to `http://localhost:3000` in code when unset. WXT inlines any
   `WXT_`-prefixed var into `import.meta.env` at build time (Vite's env
@@ -56,8 +58,9 @@ ends up injected as a tool in a live page.
 1. **Start the registry** — in `apps/web`, ensure `.env` points at the real
    seeded Neon DB (see `apps/web/.env.example`), then `bun run dev` (defaults
    to `http://localhost:3000`).
-2. **Get an API key** — sign in with GitHub at `http://localhost:3000/settings`
-   and create an agent API key from the Settings page (shown once).
+2. **Get an API key** — sign in at `http://localhost:3000/auth/sign-in`
+   (GitHub or email/password) and create an agent API key at
+   `http://localhost:3000/settings/security` (shown once).
 3. **Publish a config** — POST one of the bundled fixtures (already valid
    against `createConfigSchema`), e.g.:
    ```bash
@@ -67,37 +70,20 @@ ends up injected as a tool in a live page.
      --data @apps/extension/configs/en.wikipedia.org.json
    ```
    Note the returned `id`.
-4. **Verify it** — the lookup endpoint serves verified tools only by
-   default, and a contributor can't verify their own config, so sign in
-   with a _second_ GitHub account (or ask a teammate) and, per tool name in
-   the config:
-
-   ```bash
-   curl -X POST http://localhost:3000/api/configs/<id>/verify \
-     -H "Cookie: <second account's session cookie>" \
-     -H "Content-Type: application/json" \
-     -d '{"toolName": "wiki_summary"}'
-   ```
-
-   (Repeat per tool. For a quick solo smoke test instead of verifying, you
-   can hit `GET /api/configs/lookup?url=...&yolo=true` directly in a browser
-   to confirm the unverified config is retrievable — the extension itself
-   never sets `yolo`.)
-
-   **Solo shortcut — no second account needed:** the seeded configs'
-   contributor is the synthetic seed user, so _your_ signed-in account is a
-   valid verifier for them. Skip steps 3–4, open the seeded config's detail
-   page (`http://localhost:3000/configs/<id>`, find it from the homepage
-   list), and click **Verify** per tool. The non-`yolo` lookup then serves
-   it, which is all the extension needs.
-
+4. **Confirm it's served** — publishing makes the config immediately servable
+   (the lookup endpoint serves each definition's latest version; there is no
+   verification gate). Check in a browser:
+   `GET http://localhost:3000/api/configs/lookup?url=<a matching page url>`.
+   The seeded configs are also immediately servable, so you can skip steps
+   3–4 entirely and just look up a seeded domain (e.g. an
+   `en.wikipedia.org` article).
 5. **Load the extension** — Chrome Canary/Dev (149+) with
    `chrome://flags/#enable-webmcp-testing`, install the Model Context Tool
    Inspector extension from the Chrome Web Store, then `bun run dev` here
    (or `bun run build` + load `.output/chrome-mv3` unpacked).
-6. **Visit the site** — open the page matching the config's `urlPattern`
+6. **Visit the site** — open a page matching one of the config's `urlPatterns`
    (e.g. an `en.wikipedia.org` article) and check the Inspector lists the
-   tool(s) from step 3/4. Check the background service worker's console
+   tool(s) from step 3. Check the background service worker's console
    (`chrome://extensions` → the extension's "service worker" link) for
    `[webmcp-cafe]` logs confirming a registry hit vs. bundled fallback.
 7. Invoke a read-only tool and confirm the output.

@@ -287,6 +287,14 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   updater runs) — capture `validationMessage` in a local first, matching the
   `const el = e.currentTarget` pattern already used in the sign-in/sign-up
   forms.
+- 2026-07-24 — Stale-docs sweep after the package-install redesign + leaderboard
+  removal: rewrote the README REST API section (lookup `installed=true`,
+  versions/install/update endpoints; no more `yolo`/verify/vote), rewrote the
+  extension README's full-loop test (publishing is immediately servable — no
+  verify step; API keys at `/settings/security`; sign-in at `/auth/sign-in`),
+  fixed the pending initial-release changeset's MCP tool list, and bannered
+  `SPEC.md` as historical/non-normative rather than rewriting it (code +
+  AGENTS.md win on disagreement).
 
 ## Dev workflow gotchas
 
