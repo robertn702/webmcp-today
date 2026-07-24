@@ -1,5 +1,6 @@
 import {
   createConfigSchema,
+  domainLookupKeys,
   rankConfigsByUrl,
   type CreateConfigInput,
 } from "@robertn702/webmcp-cafe-schema";
@@ -30,17 +31,23 @@ const bundledConfigs: CreateConfigInput[] = [
 
 function hostnameOf(url: string): string | undefined {
   try {
-    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return new URL(url).hostname;
   } catch {
     return undefined;
   }
 }
 
-/** Bundled configs whose domain + urlPatterns match the URL, most specific first. */
+/**
+ * Bundled configs whose domain + urlPatterns match the URL, most specific
+ * first. Prefilters on the hostname's candidate `domain` keys (registrable
+ * domain included) so a `*.host` urlPattern still matches on subdomains;
+ * urlPatterns remain the matching authority.
+ */
 function findBundledConfigsForUrl(url: string): CreateConfigInput[] {
   const hostname = hostnameOf(url);
   if (!hostname) return [];
-  const domainConfigs = bundledConfigs.filter((c) => c.domain === hostname);
+  const keys = domainLookupKeys(hostname);
+  const domainConfigs = bundledConfigs.filter((c) => keys.includes(c.domain));
   return rankConfigsByUrl(domainConfigs, url);
 }
 

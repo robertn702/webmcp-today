@@ -36,14 +36,6 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 
 ## Extension / executor
 
-- **Subdomain lookup miss (hits the flagship)** — lookup
-  (apps/web/lib/lookup.ts:22) + bundled fallback
-  (apps/extension/src/lib/configs.ts:43) prefilter on exact
-  `domain === hostname` (www-stripped only), so a config keyed to a
-  registrable domain never serves its own `*.host` urlPattern: Reddit's
-  `*.reddit.com` config returns zero configs on old.reddit.com /
-  sh.reddit.com. Key/query by registrable domain, or match on urlPatterns.
-  (docs/erd.md → urlPatterns are the matching authority)
 - **Re-register on SPA navigation** — content script registers once at
   document_idle (content.ts main); SPA route changes never re-match configs
   or drop stale tools. Add a history/URL-change listener + idempotent re-run.
