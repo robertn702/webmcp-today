@@ -257,3 +257,29 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   as a string) — `bun run build` in packages/schema first when schema changes
   don't seem to apply. Reddit config seeded into the dev DB via a one-off
   insert (full seed would duplicate the existing five definitions).
+- 2026-07-24 — Restructured root `AGENTS.md` per the `agents-md` skill
+  (getsentry/skills, installed project-locally to enforce the standard): moved
+  the dated decisions log into this file, distilled still-true facts into
+  topical sections, 377 → 100 lines (the skill's hard max). Going forward:
+  append significant decisions here, not to `AGENTS.md`, unless they change
+  what an agent must do right now.
+- 2026-07-24 — Full tier-1 e2e verified live on reddit.com: all six Reddit
+  tools invoked through the real loop (registry lookup → background fetch →
+  content-script `registerTool` → chrome-devtools-mcp `execute_webmcp_tool`).
+  Reads returned field-picked data under budget; `reddit_vote` exercised the
+  modhash CSRF flow (upvoted + cleared, no trace); `reddit_comment` posted to
+  r/test (`t1_ozj5npb`, left in place) and proved the `destructiveHint` gate
+  genuinely blocks the write on `window.confirm` until the user approves.
+  Driven via `packages/mcp/.scratch/*.mjs` (MCP-over-stdio wrapper for
+  chrome-devtools-mcp — an opencode session doesn't always have that server
+  loaded). Learnings: (1) the config-source log line is emitted by the content
+  script, so it appears in the **page console**, not the service worker
+  (nested AGENTS.md corrected); (2) invoking a gated tool via
+  chrome-devtools-mcp surfaces an "open dialog" notice — a human must handle
+  the confirm in the browser before the write fires; (3) `reddit.com.json` is
+  deliberately absent from the bundled fallback, so on reddit.com _silence_
+  (no log line, no tools) is the registry-failure signal; (4) the comment
+  endpoint has no `returns` projection, so write output is Reddit's raw
+  rendered HTML truncated at budget — candidate for a minimal `returns`
+  (errors/permalink) later; (5) listing reads clip the last item around
+  5 × ~300 chars — agents should pass limit 3–4.

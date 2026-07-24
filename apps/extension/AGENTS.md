@@ -23,15 +23,32 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   server isn't on — extension loads but nothing works). Find strays with
   `lsof -nP -i :3000 -i :5173 -i :9222`; killing the bun wrapper does NOT kill
   the node child.
-- **Silent-fallback trap.** The background fetch requests each definition's latest
-  version from the registry; any failure (network, non-2xx, zero matches, or schema
-  mismatch) silently falls back to the bundled `configs/` dir. A "working" test may
-  never touch the registry. Any full-loop claim must cite the service-worker log line
-  `[webmcp-cafe] Using N config(s) from the registry` (vs the fallback variant).
+- **Silent-fallback trap.** The registry lookup is fetched in the background
+  worker (CSP sidestep) but the content script logs the outcome, so watch the
+  **page console**: any failure (network, non-2xx, zero matches, or schema
+  mismatch) silently falls back to the bundled `configs/` dir, and a "working"
+  test may never touch the registry. Any full-loop claim must cite the page-console
+  line `[webmcp-cafe] Using N config(s) from the registry` (vs the fallback variant).
 - **Selector-rot debugging recipe.** Evaluate the config's `resultSelector`
   against the live page via the chrome-devtools bridge (`evaluate_script`)
   before touching code. Wikipedia's Parsoid DOM (`.mw-parser-output > section`
   wrappers) broke `wiki_summary` on day one.
+
+## E2E testing (chrome-devtools-mcp)
+
+- Drive the dev browser's page tools with chrome-devtools-mcp
+  (`--browser-url=http://127.0.0.1:9222 --category-experimental-webmcp`):
+  `list_webmcp_tools` / `execute_webmcp_tool`. If the agent session lacks that
+  server, spawn it over stdio — `packages/mcp/.scratch/call-tool.mjs`
+  (`bun ... <toolName> '<inputJson>'`) is a working driver.
+- All extension logging (config source, registered/skipped tools, executor
+  failures) lands in the **page console** — not the service worker, not the
+  WXT terminal.
+- `reddit.com.json` is deliberately absent from the bundled fallback — on
+  reddit.com, no log line + no tools registered = the registry lookup failed.
+- `destructiveHint` tools gate on a blocking `window.confirm`. Invoked via
+  chrome-devtools-mcp, the call surfaces an "open dialog" notice and the write
+  waits until a human approves in the browser (or sends `handle_dialog`).
 
 ## Structure
 
