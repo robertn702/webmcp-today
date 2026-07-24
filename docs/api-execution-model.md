@@ -136,9 +136,11 @@ Field semantics:
 - **`path` / `query` / `body` / `form`** — `{placeholder}` templates bound from the
   validated tool input (same cross-validation the schema already does for `{{param}}`
   in DOM steps; placeholders may only name `inputSchema` properties).
-- **`returns`** — a projection applied to the JSON response to trim output toward the
-  1.5K tool-output budget (`TOOL_OUTPUT_MAX` in `packages/schema/src/budgets.ts`).
-  Missing from a tool's output? Truncation is the fallback, projection is the fix.
+- **`returns`** — a projection applied to the JSON response to trim output for density
+  and relevance. There is no hard output cap in v1 (the 1.5K `TOOL_OUTPUT_MAX` was
+  removed — model-dependent; the budget question is deferred, see docs/DECISIONS.md
+  2026-07-24), so projection is about signal-to-noise, not fitting a fixed budget.
+  Missing from a tool's output? Add or widen the projection.
 - **`errorPath`** — where errors live in a 200 response body (e.g. `"errors"` for
   GraphQL's 200-with-errors convention, `"json.errors"` for Reddit's REST API). A
   non-empty value at that path = tool failure, surfaced as an error to the agent.
@@ -176,11 +178,11 @@ shaped, a response reduced. Tier 2 adds **small stringified-JS hooks** in three
 declared slots. The slot name _is_ the capability — a script's scope determines what
 it can do, and all slots are **pure compute: no network, ever**.
 
-| Slot       | Signature                         | Runs when                                            | Capability rules                                                                          |
-| ---------- | --------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `headers`  | `(ctx) => Record<string, string>` | Before the executor sends the request                | Return value is merged into request headers. No `fetch`/`XHR`/`import`.                   |
-| `body`     | `(input, ctx) => unknown`         | When the request body is built                       | Return value becomes the JSON body. Input is the validated tool input. No network tokens. |
-| `response` | `(json, ctx) => unknown`          | After a successful response, before output budgeting | Return value becomes the tool output (then projected/truncated). No network tokens.       |
+| Slot       | Signature                         | Runs when                                                    | Capability rules                                                                          |
+| ---------- | --------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `headers`  | `(ctx) => Record<string, string>` | Before the executor sends the request                        | Return value is merged into request headers. No `fetch`/`XHR`/`import`.                   |
+| `body`     | `(input, ctx) => unknown`         | When the request body is built                               | Return value becomes the JSON body. Input is the validated tool input. No network tokens. |
+| `response` | `(json, ctx) => unknown`          | After a successful response, before the `returns` projection | Return value becomes the tool output (then projected). No network tokens.                 |
 
 `ctx` carries executor-provided context (extracted tokens from `auth` sources, endpoint
 metadata) — details to be pinned down when the executor is built.

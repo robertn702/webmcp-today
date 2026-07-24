@@ -1,11 +1,10 @@
-import { TOOL_OUTPUT_MAX } from "@robertn702/webmcp-cafe-schema";
 import type { McpResult } from "./model-context.js";
 
-// Shared output wrapper for both the DOM and API executors. Enforces Chrome's
-// ~1.5K tool-output budget (TOOL_OUTPUT_MAX) with a clear truncation marker so
-// oversized responses are trimmed identically everywhere.
+// Shared output wrapper for both the DOM and API executors. Returns the text
+// as-is. The ~1.5K tool-output cap (TOOL_OUTPUT_MAX) was removed for v1: verbose
+// output is acceptable, and the right budget is model-dependent (Chrome's 1.5K is
+// guidance, not an enforced limit). Revisit when we design output-budget
+// customization — see docs/DECISIONS.md 2026-07-24.
 export function mcpResult(text: string): McpResult {
-  const truncated =
-    text.length > TOOL_OUTPUT_MAX ? `${text.slice(0, TOOL_OUTPUT_MAX)}… (truncated)` : text;
-  return { content: [{ type: "text", text: truncated }] };
+  return { content: [{ type: "text", text }] };
 }

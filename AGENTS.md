@@ -56,7 +56,9 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - `await mc.registerTool({ name, description, inputSchema, execute, annotations }, { signal })`
   — rejects on duplicate names.
 - Chrome origin trial 149→156; local dev needs `chrome://flags/#enable-webmcp-testing`.
-- Char budgets: 500/tool description, 150/param description, 30/name, 1.5K/tool output.
+- Char budgets (Chrome guidance): we enforce 500/tool description, 150/param
+  description, 30/name at publish time; tool output is uncapped in v1 (Chrome's 1.5K is
+  guidance, not enforcement — see docs/DECISIONS.md 2026-07-24).
 - Open question: content-script registration may break when WebMCP ships stable
   (origin-isolation gating) — track https://github.com/webmachinelearning/webmcp.
 
