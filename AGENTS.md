@@ -2,6 +2,20 @@
 
 Working notes for agents building this repo. Full handoff brief: `SPEC.md` (read it first).
 
+## Status: PRE-PRODUCTION
+
+**This app is not in production yet.** Nothing is deployed, no real users, no data that
+matters. Act accordingly:
+
+- Don't spend time on production concerns (zero-downtime migrations, backfill plans,
+  deprecation windows, backwards compat with old API shapes, etc.).
+- **Wiping/resetting the database is always acceptable** — prefer a clean migration over
+  a careful data-preserving one. Seeds exist to repopulate.
+- Iterate rapidly and break things freely until we feel good enough to launch.
+
+**When we do release to production, update this section** (remove/replace it) so agents
+stop treating the DB and API surface as disposable.
+
 ## What this is
 
 **WebMCP Cafe** (`webmcp.cafe`) — a community registry of third-party **WebMCP tool
@@ -295,6 +309,11 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   fixed the pending initial-release changeset's MCP tool list, and bannered
   `SPEC.md` as historical/non-normative rather than rewriting it (code +
   AGENTS.md win on disagreement).
+- 2026-07-24 — Added a "Status: PRE-PRODUCTION" section up top: the app isn't
+  deployed, production-grade caution (data-preserving migrations, API backwards
+  compat) is wasted effort, and DB wipes/resets are always fine — iterate fast
+  until launch. The section instructs agents to update it when we do ship to
+  production.
 
 ## Dev workflow gotchas
 
