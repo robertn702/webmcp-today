@@ -1,33 +1,26 @@
 import {
-  createConfigSchema,
   domainLookupKeys,
   rankConfigsByUrl,
   type CreateConfigInput,
 } from "@robertn702/webmcp-cafe-schema";
-import rawGithub from "../../configs/github.com.json";
-import rawHackerNews from "../../configs/news.ycombinator.com.json";
-import rawMdn from "../../configs/developer.mozilla.org.json";
-import rawNpm from "../../configs/npmjs.com.json";
-import rawWikipedia from "../../configs/en.wikipedia.org.json";
+import { definitions } from "@webmcp-cafe/definitions";
 import { fetchRegistryConfigs } from "./registry-client.js";
 
-// Configs bundled from the local configs/ dir — used when the registry is
-// unreachable or has nothing for the current domain.
+// Curated configs bundled into the extension — used when the registry is
+// unreachable or has nothing for the current domain. reddit.com is
+// deliberately excluded: on reddit, no log line + no registered tools is the
+// signal that the registry lookup failed (see AGENTS.md).
+const BUNDLED_DOMAINS = new Set([
+  "news.ycombinator.com",
+  "github.com",
+  "en.wikipedia.org",
+  "developer.mozilla.org",
+  "npmjs.com",
+]);
 
-const bundledConfigs: CreateConfigInput[] = [
-  rawHackerNews,
-  rawGithub,
-  rawWikipedia,
-  rawMdn,
-  rawNpm,
-].flatMap((raw) => {
-  const parsed = createConfigSchema.safeParse(raw);
-  if (!parsed.success) {
-    console.warn("[webmcp-cafe] Invalid bundled config, skipping:", parsed.error.message);
-    return [];
-  }
-  return [parsed.data];
-});
+const bundledConfigs: CreateConfigInput[] = definitions.filter((c) =>
+  BUNDLED_DOMAINS.has(c.domain),
+);
 
 function hostnameOf(url: string): string | undefined {
   try {
@@ -53,8 +46,8 @@ function findBundledConfigsForUrl(url: string): CreateConfigInput[] {
 
 /**
  * Configs for the current page: prefer the registry (verified configs for
- * this URL, already ranked server-side), falling back to the bundled
- * configs/ dir when the fetch fails or the registry has nothing for this
+ * this URL, already ranked server-side), falling back to the bundled curated
+ * configs when the fetch fails or the registry has nothing for this
  * domain.
  */
 export async function getConfigsForUrl(url: string): Promise<CreateConfigInput[]> {

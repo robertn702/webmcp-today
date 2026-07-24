@@ -25,6 +25,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@robertn702/webmcp-cafe-schema": "workspace:*",
+        "@webmcp-cafe/definitions": "workspace:*",
         "zod": "^4.0.0",
       },
       "devDependencies": {
@@ -46,6 +47,7 @@
         "@tanstack/react-pacer": "^0.22.1",
         "@tanstack/react-query": "^5.101.4",
         "@webmcp-cafe/db": "workspace:*",
+        "@webmcp-cafe/definitions": "workspace:*",
         "better-auth": "^1.3.4",
         "bowser": "^2.14.1",
         "class-variance-authority": "^0.7.1",
@@ -85,6 +87,17 @@
         "@types/node": "^22",
         "drizzle-kit": "^0.31.4",
         "typescript": "^5.9.2",
+      },
+    },
+    "packages/definitions": {
+      "name": "@webmcp-cafe/definitions",
+      "version": "0.0.1",
+      "dependencies": {
+        "@robertn702/webmcp-cafe-schema": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.2",
+        "vitest": "^3.2.4",
       },
     },
     "packages/mcp": {
@@ -853,6 +866,8 @@
     "@webext-core/match-patterns": ["@webext-core/match-patterns@1.1.0", "", {}, "sha512-vebVVbcOyva4jyvljIzRJwjFi/OKMLr96LIIxiPeXfA38gE4Z3+H6Y9DwRmn7pWErJGNNHU6XOhOb5ZwicGs7Q=="],
 
     "@webmcp-cafe/db": ["@webmcp-cafe/db@workspace:packages/db"],
+
+    "@webmcp-cafe/definitions": ["@webmcp-cafe/definitions@workspace:packages/definitions"],
 
     "@webmcp-cafe/extension": ["@webmcp-cafe/extension@workspace:apps/extension"],
 

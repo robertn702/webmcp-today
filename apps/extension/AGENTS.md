@@ -26,7 +26,7 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
 - **Silent-fallback trap.** The registry lookup is fetched in the background
   worker (CSP sidestep) but the content script logs the outcome, so watch the
   **page console**: any failure (network, non-2xx, zero matches, or schema
-  mismatch) silently falls back to the bundled `configs/` dir, and a "working"
+  mismatch) silently falls back to the bundled curated configs, and a "working"
   test may never touch the registry. Any full-loop claim must cite the page-console
   line `[webmcp-cafe] Using N config(s) from the registry` (vs the fallback variant).
 - **Selector-rot debugging recipe.** Evaluate the config's `resultSelector`
@@ -44,8 +44,9 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
 - All extension logging (config source, registered/skipped tools, executor
   failures) lands in the **page console** — not the service worker, not the
   WXT terminal.
-- `reddit.com.json` is deliberately absent from the bundled fallback — on
-  reddit.com, no log line + no tools registered = the registry lookup failed.
+- `reddit.com` is deliberately excluded from the bundled fallback
+  (`BUNDLED_DOMAINS` in `src/lib/configs.ts`) — on reddit.com, no log line + no
+  tools registered = the registry lookup failed.
 - `destructiveHint` tools gate on a blocking `window.confirm`. Invoked via
   chrome-devtools-mcp, the call surfaces an "open dialog" notice and the write
   waits until a human approves in the browser (or sends `handle_dialog`).
@@ -58,5 +59,6 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   `webMcpConfigSchema` at the boundary.
 - `src/lib/executor.ts` + `steps.ts` — DOM executor ported from Joakim Selemyr's
   MIT webmcp-extension; no `evaluate` step by design.
-- `configs/*.json` — bundled fallback configs; also the seed source for the
-  registry (`apps/web/scripts/seed.ts`).
+- Bundled fallback configs come from `@webmcp-cafe/definitions`
+  (`packages/definitions`), which is also the seed source for the registry
+  (`apps/web/scripts/seed.ts`).

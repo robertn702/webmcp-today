@@ -3,8 +3,8 @@
 WXT extension that injects community WebMCP tool configs into sites that haven't
 implemented WebMCP themselves. It fetches each definition's latest published
 version for the current page from the webmcp.cafe registry API, falling back to
-the bundled configs in `configs/` when the registry has nothing for the domain
-or is unreachable.
+the bundled curated configs (`@webmcp-cafe/definitions`) when the registry has
+nothing for the domain or is unreachable.
 
 The DOM executor is ported from Joakim Selemyr's MIT-licensed
 [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) — credit to
@@ -24,7 +24,7 @@ logged-in page.
 - The response is validated at that boundary with the zod schemas from
   `@robertn702/webmcp-cafe-schema` (`webMcpConfigSchema`); anything that
   fails to parse, along with network errors and non-2xx responses, falls
-  back to the bundled `configs/` dir.
+  back to the bundled curated configs.
 - The lookup endpoint serves each definition's latest published version; the
   extension fetches unauthenticated, so it never sends `installed=true` (the
   authenticated variant that serves a user's pinned versions).
@@ -67,7 +67,7 @@ ends up injected as a tool in a live page.
    curl -X POST http://localhost:3000/api/configs \
      -H "Authorization: Bearer <your-api-key>" \
      -H "Content-Type: application/json" \
-     --data @apps/extension/configs/en.wikipedia.org.json
+     --data @packages/definitions/configs/en.wikipedia.org.json
    ```
    Note the returned `id`.
 4. **Confirm it's served** — publishing makes the config immediately servable
@@ -97,7 +97,7 @@ ends up injected as a tool in a live page.
 4. Visit a configured site (news.ycombinator.com, a GitHub repo, a Wikipedia
    article, MDN, an npm package page) and check the Inspector lists the
    `hn_*` / `gh_*` / `wiki_*` / `mdn_*` / `npm_*` tools (served from the
-   `configs/` fallback).
+   bundled fallback).
 5. Invoke a read-only tool (e.g. `hn_list_stories`) and confirm the output.
 
 ## Known limitations (spike)
