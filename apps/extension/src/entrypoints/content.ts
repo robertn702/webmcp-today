@@ -29,7 +29,14 @@ async function registerTools(): Promise<void> {
   for (const config of configs) {
     for (const tool of config.tools) {
       const execution = tool.execution;
-      if (!execution) continue;
+      if (!execution || execution.mode !== "dom") {
+        if (execution) {
+          console.warn(
+            `[webmcp-cafe] Skipping tool "${tool.name}" — "${execution.mode}" execution is not supported yet (the tier-1/API executor is not built).`,
+          );
+        }
+        continue;
+      }
       if (seen.has(tool.name)) continue;
       if (declarativeNames.has(tool.name)) {
         console.warn(

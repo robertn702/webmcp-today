@@ -28,14 +28,26 @@ export interface MatchResult {
 
 const NO_MATCH: MatchResult = { matched: false, score: 0 };
 
-function matchHost(patternHost: string, urlHost: string): { matched: boolean; score: number } {
-  if (patternHost === "*") return { matched: true, score: 0 };
+/**
+ * Does a match-pattern host cover a concrete hostname? `"*"` covers everything;
+ * `"*.example.com"` covers `example.com` and any subdomain; otherwise exact.
+ * Host coverage only — no scheme/path — used for baseUrl same-origin checks.
+ */
+export function hostCoversHostname(patternHost: string, hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  if (patternHost === "*") return true;
   if (patternHost.startsWith("*.")) {
     const base = patternHost.slice(2);
-    const matched = urlHost === base || urlHost.endsWith(`.${base}`);
-    return { matched, score: matched ? 1 : 0 };
+    return host === base || host.endsWith(`.${base}`);
   }
-  return { matched: patternHost === urlHost, score: 2 };
+  return patternHost === host;
+}
+
+function matchHost(patternHost: string, urlHost: string): { matched: boolean; score: number } {
+  if (patternHost === "*") return { matched: true, score: 0 };
+  const matched = hostCoversHostname(patternHost, urlHost);
+  if (patternHost.startsWith("*.")) return { matched, score: matched ? 1 : 0 };
+  return { matched, score: 2 };
 }
 
 function escapeRegExp(value: string): string {

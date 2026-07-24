@@ -10,6 +10,7 @@
       "inputSchema": { "type": "object", "properties": {} },
       "annotations": { "readOnlyHint": true },
       "execution": {
+        "mode": "dom",
         "selector": "body",
         "autosubmit": false,
         "resultSelector": "#mw-content-text .mw-parser-output > section:first-of-type > p:not(.mw-empty-elt)",
@@ -22,6 +23,7 @@
       "inputSchema": { "type": "object", "properties": {} },
       "annotations": { "readOnlyHint": true },
       "execution": {
+        "mode": "dom",
         "selector": "body",
         "autosubmit": false,
         "resultSelector": "#mw-content-text .mw-heading h2, #mw-content-text .mw-heading h3",
@@ -40,6 +42,7 @@
       },
       "annotations": { "readOnlyHint": true },
       "execution": {
+        "mode": "dom",
         "selector": "body",
         "autosubmit": false,
         "steps": [

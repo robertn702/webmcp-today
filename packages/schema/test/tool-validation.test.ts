@@ -14,6 +14,7 @@ describe("toolDescriptorSchema", () => {
       description: "Search",
       inputSchema,
       execution: {
+        mode: "dom",
         selector: "form",
         autosubmit: true,
         fields: [{ type: "text", selector: "#q", name: "nope", description: "Bad field" }],
@@ -28,6 +29,7 @@ describe("toolDescriptorSchema", () => {
       description: "Search",
       inputSchema,
       execution: {
+        mode: "dom",
         selector: "form",
         autosubmit: false,
         steps: [{ action: "fill", selector: "#q", value: "{{missing}}" }],
@@ -42,6 +44,7 @@ describe("toolDescriptorSchema", () => {
       description: "Search",
       inputSchema,
       execution: {
+        mode: "dom",
         selector: "body",
         autosubmit: false,
         steps: [
