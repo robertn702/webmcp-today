@@ -36,13 +36,18 @@ cd apps/extension && bun run dev
 
 ## REST API
 
-- `GET /api/configs/lookup?url=…[&yolo=true]` — configs for a page URL,
-  most-specific first; verified tools only (served from frozen verification
-  snapshots) unless `yolo=true`
+- `GET /api/configs/lookup?url=…[&installed=true]` — configs for a page URL,
+  most-specific first, at each definition's latest version; `installed=true`
+  (auth required) instead serves the caller's installed configs pinned to
+  their installed versions
 - `GET/POST /api/configs`, `GET/PATCH /api/configs/:id` — browse, submit
-  (session or `Authorization: Bearer <api key>`), edit (owner; tool edits
-  reset verification)
-- `POST /api/configs/:id/vote` (±1), `POST /api/configs/:id/verify`, `GET /api/stats`
+  (session or `Authorization: Bearer <api key>`), edit metadata (owner)
+- `POST /api/configs/:id/versions` — publish a new version (owner; versions
+  are append-only)
+- `POST/DELETE /api/configs/:id/install`, `POST /api/configs/:id/update` —
+  install/uninstall (pinned to a version) and move the pin (update or
+  rollback); install count is the trust signal
+- `GET /api/stats`
 
 ## Development
 
@@ -61,7 +66,7 @@ cp apps/web/.env.example apps/web/.env   # then fill real values
 bun run --filter @webmcp-cafe/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon
 # schema changes: bun run --filter @webmcp-cafe/db db:generate && db:migrate (db:push for quick prototyping)
 
-bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter configs (unverified)
+bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter configs (0 installs)
 ```
 
 **Running locally:**
@@ -72,7 +77,7 @@ bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:see
 
 **Quality gates:** `bun run typecheck && bun run lint && bun run test` before every commit — same as CI (`.github/workflows/ci.yml` via `oven-sh/setup-bun@v2` `1.3.14` + `--frozen-lockfile`). Pre-commit runs `husky` + `lint-staged` (eslint + prettier on staged source, prettier on json/md/css/yaml) and enforces `CLAUDE.md -> AGENTS.md` symlink drift.
 
-**Deeper context:** root `AGENTS.md` (stack, conventions, decisions log, cross-cutting gotchas) and nested `apps/web/AGENTS.md` (verification snapshots are served truth, seeds unverified, env/t3-env notes) + `apps/extension/AGENTS.md` (dev browser, silent-fallback trap, selector-rot recipe).
+**Deeper context:** root `AGENTS.md` (stack, conventions, decisions log, cross-cutting gotchas) and nested `apps/web/AGENTS.md` (package-install registry model, served truth, env/t3-env notes) + `apps/extension/AGENTS.md` (dev browser, silent-fallback trap, selector-rot recipe).
 
 ## License
 
