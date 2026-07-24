@@ -46,9 +46,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Link href="/submit" className={navLinkClass}>
                   Submit
                 </Link>
-                <Link href="/leaderboard" className={navLinkClass}>
-                  Leaderboard
-                </Link>
                 <ThemeToggle />
                 <UserButton size="icon" align="end" />
               </div>
