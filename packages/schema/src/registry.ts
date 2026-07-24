@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createConfigSchema } from "./config.js";
+import { createConfigObjectSchema } from "./config.js";
 
 // Shapes served by the registry API (superset of the submission format).
 
@@ -8,7 +8,7 @@ import { createConfigSchema } from "./config.js";
  * definition id (stable identity); `versionId` + `version` identify which
  * version this document is. Install counts are derived, not denormalized.
  */
-export const webMcpConfigSchema = createConfigSchema.extend({
+export const webMcpConfigSchema = createConfigObjectSchema.extend({
   id: z.string(),
   versionId: z.string(),
   version: z.number().int().min(1),

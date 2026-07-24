@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { apiBlockSchema, collectApiIssues } from "./api.js";
 import { toolDescriptorSchema } from "./tool.js";
 import { parseUrlPattern } from "./url-matching.js";
 
@@ -43,33 +44,50 @@ const toolsArraySchema = z
     }
   });
 
-/** What contributors submit (contributor identity comes from auth, not the body). */
-export const createConfigSchema = z.object({
+/**
+ * Base object shape. Kept as a plain ZodObject (no refinement) so the derived
+ * schemas below can still `.pick`/`.omit`/`.partial`/`.extend` it — the same
+ * split tool.ts uses (object schema vs refined schema). `createConfigSchema`
+ * wraps it with the api cross-validation.
+ */
+export const createConfigObjectSchema = z.object({
   domain: domainSchema,
   urlPatterns: z.array(urlPatternSchema).min(1).max(20),
   pageType: z.string().max(100).optional(),
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   tools: toolsArraySchema,
+  /** Tier-1 API execution surface; tools bind to it via their `endpoint`. */
+  api: apiBlockSchema.optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
   minEngine: semverSchema.optional(),
   /** What changed in this version; shown to installed users deciding whether to update. */
   changelog: z.string().max(2000).optional(),
 });
 
-export const updateConfigSchema = createConfigSchema.partial();
+/** What contributors submit (contributor identity comes from auth, not the body). */
+export const createConfigSchema = createConfigObjectSchema.superRefine((config, ctx) => {
+  for (const issue of collectApiIssues(config)) {
+    ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
+  }
+});
+
+export const updateConfigSchema = createConfigObjectSchema.partial();
 
 /** Metadata-only edits (webmcp_definitions row) — excludes versioned fields. */
-export const updateDefinitionMetaSchema = createConfigSchema
-  .omit({ urlPatterns: true, tools: true, changelog: true })
+export const updateDefinitionMetaSchema = createConfigObjectSchema
+  .omit({ urlPatterns: true, tools: true, api: true, changelog: true })
   .partial();
 
-/** A new version of an existing definition (definition_versions row) — append-only. */
-export const publishVersionSchema = createConfigSchema.pick({
-  urlPatterns: true,
-  tools: true,
-  changelog: true,
-});
+/** A new version of an existing definition (definition_versions row) — append-only.
+ * `api` travels with tools (it is execution data), so it is version-scoped too. */
+export const publishVersionSchema = createConfigObjectSchema
+  .pick({ urlPatterns: true, tools: true, api: true, changelog: true })
+  .superRefine((config, ctx) => {
+    for (const issue of collectApiIssues(config)) {
+      ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
+    }
+  });
 
 export type CreateConfigInput = z.infer<typeof createConfigSchema>;
 export type UpdateConfigInput = z.infer<typeof updateConfigSchema>;

@@ -1,4 +1,4 @@
-import { TOOL_OUTPUT_MAX, type ExecutionDescriptor } from "@robertn702/webmcp-cafe-schema";
+import { TOOL_OUTPUT_MAX, type DomExecution } from "@robertn702/webmcp-cafe-schema";
 import { executeStep } from "./executor-steps.js";
 import { fillToolField } from "./fill.js";
 import type { McpResult } from "./model-context.js";
@@ -13,7 +13,7 @@ export function mcpResult(text: string): McpResult {
 
 export async function executeTool(
   toolName: string,
-  exec: ExecutionDescriptor,
+  exec: DomExecution,
   params: Record<string, unknown>,
   annotations?: Record<string, unknown>,
 ): Promise<McpResult> {
@@ -28,7 +28,7 @@ export async function executeTool(
 
 async function executeToolInner(
   toolName: string,
-  exec: ExecutionDescriptor,
+  exec: DomExecution,
   params: Record<string, unknown>,
   annotations?: Record<string, unknown>,
 ): Promise<McpResult> {

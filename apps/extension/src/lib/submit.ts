@@ -1,4 +1,4 @@
-import type { ExecutionDescriptor } from "@robertn702/webmcp-cafe-schema";
+import type { DomExecution } from "@robertn702/webmcp-cafe-schema";
 import { deepQuery, interpolate, query } from "./dom.js";
 import { waitForClickable } from "./wait.js";
 
@@ -6,7 +6,7 @@ import { waitForClickable } from "./wait.js";
 // Returns a human-readable outcome string; the caller wraps it in an McpResult.
 
 export async function submitSimpleMode(
-  exec: ExecutionDescriptor,
+  exec: DomExecution,
   params: Record<string, unknown>,
   toolName: string,
 ): Promise<string> {
