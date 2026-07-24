@@ -1,11 +1,9 @@
 /**
- * Seed the registry with the extension's bundled configs.
+ * Seed the registry with the curated configs from @webmcp-cafe/definitions.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { createConfigSchema } from "@robertn702/webmcp-cafe-schema";
 import { createDb, definitionVersions, user, webmcpDefinitions } from "@webmcp-cafe/db";
+import { definitions } from "@webmcp-cafe/definitions";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
@@ -22,15 +20,7 @@ await db
   })
   .onConflictDoNothing();
 
-const configsDir = join(import.meta.dirname, "../../extension/configs");
-for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json"))) {
-  const raw: unknown = JSON.parse(await readFile(join(configsDir, file), "utf8"));
-  const parsed = createConfigSchema.safeParse(raw);
-  if (!parsed.success) {
-    console.error(`skip ${file}: ${parsed.error.message}`);
-    continue;
-  }
-  const input = parsed.data;
+for (const input of definitions) {
   const [definition] = await db
     .insert(webmcpDefinitions)
     .values({
@@ -43,7 +33,7 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
     })
     .returning({ id: webmcpDefinitions.id });
   if (!definition) {
-    console.log(`skip ${file}: insert returned no row`);
+    console.log(`skip ${input.domain}: insert returned no row`);
     continue;
   }
   await db.insert(definitionVersions).values({
@@ -55,5 +45,5 @@ for (const file of (await readdir(configsDir)).filter((f) => f.endsWith(".json")
     minEngine: input.minEngine,
     changelog: input.changelog,
   });
-  console.log(`seeded ${file} → ${definition.id} (0 installs)`);
+  console.log(`seeded ${input.domain} → ${definition.id} (0 installs)`);
 }

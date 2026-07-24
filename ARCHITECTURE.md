@@ -97,7 +97,7 @@ sequenceDiagram
     BG->>R: GET /api/configs/lookup?url=…
     R-->>BG: configs (zod-validated at boundary)
     alt registry unreachable / no match / schema mismatch
-        BG-->>CS: bundled configs/*.json (silent fallback — watch page console)
+        BG-->>CS: bundled fallback from @webmcp-cafe/definitions (silent — watch page console)
     else
         BG-->>CS: matched configs, most-specific first
     end

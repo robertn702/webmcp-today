@@ -14,9 +14,10 @@ implemented WebMCP — "Greasyfork for the agentic web".
 ```
 apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — config lookup + tool injection
-packages/schema/   @robertn702/webmcp-cafe-schema — zod config format (published); keystone, all consumers validate against it
-packages/db/       Drizzle + Neon — schema + client
-packages/mcp/      @robertn702/webmcp-cafe-mcp — MCP server (published)
+packages/schema/        @robertn702/webmcp-cafe-schema — zod config format (published); keystone, all consumers validate against it
+packages/db/            Drizzle + Neon — schema + client
+packages/definitions/   @webmcp-cafe/definitions — curated first-party configs (extension fallback bundle + registry seed source)
+packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 ```
 
 ## Commands
