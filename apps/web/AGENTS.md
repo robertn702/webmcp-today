@@ -32,7 +32,7 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 
 ## Auth
 
-- better-auth 1.6.x with GitHub OAuth; apiKey plugin lives in the separate
+- better-auth 1.6.x with email/password + GitHub OAuth; apiKey plugin lives in the separate
   package `@better-auth/api-key` (server: root export; client: `/client`).
   Its 1.6.25 table schema keys the owner as `reference_id` (+ `config_id`),
   not `user_id` — keep `packages/db/src/apikey-schema.ts` matched to the
@@ -41,8 +41,9 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   `/settings/security`); browser flows use session cookies.
 - Auth UI is **better-auth-ui** (vendored shadcn registry components in
   `components/auth/`, wired by `components/providers.tsx`):
-  - `/auth/[path]` — sign-in (GitHub-only; `emailAndPassword.enabled: false`
-    so password views redirect to sign-in) and sign-out.
+  - `/auth/[path]` — sign-in/sign-up (email/password + GitHub) and sign-out.
+    No email sender is configured, so `forgotPassword: false` in
+    `providers.tsx` hides the reset flow and email verification is off.
   - `/settings/[path]` — account + security tabs (API keys live under
     security). Server-gated with `ensureSession` + `HydrationBoundary`;
     `/settings` redirects to `/settings/account`.

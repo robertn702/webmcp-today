@@ -202,9 +202,12 @@ function ChangePasswordForm({
                   onInvalid={(e) => {
                     e.preventDefault();
 
+                    // Capture now: `currentTarget` is null by the time the
+                    // state updater runs.
+                    const { validationMessage } = e.currentTarget;
                     setFieldErrors((prev) => ({
                       ...prev,
-                      currentPassword: e.currentTarget.validationMessage,
+                      currentPassword: validationMessage,
                     }));
                   }}
                   aria-invalid={!!fieldErrors.currentPassword}
@@ -244,9 +247,12 @@ function ChangePasswordForm({
                     required
                     onInvalid={(e) => {
                       e.preventDefault();
+                      // Capture now: `currentTarget` is null by the time the
+                      // state updater runs.
+                      const { validationMessage } = e.currentTarget;
                       setFieldErrors((prev) => ({
                         ...prev,
-                        newPassword: e.currentTarget.validationMessage,
+                        newPassword: validationMessage,
                       }));
                     }}
                     aria-invalid={!!fieldErrors.newPassword}
@@ -304,9 +310,12 @@ function ChangePasswordForm({
                       onInvalid={(e) => {
                         e.preventDefault();
 
+                        // Capture now: `currentTarget` is null by the time the
+                        // state updater runs.
+                        const { validationMessage } = e.currentTarget;
                         setFieldErrors((prev) => ({
                           ...prev,
-                          confirmPassword: e.currentTarget.validationMessage,
+                          confirmPassword: validationMessage,
                         }));
                       }}
                       aria-invalid={!!fieldErrors.confirmPassword}

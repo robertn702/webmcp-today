@@ -78,9 +78,12 @@ export function ChangeEmail({ className }: ChangeEmailProps) {
                   }}
                   onInvalid={(e) => {
                     e.preventDefault();
+                    // Capture now: `currentTarget` is null by the time the
+                    // state updater runs.
+                    const { validationMessage } = e.currentTarget;
                     setFieldErrors((prev) => ({
                       ...prev,
-                      email: e.currentTarget.validationMessage,
+                      email: validationMessage,
                     }));
                   }}
                   aria-invalid={!!fieldErrors.email}

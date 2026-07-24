@@ -18,9 +18,10 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider
         authClient={authClient}
-        // GitHub OAuth only — the server has no email/password, so the
-        // password forms (sign-up, forgot/reset password) stay disabled.
-        emailAndPassword={{ enabled: false }}
+        // Email/password + GitHub OAuth. The server has no email sender, so
+        // forgot/reset-password stays hidden (there's no way to send the
+        // reset email); sign-up and email verification-free sign-in work.
+        emailAndPassword={{ enabled: true, forgotPassword: false }}
         socialProviders={["github"]}
         navigate={({ to, replace }) => (replace ? router.replace(to) : router.push(to))}
         plugins={[apiKeyPlugin()]}
