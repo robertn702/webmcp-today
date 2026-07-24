@@ -153,6 +153,59 @@ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
   for Claude Code parity. Also noted the chrome://flags red herring in the
   extension README (command-line features show "Default" there; chrome://version
   is ground truth).
+- 2026-07-23 — shadcn/ui adopted in apps/web (supersedes the earlier deferral).
+  Init'd with radix base + nova preset (neutral oklch theme); components live in
+  `components/ui/`. Dark mode is semantic-token-driven: the existing
+  `@custom-variant dark` + inline no-flash `<html>` class script + `ThemeToggle`
+  localStorage logic all stay; the shadcn `.dark` CSS-variable block just remaps
+  the same `--background`/`--card`/`--foreground`/etc. tokens. Every page was
+  refactored from per-component `dark:` variants to semantic tokens
+  (`bg-background`, `text-muted-foreground`, `border-border`, etc.) — zero
+  `dark:` or `stone-*` classes remain outside `components/ui/`. Theme toggle
+  rebuilt as `ToggleGroup` (type="single", outline variant, spacing=0 for
+  segmented control). Added `success`/`warning` variants to Badge (green/amber
+  via new `--success`/`--warning` CSS vars + `@theme inline` mappings) and a
+  `success` variant to Alert for the one-time API-key display. Also added
+  `types/react-css-properties.d.ts` — a module augmentation that restores the
+  custom-property index signature on `React.CSSProperties` (`--gap` etc.),
+  avoiding `as` assertions in shadcn-generated toggle-group (the repo's
+  no-`as` lint rule flagged the generated cast). Badge/Button need `"use
+client"` despite being presentational — their `Slot` import from the
+  `radix-ui` unified package triggers `createContext` at module scope, which
+  Next.js App Router rejects in Server Components. lucide-react icons used
+  throughout via `data-icon` per the shadcn skill.
+- 2026-07-23 — Navbar/theme-toggle compacted. ThemeToggle kept as the existing
+  shadcn `ToggleGroup` (no new components — simplicity bias) but segments are
+  now icon-only (Sun/Moon/Monitor, `aria-label` + `title` on each item,
+  `aria-label="Theme"` on the group); the theme mechanism (localStorage key,
+  inline no-flash script, system listener) is unchanged. layout.tsx nav now
+  wraps links + toggle into a `justify-between` group: single row on desktop,
+  wraps to a second left-aligned row under the brand at narrow widths (~400px)
+  instead of clipping. Shared link styling extracted to a `navLinkClass`
+  const. Note: the ToggleGroup `data-state=on` `bg-muted` selected state is
+  very subtle in light mode (shadcn default, pre-existing) — visible in
+  dark mode, faint against white in light.
+- 2026-07-24 — Navbar identity affordance (design Option A of three wireframed):
+  new `components/account-menu.tsx` client island in the root layout nav, right of
+  the ThemeToggle. `authClient.useSession()` drives three states: Skeleton circle
+  while pending (also what SSR emits), a "Sign in" button (GitHub OAuth) when
+  logged out, and an Avatar (GitHub `user.image`, initials fallback) opening a
+  dropdown-menu (name header + Settings + Sign out only — deliberately NO
+  Settings item in the nav itself; /settings is an authenticated-only page,
+  and the logged-out sign-in flow is covered by the nav's Sign in button, so
+  the old Settings nav link was removed entirely rather than made
+  auth-dependent). Added shadcn `avatar` + `dropdown-menu`. ThemeToggle
+  untouched; the narrow-width flex-wrap behavior is unchanged.
+- 2026-07-24 — Fixed the apikey table to match the `@better-auth/api-key`
+  1.6.25 plugin schema: `user_id` renamed to `reference_id` and `config_id`
+  added (`text not null default 'default'`). The plugin 500s
+  (`field "referenceId" does not exist`) on any api-key endpoint otherwise.
+  Migrations 0001 (rename + add column) and 0002 (FK constraint rename to
+  `apikey_reference_id_user_id_fk`) applied to Neon; table was empty, no data
+  migration needed. Note: drizzle-kit `generate` prompts interactively for
+  column renames (needs a TTY) — used `generate --custom` + hand-filled SQL
+  instead. Any worktree running pre-rename code against the migrated DB will
+  500 on /settings API keys until it picks up this change.
 
 ## Dev workflow gotchas
 

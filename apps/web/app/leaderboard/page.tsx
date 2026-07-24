@@ -1,5 +1,13 @@
 import { configs, user, votes } from "@webmcp-cafe/db";
 import { count, desc, eq, sum } from "drizzle-orm";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -25,26 +33,26 @@ export default async function LeaderboardPage() {
     <div>
       <h1 className="mb-4 text-2xl font-bold">Leaderboard</h1>
       {contributorRows.length === 0 ? (
-        <p className="text-sm text-stone-500">No contributors yet.</p>
+        <p className="text-sm text-muted-foreground">No contributors yet.</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-300 text-left text-xs text-stone-500">
-              <th className="py-2">Contributor</th>
-              <th className="py-2">Configs</th>
-              <th className="py-2">Net votes</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Contributor</TableHead>
+              <TableHead>Configs</TableHead>
+              <TableHead>Net votes</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {contributorRows.map((row) => (
-              <tr key={row.id} className="border-b border-stone-200">
-                <td className="py-2">{row.name}</td>
-                <td className="py-2">{row.configCount}</td>
-                <td className="py-2">{scores.get(row.id) ?? 0}</td>
-              </tr>
+              <TableRow key={row.id}>
+                <TableCell>{row.name}</TableCell>
+                <TableCell>{row.configCount}</TableCell>
+                <TableCell>{scores.get(row.id) ?? 0}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
     </div>
   );
