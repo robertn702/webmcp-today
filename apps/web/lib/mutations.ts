@@ -35,6 +35,7 @@ export async function insertDefinition(
       version: 1,
       urlPatterns: input.urlPatterns,
       tools: input.tools,
+      api: input.api,
       minEngine: input.minEngine,
       changelog: input.changelog,
     })
@@ -74,6 +75,7 @@ export async function publishVersion(
       version: nextVersion,
       urlPatterns: input.urlPatterns,
       tools: input.tools,
+      api: input.api,
       minEngine: input.minEngine,
       changelog: input.changelog,
     })

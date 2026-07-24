@@ -7,5 +7,6 @@ export const PARAM_DESCRIPTION_MAX = 150;
 /** Executors should truncate tool output to this many characters. */
 export const TOOL_OUTPUT_MAX = 1500;
 
-/** Current config format engine version. Bump when the format changes shape. */
-export const ENGINE_VERSION = 1;
+/** Current config format engine version. Bump when the format changes shape.
+ *  History: 1 = DOM execution; 2 = tier-1 `api` block (docs/api-execution-model.md). */
+export const ENGINE_VERSION = 2;

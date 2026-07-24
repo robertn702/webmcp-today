@@ -29,7 +29,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   t3-env (`env.ts`) validates at build time — `next build` fails without them.
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
-- `scripts/seed.ts` seeds the bundled extension configs (5 configs / 12 tools).
+- `scripts/seed.ts` seeds the bundled extension configs (6 configs / 18 tools,
+  incl. the tier-1 Reddit config).
 
 ## Auth
 
