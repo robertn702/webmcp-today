@@ -7,7 +7,8 @@
     "dev": "mkdir -p .wxt/chrome-profile && wxt",
     "build": "wxt build",
     "postinstall": "wxt prepare",
-    "typecheck": "wxt prepare && tsc --noEmit"
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@robertn702/webmcp-cafe-schema": "workspace:*",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
     "wxt": "^0.20.6"
   }
 }

@@ -1,15 +1,10 @@
-import { TOOL_OUTPUT_MAX, type DomExecution } from "@robertn702/webmcp-cafe-schema";
+import type { DomExecution } from "@robertn702/webmcp-cafe-schema";
 import { executeStep } from "./executor-steps.js";
 import { fillToolField } from "./fill.js";
+import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./model-context.js";
 import { submitSimpleMode } from "./submit.js";
 import { extractResult, waitForSelector } from "./wait.js";
-
-export function mcpResult(text: string): McpResult {
-  const truncated =
-    text.length > TOOL_OUTPUT_MAX ? `${text.slice(0, TOOL_OUTPUT_MAX)}… (truncated)` : text;
-  return { content: [{ type: "text", text: truncated }] };
-}
 
 export async function executeTool(
   toolName: string,
