@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AccountMenu } from "@/components/account-menu";
+import { UserButton } from "@/components/auth/user/user-button";
+import { Providers } from "@/components/providers";
 import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 import { Geist } from "next/font/google";
@@ -30,29 +31,33 @@ const navLinkClass = "text-sm text-muted-foreground hover:text-foreground hover:
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
-      <body className="min-h-screen">
+      <body className="flex min-h-screen flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <header className="border-b">
-          <nav className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-            <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
-              ☕ webmcp.cafe
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/" className={navLinkClass}>
-                Browse
+        <Providers>
+          <header className="border-b">
+            <nav className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+              <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
+                ☕ webmcp.cafe
               </Link>
-              <Link href="/submit" className={navLinkClass}>
-                Submit
-              </Link>
-              <Link href="/leaderboard" className={navLinkClass}>
-                Leaderboard
-              </Link>
-              <ThemeToggle />
-              <AccountMenu />
-            </div>
-          </nav>
-        </header>
-        <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+              <div className="flex items-center gap-4">
+                <Link href="/" className={navLinkClass}>
+                  Browse
+                </Link>
+                <Link href="/submit" className={navLinkClass}>
+                  Submit
+                </Link>
+                <Link href="/leaderboard" className={navLinkClass}>
+                  Leaderboard
+                </Link>
+                <ThemeToggle />
+                <UserButton size="icon" align="end" />
+              </div>
+            </nav>
+          </header>
+          <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );

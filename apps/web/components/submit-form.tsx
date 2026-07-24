@@ -39,7 +39,7 @@ export function SubmitForm() {
       const id = typeof body === "object" && body !== null ? Reflect.get(body, "id") : undefined;
       router.push(typeof id === "string" ? `/configs/${id}` : "/");
     } else if (res.status === 401) {
-      setError("Sign in (Settings) or use an API key to submit.");
+      setError("Sign in or use an API key to submit.");
     } else {
       setError(`Submit failed (${res.status}): ${await res.text()}`);
     }
