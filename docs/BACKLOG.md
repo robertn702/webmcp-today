@@ -6,6 +6,12 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 
 ## Web app
 
+- **Vercel preview deploys fail on every PR** — t3-env "Invalid environment
+  variables" at page-data collection; the Vercel project lacks the required
+  env vars for preview builds (pre-existing, seen on PRs 19–21; main itself
+  has no Vercel check). Add the env vars in Vercel (needs Robert's creds) or
+  relax build-time validation for previews. (apps/web/env.ts; AGENTS.md notes
+  builds need real env vars)
 - **Email service** (password reset, verification) — pick a provider (needs
   Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip
