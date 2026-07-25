@@ -71,4 +71,34 @@ describe("createConfigSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects a domain no urlPattern host covers (unreachable by lookup)", () => {
+    const result = createConfigSchema.safeParse({
+      ...baseConfig,
+      domain: "foo.com",
+      urlPatterns: ["*://bar.com/*"],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.join(".") === "domain")).toBe(true);
+    }
+  });
+
+  it("accepts a domain covered by a *.host wildcard (apex included)", () => {
+    const result = createConfigSchema.safeParse({
+      ...baseConfig,
+      domain: "reddit.com",
+      urlPatterns: ["*://*.reddit.com/*"],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("checks coverage against the normalized domain (www-stripped)", () => {
+    const result = createConfigSchema.safeParse({
+      ...baseConfig,
+      domain: "www.example.com",
+      urlPatterns: ["*://example.com/*"],
+    });
+    expect(result.success).toBe(true);
+  });
 });

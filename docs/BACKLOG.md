@@ -65,12 +65,6 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 
 ## Schema
 
-- **Validate domain ⊆ urlPatterns** — nothing checks the lookup key `domain`
-  is covered by any urlPattern host (config.ts superRefine runs only
-  collectApiIssues), so `{domain:"foo.com", urlPatterns:["*://bar.com/*"]}`
-  publishes but is unreachable by lookup; PATCH can also move domain off the
-  patterns. Mirror the baseUrl same-origin check in api.ts collectApiIssues.
-  (packages/schema/src/config.ts:76; apps/web/app/api/configs/[id]/route.ts)
 - **Nested-step template validation** — tool.ts superRefine only scans
   top-level steps; `{{param}}` inside a `condition` step's then/else arrays
   is unchecked and silently interpolates to "" at runtime. Recurse into

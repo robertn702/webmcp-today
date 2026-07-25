@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiBlockSchema, collectApiIssues } from "./api.js";
 import { toolDescriptorSchema } from "./tool.js";
-import { parseUrlPattern } from "./url-matching.js";
+import { domainCoveredByPatterns, parseUrlPattern } from "./url-matching.js";
 
 // Config format v1 — based on Joakim Selemyr's web-mcp-hub (MIT), extended
 // with minEngine (format evolution) and room for health/verification metadata.
@@ -76,6 +76,15 @@ export const createConfigObjectSchema = z.object({
 export const createConfigSchema = createConfigObjectSchema.superRefine((config, ctx) => {
   for (const issue of collectApiIssues(config)) {
     ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
+  }
+  // The lookup key `domain` must be reachable through the urlPatterns, or the
+  // config publishes but no page can ever serve it (see domainCoveredByPatterns).
+  if (!domainCoveredByPatterns(config.domain, config.urlPatterns)) {
+    ctx.addIssue({
+      code: "custom",
+      message: `domain "${config.domain}" is not covered by any urlPatterns host, so it would be unreachable by lookup. Add a urlPattern whose host covers it (e.g. "*://${config.domain}/*").`,
+      path: ["domain"],
+    });
   }
 });
 
