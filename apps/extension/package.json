@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "mkdir -p .wxt/chrome-profile && wxt",
     "build": "wxt build",

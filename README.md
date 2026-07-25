@@ -82,4 +82,9 @@ bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:see
 
 ## License
 
-MIT. Executor and config format credit: Joakim Selemyr (MIT).
+Split, so the pieces worth adopting stay permissive:
+
+- **AGPL-3.0-only** — the server: `apps/web` and `packages/db` (root `LICENSE`). Run a modified copy as a network service and you owe your users the source.
+- **MIT** — everything built to be adopted freely: `packages/schema` (config format), `packages/mcp` (MCP server), `packages/definitions` (curated configs), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
+
+Executor and config format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).
