@@ -58,6 +58,22 @@ third-party sites are user-hostile and a review risk.
 No extra permissions back this — the badge comes with the `action` key that the
 popup entrypoint already adds.
 
+## SPA navigation
+
+`src/lib/navigation.ts` runs a registration pass for the current URL and another
+on every URL change, so a client-side route change re-matches configs instead of
+leaving the previous route's tools behind. Each pass gets its own
+`AbortController`, passed to `registerTool` as `{ signal }`; the next navigation
+aborts it, which is what unregisters that pass's tools. Passes are serialized and
+an unchanged URL is a no-op.
+
+Detection is `popstate` + `hashchange` plus a 500 ms poll of `location.href`. The
+poll is load-bearing: `history.pushState` is the usual SPA route change, and a
+content script cannot see it — patching `history` from the isolated world only
+intercepts the isolated world's own calls. The event-driven alternative is
+`chrome.webNavigation.onHistoryStateUpdated` in the background script, which
+costs a "read your browsing history" permission warning on the store listing.
+
 ## Dev browser
 
 `bun run dev` launches a **separate** Chrome instance with its own profile —
@@ -123,9 +139,9 @@ ends up injected as a tool in a live page.
 
 ## Known limitations (spike)
 
-- Tools register once per page load; SPA route changes don't re-match configs
-  (fix shape: a background navigation listener driving an idempotent re-run —
-  see docs/BACKLOG.md).
+- SPA route changes are detected by a 500 ms URL poll (plus `popstate` /
+  `hashchange`), so for up to half a second after a client-side navigation the
+  previous route's tools are still the registered ones. See "SPA navigation".
 - End users still need the same `chrome://flags/#enable-webmcp-testing` toggle we
   use in dev — there is no origin-trial path for injected tools. The extension
   detects the missing API and shows the enablement steps (badge + popup + page

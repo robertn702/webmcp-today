@@ -29,6 +29,10 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   mismatch) silently falls back to the bundled curated configs, and a "working"
   test may never touch the registry. Any full-loop claim must cite the page-console
   line `[webmcp-cafe] Using N config(s) from the registry` (vs the fallback variant).
+- **Isolated-world blind spot.** A content script cannot see the page's
+  `history.pushState` — patching `history` only intercepts the isolated world's
+  own calls, so SPA navigation is detected by polling `location.href`
+  (`src/lib/navigation.ts`). Don't "fix" it by monkey-patching history.
 - **Selector-rot debugging recipe.** Evaluate the config's `resultSelector`
   against the live page via the chrome-devtools bridge (`evaluate_script`)
   before touching code. Wikipedia's Parsoid DOM (`.mw-parser-output > section`
