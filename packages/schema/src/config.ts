@@ -88,8 +88,6 @@ export const createConfigSchema = createConfigObjectSchema.superRefine((config, 
   }
 });
 
-export const updateConfigSchema = createConfigObjectSchema.partial();
-
 /** Metadata-only edits (webmcp_definitions row) — excludes versioned fields. */
 export const updateDefinitionMetaSchema = createConfigObjectSchema
   .omit({ urlPatterns: true, tools: true, api: true, changelog: true, minEngine: true })
@@ -108,6 +106,5 @@ export const publishVersionSchema = createConfigObjectSchema
   });
 
 export type CreateConfigInput = z.infer<typeof createConfigSchema>;
-export type UpdateConfigInput = z.infer<typeof updateConfigSchema>;
 export type UpdateDefinitionMetaInput = z.infer<typeof updateDefinitionMetaSchema>;
 export type PublishVersionInput = z.infer<typeof publishVersionSchema>;
