@@ -18,7 +18,7 @@ export default async function ConfigsPage() {
     <div>
       <h1 className="mb-1 text-2xl font-bold">Community WebMCP configs</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        {total} config{total === 1 ? "" : "s"} teaching agents how to use the web.
+        {total} config{total === 1 ? "" : "s"} adding tools to sites that never shipped any.
       </p>
 
       {configs.length === 0 ? (

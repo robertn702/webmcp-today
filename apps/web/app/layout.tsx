@@ -22,7 +22,7 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   title: "WebMCP Cafe",
   description:
-    "Community registry of WebMCP tool configs — agents teaching agents how to use the web.",
+    "A community registry of WebMCP tool configs, plus a browser extension that registers them on sites that never shipped tools of their own.",
 };
 
 // Applies the stored theme before first paint to avoid a flash of the wrong

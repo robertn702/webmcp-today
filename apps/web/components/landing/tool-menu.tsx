@@ -61,8 +61,8 @@ export function ToolMenu() {
 
       <div className="border-t px-5 py-3">
         <p className="font-mono text-[11px] text-muted-foreground">
-          <span className="text-brand">●</span> injected by webmcp.cafe · pinned v1 · the site
-          shipped none of these
+          <span className="text-brand">●</span> injected by webmcp.cafe · community config · pinned
+          v1
         </p>
       </div>
     </div>
