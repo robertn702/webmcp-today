@@ -53,17 +53,17 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-5xl gap-12 px-4 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-center lg:gap-14 lg:pt-24 lg:pb-28">
           <div>
             <p className="cafe-rise font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
-              ☕ community registry · greasyfork for the agentic web
+              ☕ community registry · anyone can publish
             </p>
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
-              Teach an agent to use <em className="text-brand not-italic">any</em> website.
+              Install the tools a site <em className="text-brand not-italic">never shipped</em>.
             </h1>
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
               WebMCP lets a site publish real tools for AI agents. Almost no site has. WebMCP Cafe
-              is a community registry of tool configs plus a browser extension that injects them
-              into sites that shipped none — so an agent calls{" "}
+              is a community registry of tool configs, plus a browser extension that registers them
+              on the page for you — so an agent calls{" "}
               <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
                 reddit_comment
               </code>{" "}
@@ -89,7 +89,7 @@ export default async function LandingPage() {
             </div>
 
             <p className="cafe-rise mt-4 font-mono text-xs text-muted-foreground [animation-delay:280ms]">
-              Free and open source · Chrome 149+ with WebMCP enabled · nothing works without it
+              Free and open source · Chrome 149+ with the WebMCP flag on · nothing works without it
             </p>
 
             {stats ? (
@@ -111,7 +111,7 @@ export default async function LandingPage() {
           <Reason
             index="01"
             title="Sites won't do this for you"
-            body="WebMCP is a real spec with real browser support, and adoption is roughly zero. The sites you use every day are not going to be first, and they'd never ship the tools you actually want anyway."
+            body="WebMCP is a live W3C proposal with a working Chrome implementation, and adoption is roughly zero. The sites you use every day are not going to be first, and they'd never ship the tools you actually want anyway."
           />
           <Reason
             index="02"
@@ -214,7 +214,7 @@ export default async function LandingPage() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               It is the part that does the work — the registry is just where the configs live. Once
-              it's installed, every config you install shows up as tools on the sites you visit.
+              it's running, every config you've installed shows up as tools on the sites you visit.
               Then write one of your own.
             </p>
           </div>
@@ -241,7 +241,7 @@ export default async function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
           <p className="font-mono text-xs text-muted-foreground">
-            ☕ webmcp.cafe — agents teaching agents how to use the web.
+            ☕ webmcp.cafe — a community registry of WebMCP tool configs.
           </p>
           <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
             <Link href="/configs" className="hover:text-foreground hover:underline">
