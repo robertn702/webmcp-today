@@ -5,10 +5,19 @@ import { UserButton } from "@/components/auth/user/user-button";
 import { Providers } from "@/components/providers";
 import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+// Display face for landing headlines only — an editorial serif against the
+// neutral UI sans, which keeps marketing type from looking like app chrome.
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "WebMCP Cafe",
@@ -30,17 +39,21 @@ const navLinkClass = "text-sm text-muted-foreground hover:text-foreground hover:
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn("font-sans", geist.variable, geistMono.variable, instrumentSerif.variable)}
+    >
       <body className="flex min-h-screen flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Providers>
-          <header className="border-b">
-            <nav className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+          <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+            <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
               <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
                 ☕ webmcp.cafe
               </Link>
               <div className="flex items-center gap-4">
-                <Link href="/" className={navLinkClass}>
+                <Link href="/configs" className={navLinkClass}>
                   Browse
                 </Link>
                 <Link href="/submit" className={navLinkClass}>
@@ -51,9 +64,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </div>
             </nav>
           </header>
-          <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8">
-            {children}
-          </main>
+          <main className="flex flex-1 flex-col">{children}</main>
         </Providers>
       </body>
     </html>

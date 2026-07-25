@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,7 +6,12 @@ import { listConfigs } from "@/lib/configs-repo";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export const metadata: Metadata = {
+  title: "Browse configs — WebMCP Cafe",
+  description: "Community WebMCP tool configs, newest version of each.",
+};
+
+export default async function ConfigsPage() {
   const { configs, total } = await listConfigs({ page: 1, pageSize: 50 });
 
   return (
