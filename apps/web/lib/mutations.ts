@@ -6,6 +6,7 @@ import type {
 import { definitionVersions, installs, webmcpDefinitions } from "@webmcp-cafe/db";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db";
+import { isUniqueViolation } from "./http";
 
 // neon-http has no transactions; inserts are sequential. Acceptable for v1 —
 // a failed version insert leaves a definition with no versions, invisible to
@@ -57,37 +58,55 @@ export async function updateDefinitionMeta(
     .where(eq(webmcpDefinitions.id, definitionId));
 }
 
-/** Append-only: insert the next version for an existing definition. */
+/** Append-only: insert the next version for an existing definition.
+ *
+ * neon-http has no transactions, so `max(version)+1` and the insert are separate
+ * round-trips: two concurrent publishes can read the same max and race for
+ * `uq_definition_versions_definition_version`. The loser hits a unique violation
+ * rather than a 500 — re-read the max and retry the next number. */
+const PUBLISH_MAX_ATTEMPTS = 3;
+
 export async function publishVersion(
   definitionId: string,
   input: PublishVersionInput,
 ): Promise<{ versionId: string; version: number }> {
-  const [row] = await db
-    .select({ maxVersion: sql<number>`coalesce(max(${definitionVersions.version}), 0)` })
-    .from(definitionVersions)
-    .where(eq(definitionVersions.definitionId, definitionId));
-  const nextVersion = (row?.maxVersion ?? 0) + 1;
+  for (let attempt = 1; attempt <= PUBLISH_MAX_ATTEMPTS; attempt++) {
+    const [row] = await db
+      .select({ maxVersion: sql<number>`coalesce(max(${definitionVersions.version}), 0)` })
+      .from(definitionVersions)
+      .where(eq(definitionVersions.definitionId, definitionId));
+    const nextVersion = (row?.maxVersion ?? 0) + 1;
 
-  const [version] = await db
-    .insert(definitionVersions)
-    .values({
-      definitionId,
-      version: nextVersion,
-      urlPatterns: input.urlPatterns,
-      tools: input.tools,
-      api: input.api,
-      minEngine: input.minEngine,
-      changelog: input.changelog,
-    })
-    .returning({ id: definitionVersions.id });
-  if (!version) throw new Error("Version insert returned no row");
+    let version: { id: string } | undefined;
+    try {
+      [version] = await db
+        .insert(definitionVersions)
+        .values({
+          definitionId,
+          version: nextVersion,
+          urlPatterns: input.urlPatterns,
+          tools: input.tools,
+          api: input.api,
+          minEngine: input.minEngine,
+          changelog: input.changelog,
+        })
+        .returning({ id: definitionVersions.id });
+    } catch (err) {
+      // A concurrent publish took this number; re-read the max and try again.
+      if (isUniqueViolation(err) && attempt < PUBLISH_MAX_ATTEMPTS) continue;
+      throw err;
+    }
+    if (!version) throw new Error("Version insert returned no row");
 
-  await db
-    .update(webmcpDefinitions)
-    .set({ updatedAt: new Date() })
-    .where(eq(webmcpDefinitions.id, definitionId));
+    await db
+      .update(webmcpDefinitions)
+      .set({ updatedAt: new Date() })
+      .where(eq(webmcpDefinitions.id, definitionId));
 
-  return { versionId: version.id, version: nextVersion };
+    return { versionId: version.id, version: nextVersion };
+  }
+  // Unreachable: the loop returns on success and throws on the final attempt.
+  throw new Error("publishVersion: exhausted version-collision retries");
 }
 
 /** Install (or move an existing install to) a specific version. Upserts per user+definition. */
