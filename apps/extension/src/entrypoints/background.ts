@@ -5,15 +5,48 @@ import {
   type LookupMessage,
   type LookupResponse,
 } from "../lib/registry-client.js";
+import {
+  statusMessageSchema,
+  statusQuerySchema,
+  type PageStatus,
+  type StatusResponse,
+} from "../lib/status.js";
+
+/** Last reported status per tab, for the popup. In-memory on purpose: a service
+ * worker restart loses it and the popup then says "reload the page", while the
+ * badge (per-tab browser state) survives independently. */
+const tabStatus = new Map<number, PageStatus>();
 
 // Fetches run here (not the content script) so they hit the registry's own
 // origin rather than the page's — this sidesteps page CSP `connect-src`
 // restrictions entirely instead of relying on host_permissions overriding them.
 export default defineBackground(() => {
-  browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
-    if (!isLookupMessage(message)) return;
-    void fetchLookup(message.url).then(sendResponse);
-    return true;
+  browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+    if (isLookupMessage(message)) {
+      void fetchLookup(message.url).then(sendResponse);
+      return true;
+    }
+
+    const status = statusMessageSchema.safeParse(message);
+    if (status.success) {
+      const tabId = sender.tab?.id;
+      if (tabId !== undefined) {
+        tabStatus.set(tabId, status.data.status);
+        void applyBadge(tabId, status.data.status);
+      }
+      return;
+    }
+
+    if (statusQuerySchema.safeParse(message).success) {
+      void activeTabStatus().then(sendResponse);
+      return true;
+    }
+
+    return;
+  });
+
+  browser.tabs.onRemoved.addListener((tabId) => {
+    tabStatus.delete(tabId);
   });
 });
 
@@ -33,5 +66,29 @@ async function fetchLookup(url: string): Promise<LookupResponse> {
     return { ok: true, body: await response.json() };
   } catch {
     return { ok: false };
+  }
+}
+
+async function activeTabStatus(): Promise<StatusResponse> {
+  const tabs = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+  const tabId = tabs[0]?.id;
+  return { status: (tabId === undefined ? undefined : tabStatus.get(tabId)) ?? null };
+}
+
+/** "!" when the WebMCP flag is off on a page we have tools for, the tool count
+ * when registration worked, nothing otherwise. */
+async function applyBadge(tabId: number, status: PageStatus): Promise<void> {
+  const text =
+    status.kind === "webmcp-unavailable"
+      ? "!"
+      : status.kind === "registered" && status.toolNames.length > 0
+        ? String(status.toolNames.length)
+        : "";
+  const color = status.kind === "webmcp-unavailable" ? "#b45309" : "#3f6212";
+  try {
+    await browser.action.setBadgeText({ tabId, text });
+    if (text) await browser.action.setBadgeBackgroundColor({ tabId, color });
+  } catch {
+    // Tab closed or navigated away mid-update; the next pass will re-report.
   }
 }

@@ -52,13 +52,6 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   identity, privacy policy page. The tiers 2–3 "no remote code" answer can
   follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
-- **WebMCP-flag onboarding** — every early user must enable
-  `chrome://flags/#enable-webmcp-testing`, and the extension registers into a
-  missing API silently today: no detection, no instructions. Detect an absent
-  `document.modelContext`/`navigator.modelContext` and surface enablement
-  steps; the landing/docs pages lead with the same copy. Hub pushes this onto
-  the user via README prose — we can do better cheaply.
-  (apps/extension/src/lib/model-context.ts; docs/DECISIONS.md 2026-07-24)
 - **Switch Namecheap nameservers to Cloudflare** — the last step before
   `webmcp.cafe` resolves; Robert's action, then propagation time.
   (AGENTS.md → Deploy, domain & DNS)
