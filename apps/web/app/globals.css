@@ -10,6 +10,7 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", monospace;
+  --font-display: ui-serif, Georgia, serif;
 }
 
 html.dark {
@@ -19,6 +20,11 @@ html.dark {
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -82,6 +88,11 @@ html.dark {
   --ring: oklch(0.708 0 0);
   --success: oklch(0.45 0.14 152);
   --warning: oklch(0.55 0.13 65);
+  /* Roasted-amber accent. The rest of the palette is deliberately neutral, so
+     brand is the only saturated colour on the page and always means "active". */
+  --brand: oklch(0.55 0.16 46);
+  --brand-soft: oklch(0.55 0.16 46 / 9%);
+  --brand-contrast: oklch(0.99 0.01 80);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -119,6 +130,9 @@ html.dark {
   --ring: oklch(0.556 0 0);
   --success: oklch(0.8 0.14 152);
   --warning: oklch(0.8 0.13 70);
+  --brand: oklch(0.79 0.15 66);
+  --brand-soft: oklch(0.79 0.15 66 / 13%);
+  --brand-contrast: oklch(0.21 0.03 60);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -143,5 +157,76 @@ html.dark {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Landing page. Scoped here rather than in components so the keyframes and the
+   two atmosphere layers stay in one readable place.
+   --------------------------------------------------------------------------- */
+
+@keyframes cafe-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Travelling dash along an active diagram edge — reads as a packet in flight. */
+@keyframes cafe-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+@keyframes cafe-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.cafe-rise {
+  animation: cafe-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cafe-flow-dash {
+  stroke-dasharray: 5 11;
+  animation: cafe-flow 800ms linear infinite;
+}
+
+.cafe-progress {
+  transform-origin: left;
+  animation: cafe-progress linear forwards;
+}
+
+/* Two offset warm pools instead of a flat background, so the hero has depth. */
+.cafe-atmosphere {
+  background-image:
+    radial-gradient(58rem 30rem at 12% -12%, var(--brand-soft), transparent 62%),
+    radial-gradient(44rem 26rem at 94% 6%, oklch(0.6 0.09 248 / 8%), transparent 68%);
+}
+
+/* Hairline grid, faded out with a mask so it never reaches a hard edge. */
+.cafe-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 76px 76px;
+  -webkit-mask-image: radial-gradient(46rem 28rem at 50% 0%, #000, transparent 72%);
+  mask-image: radial-gradient(46rem 28rem at 50% 0%, #000, transparent 72%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cafe-rise,
+  .cafe-flow-dash,
+  .cafe-progress {
+    animation: none;
   }
 }

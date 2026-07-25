@@ -2,6 +2,19 @@
 
 Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first).
 
+## Routes
+
+- `app/page.tsx` is the **public landing page** — full-bleed, outside any container.
+  Its two staged diagrams are derived from `ARCHITECTURE.md`'s runtime/data flow
+  sequences (`components/landing/mode-flows.ts`); if those flows change, change the copy.
+- Everything else lives in the `app/(registry)/` route group, whose layout supplies the
+  shared `max-w-5xl` container. Route groups don't affect URLs — `/configs`, `/submit`,
+  `/settings`, `/auth` are unchanged. Browse is `/configs` (it used to be `/`).
+- `/extension` is a stub until the extension is published; the landing CTA points at it
+  and both carry a `TODO(extension)` marker for the Web Store swap.
+- Landing typography/colour: `--font-display` (Instrument Serif) and the `--brand` amber
+  are defined in `globals.css` and used only by the landing page.
+
 ## Registry model (the served truth)
 
 - **`definition_versions` rows are the served truth directly** — no snapshot table.
