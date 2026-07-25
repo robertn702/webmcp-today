@@ -13,6 +13,24 @@
       "skillPath": "better-auth/best-practices/SKILL.md",
       "computedHash": "61ba0ef64ed2e7c424401cc848ca33dd6d790a720c44727717dc0c5cba5fc122"
     },
+    "chrome-extensions": {
+      "source": "googlechrome/modern-web-guidance",
+      "sourceType": "github",
+      "skillPath": "skills/chrome-extensions/SKILL.md",
+      "computedHash": "1373f573799adad2a98c158b0c1a068e9f3bdef07c728b55b2be3f1c8ae0c2b0"
+    },
+    "neon": {
+      "source": "neondatabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/neon/SKILL.md",
+      "computedHash": "3d1612a92d2095254430e242b30f39e61824b2c50e45f88de7332aa7a969a4f9"
+    },
+    "neon-postgres": {
+      "source": "neondatabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/neon-postgres/SKILL.md",
+      "computedHash": "155b339e116d891158c333031bf5a620fe029d98ba32f605d9c7c2a2e23a7ee6"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
