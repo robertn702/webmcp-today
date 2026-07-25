@@ -390,3 +390,19 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   `test/navigation.test.ts`). Not verified live: the flag-off path needs a Chrome
   without `#enable-webmcp-testing`, and the SPA path needs a human driving the dev
   browser.
+- 2026-07-25 — Relicensed as a split, superseding the 2026-07-23 root-`LICENSE` (MIT)
+  entry above: the server (`apps/web`, `packages/db`) is now **AGPL-3.0-only** — root
+  `LICENSE` is the verbatim FSF text under a short scope header — while the
+  adoption-surface packages stay **MIT**, each with its own `LICENSE`:
+  `packages/schema`, `packages/mcp` (both already had one) and `packages/definitions`,
+  `apps/extension` (added now). Rationale: start open, but keep the option to sell a
+  hosted/commercial server later. The Joakim Selemyr attribution block therefore moved
+  off the root LICENSE and lives only where the ported MIT code actually is —
+  `packages/schema/LICENSE` (`config.ts`, `steps.ts`, `fields.ts`, `derive-schema.ts`)
+  and `apps/extension/LICENSE` (`src/lib/` executor); `packages/definitions` has no
+  ported code and omits it, and the AGPL'd tree contains none. Contributions are
+  covered by a new `CONTRIBUTING.md` CLA: an irrevocable, non-exclusive license to
+  relicense under any terms (plus patent grant) rather than copyright assignment —
+  contributors keep their copyright, and the relicensing option survives without
+  chasing them. Git history was deliberately NOT rewritten; the MIT-era commits are
+  inert because the repo was never distributed.
