@@ -44,6 +44,24 @@ export function hostCoversHostname(patternHost: string, hostname: string): boole
 }
 
 /**
+ * Is a config's `domain` lookup key reachable through its own urlPatterns? True
+ * when at least one pattern's host covers `domain` (Chrome match semantics:
+ * `*.example.com` covers the apex `example.com` too — see hostCoversHostname).
+ *
+ * A config whose `domain` no pattern covers is unreachable by lookup: on a page
+ * that keys on `domain` no pattern matches (dropped by rankConfigsByUrl), and on
+ * a page the patterns do cover, `domain` is never a candidate lookup key. Mirrors
+ * the baseUrl same-origin check in api.ts. `domain` is expected already
+ * normalized (lowercased, www-stripped, as domainSchema emits).
+ */
+export function domainCoveredByPatterns(domain: string, urlPatterns: string[]): boolean {
+  return urlPatterns.some((pattern) => {
+    const parsed = parseUrlPattern(pattern);
+    return parsed !== null && hostCoversHostname(parsed.host, domain);
+  });
+}
+
+/**
  * Expand a hostname into the candidate `domain` lookup keys a stored config
  * might use: the full hostname plus each parent domain down to the registrable
  * domain (naively the last two labels — no public-suffix list). Leading `www.`
