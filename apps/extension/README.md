@@ -102,10 +102,15 @@ ends up injected as a tool in a live page.
 
 ## Known limitations (spike)
 
-- Tools register once per page load; SPA route changes don't re-match configs.
-- Registration from a content script relies on the testing flag relaxing
-  WebMCP's origin-isolation gate; whether that survives the stable release is
-  an open question (see AGENTS.md).
+- Tools register once per page load; SPA route changes don't re-match configs
+  (fix shape: a background navigation listener driving an idempotent re-run —
+  see docs/BACKLOG.md).
+- End users need the same `chrome://flags/#enable-webmcp-testing` toggle we use
+  in dev, and the extension neither detects nor explains a missing WebMCP API
+  today — it just registers nothing (docs/BACKLOG.md).
+- Registration from a content script is unsanctioned upstream, and sites can
+  reject injected tools outright via `Permissions-Policy: tools=()` (Chrome
+  150+) — see docs/platform-risks.md.
 - No caching or retry around the registry fetch — a single request per page
   load, falling back to bundled configs on any failure (simplicity bias; this
   is still a spike).
