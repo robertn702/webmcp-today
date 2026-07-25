@@ -2,6 +2,7 @@ import { defineContentScript } from "wxt/utils/define-content-script";
 import { browser } from "wxt/browser";
 import { getConfigsForUrl } from "../lib/configs.js";
 import { getModelContext } from "../lib/model-context.js";
+import { startNavigationWatcher } from "../lib/navigation.js";
 import { runRegistrationPass, type RegistrationDeps } from "../lib/register-tools.js";
 import { STATUS_MESSAGE_TYPE, type PageStatus } from "../lib/status.js";
 
@@ -9,7 +10,11 @@ export default defineContentScript({
   matches: ["<all_urls>"],
   runAt: "document_idle",
   main() {
-    void runRegistrationPass(window.location.href, deps);
+    // Runs the first pass now and re-runs it on SPA route changes.
+    startNavigationWatcher({
+      getUrl: () => window.location.href,
+      run: (url, signal) => runRegistrationPass(url, signal, deps),
+    });
   },
 });
 

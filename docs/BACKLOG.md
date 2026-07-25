@@ -55,12 +55,6 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **Switch Namecheap nameservers to Cloudflare** — the last step before
   `webmcp.cafe` resolves; Robert's action, then propagation time.
   (AGENTS.md → Deploy, domain & DNS)
-- **Re-register on SPA navigation** — content script registers once at
-  document_idle (content.ts main); SPA route changes never re-match configs
-  or drop stale tools. Add a history/URL-change listener + idempotent re-run;
-  Hub looks configs up per navigation from the background script, which is the
-  shape to copy. (apps/extension/README.md → Known limitations;
-  docs/DECISIONS.md 2026-07-24)
 - **Email service** (password reset, verification) — pick a provider (needs
   Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip

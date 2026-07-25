@@ -20,15 +20,24 @@ export interface RegistrationDeps {
 }
 
 /**
- * One registration pass for `url`.
+ * One registration pass for `url`. Every tool is registered with `signal`, so
+ * aborting it (on the next navigation) unregisters everything this pass added.
  *
  * Configs are looked up *before* WebMCP is probed on purpose: a missing
  * `document.modelContext` is only worth telling the user about on a page we
  * actually have tools for — probing first would warn on every page on the
  * internet.
  */
-export async function runRegistrationPass(url: string, deps: RegistrationDeps): Promise<void> {
+export async function runRegistrationPass(
+  url: string,
+  signal: AbortSignal,
+  deps: RegistrationDeps,
+): Promise<void> {
   const configs = await deps.loadConfigs(url);
+  // Navigated away while the lookup was in flight — the newer pass owns the
+  // status, so say nothing.
+  if (signal.aborted) return;
+
   if (configs.length === 0) {
     deps.reportStatus({ kind: "no-configs" });
     return;
@@ -96,16 +105,21 @@ export async function runRegistrationPass(url: string, deps: RegistrationDeps): 
       }
       seen.add(tool.name);
 
+      if (signal.aborted) return;
       try {
         // Promise-based in the 2026 draft; rejects on duplicate names, which
         // also covers collisions with imperatively site-registered tools.
-        await mc.registerTool({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema,
-          ...(tool.annotations ? { annotations: tool.annotations } : {}),
-          execute,
-        });
+        // `signal` ties the tool's lifetime to this pass.
+        await mc.registerTool(
+          {
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+            ...(tool.annotations ? { annotations: tool.annotations } : {}),
+            execute,
+          },
+          { signal },
+        );
         registered.push(tool.name);
         console.info(`[webmcp-cafe] Registered tool "${tool.name}"`);
       } catch (err) {

@@ -346,3 +346,47 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   the same: the DOM executor doesn't need WebMCP as transport, so the product
   degrades to extension-mediated agent access (side panel / chrome.debugger
   WebMCP CDP domain), a different shape rather than a dead one.
+- 2026-07-24 — Two launch-blocking extension gaps closed: **WebMCP-flag onboarding**
+  and **re-registration on SPA navigation**. Design calls worth keeping.
+  (1) **Order**: configs are now looked up _before_ `getModelContext()` is probed.
+  The probe used to come first, so "the flag is off" was indistinguishable from
+  "nothing to inject here" — and warning on the probe alone would fire on every
+  page on the internet. The signal now fires only once a config has matched.
+  (2) **Surface**: the extension's own surfaces, never the page. A `console.warn`
+  in the page console (where the rest of the extension's logging goes) carries the
+  exact steps, and a new popup entrypoint + action badge carry them where a
+  non-developer will actually see them: `!` badge when a config matched but WebMCP
+  is missing, tool count when registration worked, cleared otherwise. Page-injected
+  banners on third-party sites were rejected as user-hostile and a CWS-review risk.
+  No new permissions — the badge rides on the `action` key the popup adds, and the
+  flag URL is rendered as selectable text rather than a copy button so we don't ask
+  for `clipboardWrite`. Per-tab status lives in an in-memory Map in the background
+  worker; a worker restart loses it and the popup then says "reload the page",
+  while the badge (per-tab browser state) survives independently — accepted over
+  paying for the `storage` permission.
+  (3) **SPA detection lives in the content script, not the background.** Hub does
+  per-navigation lookup from the background via webNavigation; we already ask the
+  background per lookup, and the pass's AbortController state belongs next to the
+  registrations, so a content-script watcher was the smaller change — and it avoids
+  the "read your browsing history" permission warning `chrome.webNavigation` would
+  add to the store listing. Detection is `popstate` + `hashchange` plus a 500 ms
+  `location.href` poll. The poll is load-bearing, not laziness: `history.pushState`
+  is the common SPA route change and a content script **cannot** observe it —
+  patching `history` from the isolated world only intercepts the isolated world's
+  own calls. Cost: up to ~500 ms where the previous route's tools are still the
+  registered ones. The Navigation API (`navigatesuccess`) was skipped rather than
+  added as a fast path, because whether it fires for an isolated world couldn't be
+  verified here.
+  (4) **Teardown by signal**: one `AbortController` per pass, passed to
+  `registerTool` as `{ signal }` and aborted on the next URL change, so the
+  previous route's tools go away with the pass that made them. Passes are
+  serialized (a navigation waits for the aborted pass to drain rather than
+  interleaving) and an unchanged URL is a no-op.
+  (5) Registration moved out of the content-script entrypoint into
+  `src/lib/register-tools.ts`, taking its four side effects (config lookup, WebMCP
+  probe, site-declared tool names, status reporting) as injected deps — the reason
+  the flag-off branch, the stale-tool teardown and the no-op-on-unchanged-URL
+  behaviour are unit-tested at all (`test/register-tools.test.ts`,
+  `test/navigation.test.ts`). Not verified live: the flag-off path needs a Chrome
+  without `#enable-webmcp-testing`, and the SPA path needs a human driving the dev
+  browser.
