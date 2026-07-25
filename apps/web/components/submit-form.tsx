@@ -38,7 +38,7 @@ export function SubmitForm() {
       // The parser reports the offending position — useless to discard it on a
       // 200-line paste.
       const message = err instanceof Error ? err.message : String(err);
-      setError({ text: `Not valid JSON — ${message}` });
+      setError({ text: `Not valid JSON. ${message}` });
       return;
     }
     const parsed = createConfigSchema.safeParse(raw);
@@ -66,7 +66,7 @@ export function SubmitForm() {
         note: "or POST to the API with a Bearer key",
       });
     } else {
-      setError({ text: `Publish failed (${res.status}): ${await readErrorBody(res)}` });
+      setError({ text: `Publish failed (${res.status}). ${await readErrorBody(res)}` });
     }
   }
 

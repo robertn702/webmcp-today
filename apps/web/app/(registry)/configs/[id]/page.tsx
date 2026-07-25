@@ -47,8 +47,8 @@ export default async function ConfigPage({ params }: { params: Promise<{ id: str
         <InstallButton configId={config.id} />
         <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted-foreground">
           Installing adds this package to your account at v{config.version}. The extension registers
-          its tools whenever you&apos;re on a matching page, and keeps you on v{config.version}{" "}
-          until you update.
+          its tools whenever you&apos;re on a matching page. You stay on v{config.version} until you
+          update.
         </p>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
           Needs the extension on Chrome 149+ with the WebMCP testing flag.{" "}

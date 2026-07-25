@@ -19,12 +19,12 @@ export default async function ConfigsPage() {
       <h1 className="mb-1 text-2xl font-bold">Browse packages</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {total} package{total === 1 ? "" : "s"}. Each one adds tools to a site that never shipped
-        any — install one and the extension registers it on matching pages.
+        any. Install one and the extension registers it on matching pages.
       </p>
 
       {configs.length === 0 ? (
         <p className="rounded border border-dashed border-border p-8 text-center text-muted-foreground">
-          No configs yet.{" "}
+          No packages yet.{" "}
           <Link href="/submit" className="underline">
             Publish the first one.
           </Link>
