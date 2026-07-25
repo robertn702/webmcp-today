@@ -2,7 +2,7 @@ import { createConfigSchema } from "@robertn702/webmcp-cafe-schema";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
 import { listConfigs } from "@/lib/configs-repo";
-import { jsonError, parseBody } from "@/lib/http";
+import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";
 import { insertDefinition } from "@/lib/mutations";
 
 /** GET /api/configs?domain=&page=&pageSize= — browse the registry (latest version of each). */
@@ -16,7 +16,12 @@ export async function GET(request: Request): Promise<NextResponse> {
   return NextResponse.json({ configs, total, page, pageSize });
 }
 
-/** POST /api/configs — publish a new definition + its version 1 (session cookie or Bearer API key). */
+/**
+ * POST /api/configs — publish a new definition + its version 1 (session cookie
+ * or Bearer API key). Publishing here carries the same submission grant as the
+ * form at /submit: a permanent license to host and redistribute the package,
+ * offered onward under CC0. The 201 links back to /terms.
+ */
 export async function POST(request: Request): Promise<NextResponse> {
   const userId = await getAuthUserId(request);
   if (!userId) return jsonError(401, "Authentication required (session or API key)");
@@ -25,5 +30,5 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!body.ok) return body.response;
 
   const { definitionId } = await insertDefinition(body.data, userId);
-  return NextResponse.json({ id: definitionId }, { status: 201 });
+  return acceptedSubmission(request, { id: definitionId });
 }

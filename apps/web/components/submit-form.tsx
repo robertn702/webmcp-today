@@ -96,9 +96,21 @@ export function SubmitForm() {
           </AlertDescription>
         </Alert>
       )}
-      <Button onClick={() => void submit()} disabled={busy} className="w-fit">
-        {busy ? "Publishing…" : "Publish package"}
-      </Button>
+      <div className="flex flex-col gap-3">
+        <Button onClick={() => void submit()} disabled={busy} className="w-fit">
+          {busy ? "Publishing…" : "Publish package"}
+        </Button>
+        {/* The grant attaches on publish, so the notice sits on the control that
+            does it rather than somewhere the publisher has to go looking. */}
+        <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
+          Publishing grants a permanent license to host and redistribute this package, offers it to
+          everyone under CC0, and confirms it&apos;s yours to publish.{" "}
+          <Link href="/terms" className="text-foreground underline underline-offset-4">
+            Full terms
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   );
 }

@@ -438,3 +438,25 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   and gives up badge _text_ on non-installed sites. Sequenced last, not first — consent
   is fixed by local installs alone. Cross-device sync and signed-in install state are
   explicitly deferred and were not allowed to shape v1.
+- 2026-07-25 — **Terms of service + config submission terms** (`/terms`, `apps/web`).
+  The repo licensing split that landed the same day covers _code_; community-submitted
+  configs had no terms at all, so the project had no stated right to host or redistribute
+  the corpus and no consumer had a stated right to use it. Closed with a ToS rather than a
+  license field, which is how npm, PyPI and Greasy Fork all handle submitted content.
+  Three parts: (1) an **inbound grant** — publishing grants a worldwide, non-exclusive,
+  irrevocable, perpetual, royalty-free, sublicensable license to host/reproduce/modify/
+  redistribute, plus a warranty that the submitter has the right to submit; irrevocable is
+  load-bearing because versions are append-only and installs pin, so a revoked grant would
+  break live installs. (2) an **outbound corpus license of CC0** — MIT's notice-retention
+  clause is unworkable on a JSON blob injected into a live page, so it would be decorative;
+  `packages/definitions` stays MIT because it is code-shaped and ships its own LICENSE.
+  (3) **notice at the point of submission on both surfaces** — a line on the publish button
+  for the form, and for the API a `terms` field + `Link: …; rel="terms-of-service"` header
+  on every `201` (`acceptedSubmission` in `apps/web/lib/http.ts`), since an agent POSTing
+  never sees `/submit`. Deliberately _not_ done: a per-config `license` field on
+  `packages/schema` (one blanket license for v1), and a `agreeToTerms` checkbox/field —
+  a required schema field would break the seed corpus and every published consumer, and the
+  button-adjacent notice is the pattern npm and GitHub use. The document is an unreviewed
+  draft: no governing-law or dispute clause (inventing a jurisdiction is worse than omitting
+  one) and the only contact channel is the public issue tracker, because no mail provider is
+  configured yet. Both gaps are marked `TODO(legal)` in the page.

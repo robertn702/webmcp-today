@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { jsonError, parseBody } from "@/lib/http";
+import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";
 import { publishVersion } from "@/lib/mutations";
 
 /**
@@ -12,6 +12,9 @@ import { publishVersion } from "@/lib/mutations";
  * definition (owner only). Versions are append-only; there is no edit or
  * delete. Installed users stay pinned to their current version until they
  * explicitly call /update.
+ *
+ * A version is a submission of its own, so it carries the same grant as a first
+ * publish and the 201 links back to /terms.
  */
 export async function POST(
   request: Request,
@@ -36,5 +39,5 @@ export async function POST(
   if (!body.ok) return body.response;
 
   const { versionId, version } = await publishVersion(id, body.data);
-  return NextResponse.json({ versionId, version }, { status: 201 });
+  return acceptedSubmission(request, { versionId, version });
 }

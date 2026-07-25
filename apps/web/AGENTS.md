@@ -12,6 +12,12 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   `/settings`, `/auth` are unchanged. Browse is `/configs` (it used to be `/`).
 - `/extension` is a stub until the extension is published; the landing CTA points at it
   and both carry a `TODO(extension)` marker for the Web Store swap.
+- `components/site-footer.tsx` renders once from the **root** layout (not the registry
+  group), so `/terms` and the AGPL §13 source offer appear on the landing page too.
+- `/terms` is the submission grant + the corpus's CC0 offer. Both publish routes echo it
+  on `201` (`terms` field + `Link: …; rel="terms-of-service"`) via `acceptedSubmission`
+  in `lib/http.ts` — API publishers never see the notice on `/submit`. Unreviewed draft;
+  the `TODO(legal)` in the page lists what a lawyer still has to add.
 - Landing typography/colour: `--font-display` (Instrument Serif) and the `--brand` amber
   are defined in `globals.css` and used only by the landing page.
 
