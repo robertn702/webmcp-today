@@ -45,6 +45,9 @@ cd apps/extension && bun run dev
   (session or `Authorization: Bearer <api key>`), edit metadata (owner)
 - `POST /api/configs/:id/versions` — publish a new version (owner; versions
   are append-only)
+- Both publish routes carry the submission grant in
+  [the terms](https://webmcp.cafe/terms) and echo it back on `201` as a `terms`
+  field plus a `Link: …; rel="terms-of-service"` header
 - `POST/DELETE /api/configs/:id/install`, `POST /api/configs/:id/update` —
   install/uninstall (pinned to a version) and move the pin (update or
   rollback); install count is the trust signal
@@ -86,5 +89,7 @@ Split, so the pieces worth adopting stay permissive:
 
 - **AGPL-3.0-only** — the server: `apps/web` and `packages/db` (root `LICENSE`). Run a modified copy as a network service and you owe your users the source.
 - **MIT** — everything built to be adopted freely: `packages/schema` (config format), `packages/mcp` (MCP server), `packages/definitions` (curated configs), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
+
+Community-submitted configs are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.cafe/terms) (`apps/web/app/(registry)/terms`). `packages/definitions` is the first-party exception: it ships as MIT source.
 
 Executor and config format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).

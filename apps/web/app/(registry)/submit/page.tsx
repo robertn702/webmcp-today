@@ -33,8 +33,20 @@ export default function SubmitPage() {
         <Link href="/settings/security" className="text-foreground underline underline-offset-4">
           Settings → Security
         </Link>
-        . Returns <code className="font-mono text-xs">201 {"{ id }"}</code>. Validation failures
-        return the zod issue list.
+        . Returns <code className="font-mono text-xs">201 {"{ id, terms }"}</code>. Validation
+        failures return the zod issue list.
+      </p>
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        POSTing carries the same grant the form does. Whoever runs the agent grants a permanent
+        license to host and redistribute the package, offers it to everyone under CC0, and confirms
+        it&apos;s theirs to publish. Every 201 repeats the link in a{" "}
+        <code className="font-mono text-xs">terms</code> field and a{" "}
+        <code className="font-mono text-xs">Link</code> header, so an agent can read the terms it
+        just accepted.{" "}
+        <Link href="/terms" className="text-foreground underline underline-offset-4">
+          Full terms
+        </Link>
+        .
       </p>
     </div>
   );

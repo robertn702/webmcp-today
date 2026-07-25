@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { UserButton } from "@/components/auth/user/user-button";
 import { Providers } from "@/components/providers";
+import { SiteFooter } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </nav>
           </header>
           <main className="flex flex-1 flex-col">{children}</main>
+          <SiteFooter />
         </Providers>
       </body>
     </html>

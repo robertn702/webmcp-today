@@ -247,31 +247,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
-          <p className="font-mono text-xs text-muted-foreground">
-            ☕ webmcp.cafe · a community registry of WebMCP tool packages.
-          </p>
-          <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-            <Link href="/configs" className="hover:text-foreground hover:underline">
-              Browse
-            </Link>
-            <Link href="/submit" className="hover:text-foreground hover:underline">
-              Submit
-            </Link>
-            <Link href={EXTENSION_HREF} className="hover:text-foreground hover:underline">
-              Extension
-            </Link>
-            <a
-              href="https://github.com/robertn702/webmcp-cafe"
-              className="hover:text-foreground hover:underline"
-            >
-              GitHub
-            </a>
-          </div>
-        </div>
-      </footer>
     </>
   );
 }
