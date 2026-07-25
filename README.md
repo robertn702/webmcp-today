@@ -5,7 +5,8 @@ implemented WebMCP themselves — Greasyfork for the agentic web. Humans and age
 author declarative configs that teach AI agents how to operate a site; an
 extension (or MCP server) delivers them. **Agents teaching agents.**
 
-Live at `webmcp.cafe` (pending deploy). Format and executor based on Joakim
+Live at `webmcp.cafe` (deployed; domain goes live once the Namecheap nameservers
+switch to Cloudflare — see AGENTS.md). Format and executor based on Joakim
 Selemyr's MIT-licensed [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub)
 and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
 
