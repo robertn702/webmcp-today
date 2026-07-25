@@ -38,6 +38,58 @@ describe("toolDescriptorSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects {{template}} vars nested inside a condition step's then branch", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      execution: {
+        mode: "dom",
+        selector: "form",
+        autosubmit: false,
+        steps: [
+          {
+            action: "condition",
+            selector: "#modal",
+            state: "visible",
+            then: [{ action: "fill", selector: "#q", value: "{{missing}}" }],
+          },
+        ],
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects {{template}} vars nested inside a condition step's else branch", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      execution: {
+        mode: "dom",
+        selector: "form",
+        autosubmit: false,
+        steps: [
+          {
+            action: "condition",
+            selector: "#modal",
+            state: "hidden",
+            then: [{ action: "click", selector: "#ok" }],
+            else: [
+              {
+                action: "condition",
+                selector: "#inner",
+                state: "visible",
+                then: [{ action: "fill", selector: "#q", value: "{{typo}}" }],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("accepts a valid multi-step tool with nested condition steps", () => {
     const result = toolDescriptorSchema.safeParse({
       name: "search",

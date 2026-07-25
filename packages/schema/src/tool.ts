@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TOOL_DESCRIPTION_MAX, TOOL_NAME_MAX } from "./budgets.js";
 import { executionDescriptorSchema } from "./execution.js";
 import { inputSchemaSchema } from "./input-schema.js";
+import type { ActionStep } from "./steps.js";
 import { unknownPlaceholders } from "./templates.js";
 
 // Tool descriptor — one WebMCP tool: metadata + optional declarative execution.
@@ -53,13 +54,20 @@ export const toolDescriptorSchema = toolDescriptorObjectSchema.superRefine((tool
     }
   };
 
-  const steps = tool.execution.steps ?? [];
-  for (const [i, step] of steps.entries()) {
-    const base = ["execution", "steps", i];
+  const checkStep = (step: ActionStep, base: (string | number)[]): void => {
     if ("url" in step) checkTemplates(step.url, [...base, "url"]);
     if ("value" in step) checkTemplates(step.value, [...base, "value"]);
     if ("selector" in step) checkTemplates(step.selector, [...base, "selector"]);
-  }
+    // A condition step's then/else hold nested steps whose {{param}} templates
+    // would otherwise go unchecked and silently interpolate to "" at runtime.
+    if (step.action === "condition") {
+      step.then.forEach((child, i) => checkStep(child, [...base, "then", i]));
+      step.else?.forEach((child, i) => checkStep(child, [...base, "else", i]));
+    }
+  };
+
+  const steps = tool.execution.steps ?? [];
+  steps.forEach((step, i) => checkStep(step, ["execution", "steps", i]));
 });
 
 export type ToolAnnotations = z.infer<typeof toolAnnotationsSchema>;
