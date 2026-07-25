@@ -5,9 +5,10 @@ implemented WebMCP — "Greasyfork for the agentic web".
 
 ## Status: PRE-PRODUCTION (delete this section on launch)
 
-- Not deployed; no real users or data. Skip production concerns (zero-downtime
-  migrations, backfills, API backwards compat).
-- DB wipes/resets are always acceptable — prefer clean migrations; seeds repopulate.
+- Deployed to prod (Vercel + `webmcp.cafe`) but pre-launch — no real users or
+  data. Skip production concerns (zero-downtime migrations, backfills, API
+  backwards compat).
+- DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
 
 ## Layout
 
@@ -31,6 +32,28 @@ packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 
 - Lint runs once at the root; typecheck/test/build fan out via turbo. `apps/web` build
   needs real env vars (t3-env validates at build).
+
+## Deploy, domain & DNS
+
+- Hosting: Vercel project `webmcp-cafe`, team `robert-1554` (orgId
+  `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. Prod deploy:
+  `vercel --prod` from the repo root.
+- Required env vars must exist in the Vercel project (Production) or the build
+  fails at "Collecting page data" (t3-env validates on import). Set with
+  `vercel env add <NAME> production`; local source of truth is `apps/web/.env`
+  (override `BETTER_AUTH_URL` to the prod origin for Production).
+- Domain `webmcp.cafe`: registered at **Namecheap**, DNS on **Cloudflare** (zone
+  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud). Records:
+  `A @ → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`; www 308→apex. Going live
+  needs the Namecheap nameservers switched to the two Cloudflare NS
+  (`diva`/`patrick.ns.cloudflare.com`). CF API token: 1Password robertn702 →
+  Private, "Cloudflare API Token (webmcp-cafe)".
+- Vercel token/scope quirks (which token to use, the `robertniimi` 403 trap):
+  global `~/.config/opencode/AGENTS.md` "Vercel". Vercel refuses
+  `vercel domains add` while the latest prod deploy is errored — fix the deploy
+  first, then attach the domain.
+- GitHub OAuth prod sign-in needs `https://webmcp.cafe/api/auth/callback/github`
+  added to the OAuth app's authorized callbacks.
 
 ## Stack (decided — do not relitigate)
 
