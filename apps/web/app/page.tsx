@@ -53,7 +53,7 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-5xl gap-12 px-4 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-center lg:gap-14 lg:pt-24 lg:pb-28">
           <div>
             <p className="cafe-rise font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
-              ☕ WebMCP tool registry · anyone can publish
+              WebMCP tool registry
             </p>
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
@@ -174,32 +174,45 @@ export default async function LandingPage() {
               Trust model
             </p>
             <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-              An install count, not a checkmark.
+              Read it before you run it.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              There is no approval queue and no verified badge. Packages run in pages you're signed
-              into, so containment comes from the data model rather than from a promise.
+              A package registers tools on pages you&apos;re signed into. So nothing here asks you
+              to take our word for it.
             </p>
           </div>
 
           <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2">
-            <TrustFact title="Versions are append-only">
-              Publishing v4 leaves v3 byte-for-byte intact. The version rows are the served truth,
-              so there is no snapshot table to drift out of sync.
+            <TrustFact title="The source is public">
+              The extension, this registry, the schema and the MCP server all live in one GitHub
+              repo. What the extension does with a package is code you can read.
             </TrustFact>
-            <TrustFact title="Installs pin to a version">
-              You get the version you installed and nothing else. A malicious or broken update
-              reaches zero installed users until each one opts in. Rollback is just re-pinning.
+            <TrustFact title="Packages are data, not code">
+              A package is a JSON document. URL patterns, tool descriptions, and either DOM steps or
+              an API block. Nothing in it can run arbitrary code in your page.
             </TrustFact>
-            <TrustFact title="Rival packages are allowed">
-              Two packages may target the same site. Install count and URL-pattern specificity rank
-              them. Competition beats a gatekeeper.
+            <TrustFact title="You see every tool first">
+              The package page lists each tool it registers and what that tool takes. Nothing shows
+              up on a page you didn&apos;t already read.
             </TrustFact>
-            <TrustFact title="Same-origin, no eval">
-              No package has an arbitrary-code step. API-mode calls are locked to the package&apos;s
-              own origin, checked when it&apos;s published and again when it runs. A registry bug
-              alone can&apos;t break it.
+            <TrustFact title="Updates can’t ambush you">
+              Your install is pinned to one version, and a published version is never edited. A bad
+              update reaches you when you move the pin and not before. Rolling back means moving it
+              back.
             </TrustFact>
+            <TrustFact title="A call can’t leave the site">
+              API mode is locked to the package&apos;s own origin, checked when it&apos;s published
+              and again when it runs. Your session on one site stays there.
+            </TrustFact>
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
+              <a href="https://github.com/robertn702/webmcp-cafe">
+                Read the source
+                <ArrowRight className="size-4" />
+              </a>
+            </Button>
           </div>
         </div>
       </section>
@@ -209,12 +222,10 @@ export default async function LandingPage() {
         <div className="flex flex-col items-start gap-8 rounded-2xl border bg-card px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
             <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
-              Start with the extension.
+              Nothing runs without the extension.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              It is the part that does the work. The registry is just where the packages live. Once
-              it&apos;s running, every package you&apos;ve installed shows up as tools on the sites
-              you visit. Then write one of your own.
+              Install it once, add a package, and the tools are there next time you open the site.
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
