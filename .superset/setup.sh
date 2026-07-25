@@ -48,7 +48,18 @@ else
   echo "Skipping .scratch/shared symlink: $SHARED_SCRATCH not a directory"
 fi
 
-# 4. Install dependencies so the workspace is immediately usable.
+# 4. Symlink .vercel from the main worktree so the `vercel` CLI resolves the
+#    linked project in every workspace (project/org ids only — no secrets;
+#    .vercel is gitignored). Without it, every vercel command needs --cwd.
+VERCEL_LINK="$MAIN_REPO/.vercel"
+if [[ -d "$VERCEL_LINK" ]]; then
+  ln -sfn "$VERCEL_LINK" "$PWD/.vercel"
+  echo "Linked .vercel -> $VERCEL_LINK"
+else
+  echo "Skipping .vercel symlink: $VERCEL_LINK not a directory"
+fi
+
+# 5. Install dependencies so the workspace is immediately usable.
 if command -v bun >/dev/null 2>&1; then
   echo "Installing dependencies with bun..."
   bun install
