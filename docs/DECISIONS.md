@@ -406,3 +406,35 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   contributors keep their copyright, and the relicensing option survives without
   chasing them. Git history was deliberately NOT rewritten; the MIT-era commits are
   inert because the repo was never distributed.
+- 2026-07-25 — **Installed packages move into the extension's `chrome.storage.local`.
+  No account to consume; auth only to publish.** Design: `docs/local-first-installs.md`
+  (decided, unimplemented — the code, `ARCHITECTURE.md`, `docs/erd.md` and
+  `mode-flows.ts` all still describe the current design until each step lands). What
+  forced it: the extension sends every full URL it sees to `GET /api/configs/lookup`
+  (`content.ts:10` matches `<all_urls>`, `navigation.ts:36` polls every 500 ms), so the
+  registry receives a browsing-history feed — and the lookup's default branch has no
+  auth and serves latest-version configs to anyone (`lookup/route.ts:24`), so **install
+  has never affected what registers**. Both landing TrustFacts about seeing tools first
+  and pinned versions (`page.tsx:194`, `:198`) were false as built; local installs make
+  them true by construction. Supersedes the backlog's "factor in installed configs" fix
+  (credentialed `installed=true` fetch): that keeps the URL feed and makes consumption
+  require an account, which is the opposite of the direction chosen. Consequences worth
+  knowing without opening the doc: the bundled auto-registering fallback is deleted and
+  becomes a first-run **suggestion** list (same consent gap in miniature), which also
+  ends the silent-fallback trap and voids the reddit-exclusion debugging convention;
+  a revocation feed (`GET /api/revocations?since=`) is **mandatory**, because once
+  bodies live on disk it is the registry's only remaining lever after install; install
+  count is dropped as a trust signal (anonymous consumption makes it inflatable, and no
+  code path ever ranked by it — `url-matching.ts:151`, `lookup.ts:33`,
+  `configs-repo.ts:84`); the MCP install tools keep their names but stop claiming a
+  browser effect and hand back a deep link the human clicks. Dropping the `<all_urls>`
+  content script for per-domain `optional_host_permissions` +
+  `chrome.scripting.registerContentScripts` was researched against current MV3 docs and
+  **works**, with two hard constraints: `permissions.request()` needs a user gesture in
+  an extension surface (unavailable in content scripts, lost when forwarded through the
+  service worker — crbug.com/1284891), so a grant always ends in the popup; and reading
+  tab URLs from the background costs `tabs`/`webNavigation`, both warned as "Read your
+  browsing history", so discovery uses warning-free `declarativeContent` rules instead
+  and gives up badge _text_ on non-installed sites. Sequenced last, not first — consent
+  is fixed by local installs alone. Cross-device sync and signed-in install state are
+  explicitly deferred and were not allowed to shape v1.
