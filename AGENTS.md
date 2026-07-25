@@ -79,12 +79,14 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - Feature-detect: `const mc = document.modelContext ?? navigator.modelContext`.
 - `await mc.registerTool({ name, description, inputSchema, execute, annotations }, { signal })`
   — rejects on duplicate names.
-- Chrome origin trial 149→156; local dev needs `chrome://flags/#enable-webmcp-testing`.
+- Chrome origin trial 149→156; local dev **and end users** need
+  `chrome://flags/#enable-webmcp-testing` — sites we inject into never serve an
+  origin-trial token on our behalf (docs/DECISIONS.md 2026-07-24).
 - Char budgets (Chrome guidance): we enforce 500/tool description, 150/param
   description, 30/name at publish time; tool output is uncapped in v1 (Chrome's 1.5K is
   guidance, not enforcement — see docs/DECISIONS.md 2026-07-24).
-- Open question: content-script registration may break when WebMCP ships stable
-  (origin-isolation gating) — track https://github.com/webmachinelearning/webmcp.
+- Platform risks (unsanctioned extension registration, `tools=()` kill switch):
+  docs/platform-risks.md; track webmachinelearning/webmcp#74.
 
 ## Config format
 
@@ -123,6 +125,7 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 | Extension notes                 | `apps/extension/AGENTS.md`                                                                                                      |
 | Data model ERD                  | `docs/erd.md`                                                                                                                   |
 | API execution model             | `docs/api-execution-model.md`                                                                                                   |
+| Platform risk register          | `docs/platform-risks.md`                                                                                                        |
 | Decision history (archive)      | `docs/DECISIONS.md`                                                                                                             |
 | Open follow-ups (prune as done) | `docs/BACKLOG.md`                                                                                                               |
 | Reference impl (MIT, ported)    | [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub) + [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) |

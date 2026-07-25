@@ -297,3 +297,52 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   fitting a fixed budget. Follow-up: design output-budget customization later
   (e.g. a per-user extension setting for output budget, possibly model-aware);
   the budget question is deferred, not answered.
+- 2026-07-24 — Surveyed the reference implementation now that it ships as a
+  product: **WebMCP Hub** (Joakim Selemyr — the same MIT source our DOM executor
+  is ported from) is **published on the Chrome Web Store**
+  (`ahblgfajboifhioeldnefolijmllkaaj`, v1.0.0, 19 Feb 2026, 21 users, 21.8 KiB,
+  "will not collect or use your data"). Four findings bear on our launch.
+  (1) **The WebMCP flag is unavoidable for end users.** Their README lists
+  Chrome Canary/Dev + `chrome://flags` "WebMCP for testing" + the Model Context
+  Tool Inspector as prerequisites — they push enablement onto the user rather
+  than solving it, and no origin-trial path exists for us either: we inject into
+  third-party sites, which never serve a trial token on our behalf. So the
+  extension must detect a missing `document.modelContext` /
+  `navigator.modelContext` and say how to turn it on, and the install page leads
+  with that copy. (2) **Store approval is precedented for this exact category** —
+  remote-registry lookup plus content-script tool registration passed review.
+  Our policy position is stronger than theirs: no `evaluate` step, and we ship
+  declarative JSON interpreted by a bundled executor, not code. Say precisely
+  that in the listing and make the same no-data-collection declaration; the
+  "no remote code" fight stays where `docs/api-execution-model.md` puts it, at
+  tiers 2–3. (3) **SPA fix shape**: their listing claims both traditional loads
+  and SPAs because the background script listens for navigations and looks up
+  configs per navigation — versus our once-at-`document_idle` content script.
+  (4) Their popup exposes a **configurable hub URL**, so a store-approved
+  extension can already be pointed at an arbitrary registry; if our
+  `GET /api/configs/lookup` is wire-compatible with their hub client, that is a
+  launch path with zero store-review latency, at the cost of shipping our
+  experience inside a competitor's shell — worth a short compatibility check.
+  Strategic read: 21 users in five months says the reachable audience today is
+  people willing to run a Chrome flag, i.e. developers. Launch to them (config
+  authoring docs, the schema/MCP packages, honest "this is early" framing)
+  rather than polishing for a consumer audience that cannot run the API yet.
+- 2026-07-24 — Platform-risk assessment, now living in docs/platform-risks.md.
+  The origin-isolation fear in SPEC.md was obsolete: Chrome defaults to
+  origin-keyed agent clusters since the `document.domain` deprecation (~M115),
+  so only legacy `Origin-Agent-Cluster: ?0` sites fail. The real upstream risks
+  are unsanctioned extension-side registration (webmachinelearning/webmcp#74 —
+  tail risk is provenance marking, not blocking, since gating `registerTool`
+  buys the platform nothing over what `host_permission` already grants) and
+  `Permissions-Policy: tools=()` as a per-site kill switch (#178 — enforced
+  above the JS layer, and the filer is advocating it as standard defensive
+  posture with a demo that is exactly our injection pattern). Decided: if a
+  site sends `tools=()`, we respect it — catch the SecurityError, mark the
+  config site-blocked, do NOT strip the header via declarativeNetRequest. It
+  removes a user-protection control for all scripts, invites CWS rejection,
+  and the platform sides with the site if it escalates. The trend to watch is
+  `tools=()` becoming baseline guidance or a framework/CDN default — that
+  version is existential, the header alone is not. Fallback for both risks is
+  the same: the DOM executor doesn't need WebMCP as transport, so the product
+  degrades to extension-mediated agent access (side panel / chrome.debugger
+  WebMCP CDP domain), a different shape rather than a dead one.
