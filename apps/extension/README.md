@@ -37,6 +37,27 @@ logged-in page.
   origins, since manifest permissions are fixed at build time and can't read
   the env var.
 
+## Status surface (badge + popup)
+
+Every registration pass reports its outcome to the background script, which
+mirrors it on the action badge and in the popup:
+
+| Situation                          | Badge      | Popup                                               |
+| ---------------------------------- | ---------- | --------------------------------------------------- |
+| Configs matched, tools registered  | tool count | the registered tool names                           |
+| Configs matched, WebMCP API absent | `!`        | `chrome://flags/#enable-webmcp-testing` steps       |
+| No config matches the URL          | cleared    | "No tools for this page"                            |
+| Background has no status yet       | unchanged  | "reload the page" (service worker restarts lose it) |
+
+The "WebMCP is off" signal only fires once a config has matched — probing the
+API first would warn on every page on the internet. It also lands in the page
+console (`console.warn`) with the same steps, since that's where the rest of the
+extension's logging goes. Nothing is injected into the page: banners on
+third-party sites are user-hostile and a review risk.
+
+No extra permissions back this — the badge comes with the `action` key that the
+popup entrypoint already adds.
+
 ## Dev browser
 
 `bun run dev` launches a **separate** Chrome instance with its own profile —
@@ -105,9 +126,10 @@ ends up injected as a tool in a live page.
 - Tools register once per page load; SPA route changes don't re-match configs
   (fix shape: a background navigation listener driving an idempotent re-run —
   see docs/BACKLOG.md).
-- End users need the same `chrome://flags/#enable-webmcp-testing` toggle we use
-  in dev, and the extension neither detects nor explains a missing WebMCP API
-  today — it just registers nothing (docs/BACKLOG.md).
+- End users still need the same `chrome://flags/#enable-webmcp-testing` toggle we
+  use in dev — there is no origin-trial path for injected tools. The extension
+  detects the missing API and shows the enablement steps (badge + popup + page
+  console), but it can't flip the flag for them.
 - Registration from a content script is unsanctioned upstream, and sites can
   reject injected tools outright via `Permissions-Policy: tools=()` (Chrome
   150+) — see docs/platform-risks.md.

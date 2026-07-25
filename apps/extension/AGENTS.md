@@ -57,6 +57,11 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   (`WXT_REGISTRY_API_URL`, default `http://localhost:3000`); content script asks
   via `browser.runtime.sendMessage`. Registry responses are zod-validated with
   `webMcpConfigSchema` at the boundary.
+- `src/lib/register-tools.ts` — one registration pass (config lookup → WebMCP
+  probe → registerTool), taking its side effects as injected deps so it is
+  unit-testable; the content script supplies the real ones.
+- `src/entrypoints/popup/` + the action badge — where a missing WebMCP API is
+  surfaced (page-console `console.warn` too). Never inject UI into the page.
 - `src/lib/executor.ts` + `steps.ts` — DOM executor ported from Joakim Selemyr's
   MIT webmcp-extension; no `evaluate` step by design.
 - Bundled fallback configs come from `@webmcp-cafe/definitions`
