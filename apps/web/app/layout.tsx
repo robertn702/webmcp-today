@@ -21,8 +21,8 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "WebMCP Cafe — MCP tools for any site",
-    template: "%s — WebMCP Cafe",
+    default: "WebMCP Cafe · MCP tools for any site",
+    template: "%s · WebMCP Cafe",
   },
   description:
     "Install community-written MCP tool packages on sites that never shipped any. The extension registers them on the page, so your agent calls named tools instead of guessing.",

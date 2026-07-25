@@ -62,7 +62,7 @@ export default async function LandingPage() {
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
               Agents guess at the DOM because almost no site publishes real tools. Install a package
-              here and the extension registers them on the page — so your agent calls{" "}
+              here and the extension registers its tools on the page, so your agent calls{" "}
               <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
                 reddit_comment
               </code>{" "}
@@ -110,17 +110,17 @@ export default async function LandingPage() {
           <Reason
             index="01"
             title="Sites won't do this for you"
-            body="WebMCP is a live W3C proposal and adoption is roughly zero. The sites you use every day are not going to be first, and they'd never ship the tools you actually want anyway."
+            body="WebMCP is a live W3C proposal and adoption is roughly zero. The sites you use every day won't be first. They'd never ship the tools you actually want anyway."
           />
           <Reason
             index="02"
             title="Scraping rots quietly"
-            body="A selector breaks the day a class name changes and nothing tells you. A package that declares the site's own HTTP API fails loudly instead — a 4xx you can see beats a div you can't find."
+            body="A selector breaks the day a class name changes and nothing tells you. A package that declares the site's own HTTP API fails loudly instead. A 4xx you can see beats a div you can't find."
           />
           <Reason
             index="03"
             title="Agents can write packages"
-            body="A package is data: URL patterns, tool descriptions, and either DOM steps or an API block. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
+            body="A package is data. URL patterns, tool descriptions, and either DOM steps or an API block. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
           />
         </div>
       </section>
@@ -134,8 +134,8 @@ export default async function LandingPage() {
           <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Two ways in.</h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Same registry, same packages, same execution engine. The difference is where the agent
-            sits — outside the browser, talking to the registry over MCP, or inside the page, using
-            tools the extension already injected. Step through each one.
+            sits. It can run outside the browser and talk to the registry over MCP, or run inside
+            the page on tools the extension already injected. Step through each one.
           </p>
         </div>
 
@@ -143,12 +143,12 @@ export default async function LandingPage() {
           <ModeCard
             index="Mode 01"
             title="From your terminal"
-            summary="An agent outside the browser — Claude Code, or any MCP client — searches the registry, publishes what's missing, and pins an install. The extension delivers that exact version into the page."
+            summary="An agent outside the browser, like Claude Code or any other MCP client, searches the registry, publishes what's missing, and pins an install. The extension delivers that exact version into the page."
           >
             <FlowDiagram
               nodes={llmFirstNodes}
               steps={llmFirstSteps}
-              label="From your terminal: a terminal agent uses the Cafe MCP server to find, publish and install packages, which the extension then registers on the target site."
+              label="From your terminal, an agent uses the Cafe MCP server to find, publish and install packages, which the extension then registers on the target site."
             />
           </ModeCard>
 
@@ -160,7 +160,7 @@ export default async function LandingPage() {
             <FlowDiagram
               nodes={inBrowserNodes}
               steps={inBrowserSteps}
-              label="In the browser: the extension fetches packages for the current URL and registers their tools on document.modelContext, where the browser's agent invokes them."
+              label="In the browser, the extension fetches packages for the current URL and registers their tools on document.modelContext, where the browser's agent invokes them."
             />
           </ModeCard>
         </div>
@@ -184,20 +184,20 @@ export default async function LandingPage() {
 
           <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2">
             <TrustFact title="Versions are append-only">
-              Publishing v4 leaves v3 byte-for-byte intact. The version rows are the served truth —
-              there is no snapshot table to drift out of sync.
+              Publishing v4 leaves v3 byte-for-byte intact. The version rows are the served truth,
+              so there is no snapshot table to drift out of sync.
             </TrustFact>
             <TrustFact title="Installs pin to a version">
               You get the version you installed and nothing else. A malicious or broken update
-              reaches zero installed users until each one opts in, and rollback is just re-pinning.
+              reaches zero installed users until each one opts in. Rollback is just re-pinning.
             </TrustFact>
             <TrustFact title="Rival packages are allowed">
-              Two packages may target the same site; install count and URL-pattern specificity rank
+              Two packages may target the same site. Install count and URL-pattern specificity rank
               them. Competition beats a gatekeeper.
             </TrustFact>
             <TrustFact title="Same-origin, no eval">
               No package has an arbitrary-code step. API-mode calls are locked to the package&apos;s
-              own origin, checked when it&apos;s published and again when it runs — a registry bug
+              own origin, checked when it&apos;s published and again when it runs. A registry bug
               alone can&apos;t break it.
             </TrustFact>
           </div>
@@ -212,7 +212,7 @@ export default async function LandingPage() {
               Start with the extension.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              It is the part that does the work — the registry is just where the packages live. Once
+              It is the part that does the work. The registry is just where the packages live. Once
               it&apos;s running, every package you&apos;ve installed shows up as tools on the sites
               you visit. Then write one of your own.
             </p>
@@ -240,7 +240,7 @@ export default async function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
           <p className="font-mono text-xs text-muted-foreground">
-            ☕ webmcp.cafe — a community registry of WebMCP tool packages.
+            ☕ webmcp.cafe · a community registry of WebMCP tool packages.
           </p>
           <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
             <Link href="/configs" className="hover:text-foreground hover:underline">

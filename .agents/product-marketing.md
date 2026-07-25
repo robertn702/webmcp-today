@@ -204,6 +204,9 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 - Never claim verification or safety guarantees; describe the data model instead.
 - The Chrome flag requirement appears wherever someone might try to install.
 - Prefer the product's own vocabulary over invented marketing terms.
+- Prose mechanics (punctuation, sentence construction, banned vocabulary) follow
+  `~/git/robertn702/nexus/docs/context/personal/writing-style.md`. No em dashes,
+  colons or semicolons in body copy.
 
 ## Proof Points
 

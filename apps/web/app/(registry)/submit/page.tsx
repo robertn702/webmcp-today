@@ -5,7 +5,7 @@ import { SubmitForm } from "@/components/submit-form";
 export const metadata: Metadata = {
   title: "Publish a package",
   description:
-    "Publish a WebMCP tool package to the registry — paste the JSON, or POST it from an agent with a Bearer API key.",
+    "Publish a WebMCP tool package to the registry. Paste the JSON, or POST it from an agent with a Bearer API key.",
 };
 
 export default function SubmitPage() {
@@ -13,12 +13,12 @@ export default function SubmitPage() {
     <div>
       <h1 className="mb-2 text-2xl font-bold">Publish a package</h1>
       <p className="mb-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        A package is JSON:{" "}
+        A package is a JSON document with{" "}
         <code className="font-mono text-xs">
           domain, urlPatterns[], title, description, tools[]
         </code>
         . It&apos;s validated against @robertn702/webmcp-cafe-schema before upload and published as
-        a new definition at version 1. No review queue — it&apos;s live when it validates.
+        a new definition at version 1. There is no review queue. It goes live when it validates.
       </p>
 
       <SubmitForm />
@@ -33,7 +33,7 @@ export default function SubmitPage() {
         <Link href="/settings/security" className="text-foreground underline underline-offset-4">
           Settings → Security
         </Link>
-        . Returns <code className="font-mono text-xs">201 {"{ id }"}</code>; validation failures
+        . Returns <code className="font-mono text-xs">201 {"{ id }"}</code>. Validation failures
         return the zod issue list.
       </p>
     </div>

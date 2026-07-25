@@ -27,12 +27,12 @@ export function InstallButton({ configId }: { configId: string }) {
       const body: unknown = await res.json().catch(() => null);
       const parsed = installResponseSchema.safeParse(body);
       setStatus({
-        text: parsed.success ? `Installed — pinned to v${parsed.data.version}` : "Installed",
+        text: parsed.success ? `Installed, pinned to v${parsed.data.version}` : "Installed",
       });
     } else if (res.status === 401) {
       setStatus({ text: "Sign in to install", href: "/auth" });
     } else {
-      setStatus({ text: `Install failed (${res.status}) — try again` });
+      setStatus({ text: `Install failed (${res.status}). Try again.` });
     }
   }
 
@@ -41,7 +41,7 @@ export function InstallButton({ configId }: { configId: string }) {
     if (res.ok) setStatus({ text: "Uninstalled" });
     else if (res.status === 401) setStatus({ text: "Sign in to manage installs", href: "/auth" });
     else if (res.status === 404) setStatus({ text: "Not installed" });
-    else setStatus({ text: `Uninstall failed (${res.status}) — try again` });
+    else setStatus({ text: `Uninstall failed (${res.status}). Try again.` });
   }
 
   return (

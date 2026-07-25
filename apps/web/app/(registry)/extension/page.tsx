@@ -16,7 +16,7 @@ export default function ExtensionPage() {
       <h1 className="mt-3 font-display text-4xl tracking-tight">Run it from source.</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         It isn&apos;t in the Chrome Web Store yet, so building it yourself is the install. It&apos;s
-        the part that does the work: it looks up packages for the page you&apos;re on and registers
+        the part that does the work. It looks up packages for the page you&apos;re on and registers
         their tools where an agent can call them. You&apos;ll need Bun and Chrome 149+.
       </p>
 
@@ -36,7 +36,7 @@ export default function ExtensionPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             That variable is baked in at build time. Leave it off and the extension looks for a
             registry on localhost:3000, finds nothing, and quietly falls back to its bundled
-            packages — it will appear to work while ignoring everything you&apos;ve installed.
+            packages. It will appear to work while ignoring everything you&apos;ve installed.
           </p>
         </li>
         <li>
@@ -59,7 +59,7 @@ export default function ExtensionPage() {
               chrome://flags/#enable-webmcp-testing
             </code>{" "}
             and restart. Chrome 149+. Sites we inject into don&apos;t serve an origin-trial token on
-            our behalf, so this is required for end users, not just for development.
+            our behalf, so anyone running the extension has to turn it on.
           </p>
         </li>
         <li>
