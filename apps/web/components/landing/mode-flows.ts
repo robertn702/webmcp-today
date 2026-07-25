@@ -1,7 +1,7 @@
 import type { FlowNode, FlowStep } from "./flow-diagram";
 
 /**
- * The two ways a config actually reaches an agent. Both sequences are taken
+ * The two ways a package actually reaches an agent. Both sequences are taken
  * from ARCHITECTURE.md ("Runtime flow — tool registration/invocation" and
  * "Data flow — publish, install, serve"); keep them in step with that doc.
  */
@@ -159,14 +159,14 @@ export const inBrowserSteps: readonly FlowStep[] = [
   {
     from: "bg",
     to: "api",
-    title: "Look up configs for this URL",
-    body: "`GET /api/configs/lookup?url=…`, zod-validated at the boundary. Unreachable, no match, or a schema mismatch all fall back to the bundled configs — silently, which is why the page console is the ground truth.",
+    title: "Look up packages for this URL",
+    body: "`GET /api/configs/lookup?url=…`, zod-validated at the boundary. Unreachable, no match, or a schema mismatch all fall back to the bundled packages — silently, which is why the page console is the ground truth.",
   },
   {
     from: "api",
     to: "mc",
     title: "Matching tools get registered",
-    body: "A config whose `minEngine` outranks the extension is skipped whole, never half-registered. The rest go in tool by tool via `registerTool()`, skipping any name the site already claimed.",
+    body: "A package whose `minEngine` outranks the extension is skipped whole, never half-registered. The rest go in tool by tool via `registerTool()`, skipping any name the site already claimed.",
   },
   {
     from: "you",
@@ -178,7 +178,7 @@ export const inBrowserSteps: readonly FlowStep[] = [
     from: "agent",
     to: "mc",
     title: "It sees injected tools as ordinary page tools",
-    body: "WebMCP tools carry no provenance today, so a community config is indistinguishable from one the site shipped itself.",
+    body: "WebMCP tools carry no provenance today, so a community package is indistinguishable from one the site shipped itself.",
   },
   {
     from: "mc",

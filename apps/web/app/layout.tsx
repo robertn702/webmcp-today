@@ -20,9 +20,12 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "WebMCP Cafe",
+  title: {
+    default: "WebMCP Cafe — MCP tools for any site",
+    template: "%s — WebMCP Cafe",
+  },
   description:
-    "A community registry of WebMCP tool configs, plus a browser extension that registers them on sites that never shipped tools of their own.",
+    "Install community-written MCP tool packages on sites that never shipped any. The extension registers them on the page, so your agent calls named tools instead of guessing.",
 };
 
 // Applies the stored theme before first paint to avoid a flash of the wrong
@@ -58,6 +61,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </Link>
                 <Link href="/submit" className={navLinkClass}>
                   Submit
+                </Link>
+                <Link href="/extension" className={navLinkClass}>
+                  Extension
                 </Link>
                 <ThemeToggle />
                 <UserButton size="icon" align="end" />
