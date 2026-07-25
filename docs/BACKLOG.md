@@ -67,9 +67,6 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 - **Output-projection language** — `returns` grammar is dot-paths + `[]` +
   `{a,b}` pickers; anything richer is a deferred decision.
   (docs/api-execution-model.md → Open questions)
-- **Remove dead `updateConfigSchema`** — superseded by
-  `updateDefinitionMetaSchema`/`publishVersionSchema`; unused
-  (packages/schema/src/config.ts:82).
 
 ## Design questions (need a decision before building)
 
