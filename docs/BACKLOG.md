@@ -20,32 +20,27 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **Docs page** — config format, publishing guide, extension install guide;
   source content exists in docs/ + apps/extension/README.md to adapt.
   (docs/api-execution-model.md, packages/schema)
-- **Approval-before-publish vs open-publish + moderation** — leaning
-  open-publish for tier 1, human review queue for tier-2/3 code; undecided.
-  Needs an answer _and_ a report/takedown path before publishing opens to
-  strangers — tier-1 `api` configs can POST to arbitrary endpoints from a
-  logged-in session. Governs _what gets published_; pairs with the pinning item
-  below, which governs _what changes after you trusted it_.
-  (docs/api-execution-model.md → Open questions)
-- **Factor in installed webmcp configs** (security) — the extension fetches
-  unauthenticated and never sends `installed=true`, so it serves latest
-  versions, not the user's pinned ones: a publisher can append a malicious v2
-  that lands silently in every install. Auth piggybacks on the web app session
-  — `getAuthUserId` already resolves cookie sessions and host permissions
-  exempt the background fetch from CORS, so the client just needs
-  `credentials: "include"`. Open: verify Chrome sends the cookie (SameSite
-  exemption for host-permitted extension requests), decide the merge policy
-  (`installed=true` returns _only_ installs, dropping discovery of
-  uninstalled configs), and surface signed-out state — silent downgrade to
-  latest defeats the pin. (apps/extension/src/entrypoints/background.ts:31;
-  apps/web/lib/api-auth.ts; apps/web/AGENTS.md → served truth)
+- **Local-first installs** — installed packages move into the extension's
+  `chrome.storage.local`; no account to consume, auth only to publish. Fixes the
+  browsing-history feed the registry receives today and makes install actually
+  gate what registers (it doesn't). Includes a **mandatory** revocation feed,
+  deletes the auto-registering bundled fallback, and drops install count as a
+  trust signal. Supersedes the old credentialed-`installed=true` fetch plan,
+  which kept the URL feed and would have made consumption require an account.
+  Eight sequenced steps; docs update when each lands, not before.
+  (docs/local-first-installs.md)
 - **Chrome Web Store distribution decision** — CWS listing at launch vs.
   unpacked install (users already need `#enable-webmcp-testing`). Precedent:
   the reference impl (WebMCP Hub) shipped this exact category — remote-registry
   lookup + content-script registration — to CWS in Feb 2026, so reviewer risk
   is lower than feared; position the listing as declarative configs interpreted
-  by a bundled executor (no `evaluate`, no remote code) with a no-data-collected
-  declaration. Submit early regardless: review turnaround is the constraint.
+  by a bundled executor (no `evaluate`, no remote code). **The privacy
+  declaration depends on local-first installs**: as built, every URL goes to the
+  registry, so "no data collected" would be false — it becomes true (no browsing
+  history; the registry sees only which package versions you downloaded) once
+  steps 3–4 land, and the `<all_urls>` warning goes away at step 7. Declare
+  whatever is true at submission and update the listing after. Submit early
+  regardless: review turnaround is the constraint.
   Zero-review fallback worth a compatibility check — Hub's popup accepts a
   custom hub URL, so its store-approved build could be pointed at our
   `GET /api/configs/lookup`. Needs Robert: $5 developer account, listing
@@ -71,6 +66,14 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   relax build-time validation for previews. Do not point Preview at the prod
   `DATABASE_URL`/auth secrets — every PR branch gets an ungated preview URL.
   (apps/web/env.ts; AGENTS.md notes builds need real env vars)
+- **Approval-before-publish vs open-publish + moderation** — downgraded by
+  local-first installs: once nothing auto-registers, an unreviewed package
+  reaches only users who explicitly installed it, so open-publish for tier 1 is
+  the answer and a review queue is a tier-2/3 problem. The takedown half is not
+  optional and is not here — it is the revocation feed in
+  docs/local-first-installs.md §5. What is left for this item: the report path
+  (who flags, where it lands) and the tier-2/3 review bar.
+  (docs/api-execution-model.md → Open questions)
 - **Param-description budget gap** — `inputSchema` property descriptions allow
   1,000 chars vs Chrome's 150 guidance; DOM `fields[]` enforce 150, API tools
   bypass it. Align or consciously relax — tightening it after strangers publish
