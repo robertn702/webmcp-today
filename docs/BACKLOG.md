@@ -6,11 +6,6 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 
 ## Web app
 
-- **publish_version version-collision** — `publishVersion` (mutations.ts:69)
-  computes `max(version)+1` non-atomically; concurrent publishes 500 on the
-  unique constraint. Retry on `isUniqueViolation` (already defined in
-  lib/http.ts, currently unused) or compute the number in-insert.
-  (apps/web/lib/mutations.ts; packages/db/src/webmcp-schema.ts:62)
 - **Email service** (password reset, verification) — pick a provider (needs
   Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip
