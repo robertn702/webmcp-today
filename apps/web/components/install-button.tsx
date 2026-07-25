@@ -1,10 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 
+// TODO: this renders Install and Uninstall unconditionally and never reads the
+// current install state, so the labels can't reflect reality — it needs the
+// caller to pass install state (or fetch it) to render the correct single action.
+
+/** POST /api/configs/:id/install response — see app/api/configs/[id]/install/route.ts. */
+const installResponseSchema = z.object({ version: z.number() });
+
+type Status = { text: string; href?: string };
+
 export function InstallButton({ configId }: { configId: string }) {
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
 
   async function install() {
     const res = await fetch(`/api/configs/${configId}/install`, {
@@ -12,17 +23,25 @@ export function InstallButton({ configId }: { configId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
-    if (res.ok) setStatus("Installed");
-    else if (res.status === 401) setStatus("Sign in to install");
-    else setStatus("Install failed");
+    if (res.ok) {
+      const body: unknown = await res.json().catch(() => null);
+      const parsed = installResponseSchema.safeParse(body);
+      setStatus({
+        text: parsed.success ? `Installed — pinned to v${parsed.data.version}` : "Installed",
+      });
+    } else if (res.status === 401) {
+      setStatus({ text: "Sign in to install", href: "/auth" });
+    } else {
+      setStatus({ text: `Install failed (${res.status}) — try again` });
+    }
   }
 
   async function uninstall() {
     const res = await fetch(`/api/configs/${configId}/install`, { method: "DELETE" });
-    if (res.ok) setStatus("Uninstalled");
-    else if (res.status === 401) setStatus("Sign in to manage installs");
-    else if (res.status === 404) setStatus("Not installed");
-    else setStatus("Uninstall failed");
+    if (res.ok) setStatus({ text: "Uninstalled" });
+    else if (res.status === 401) setStatus({ text: "Sign in to manage installs", href: "/auth" });
+    else if (res.status === 404) setStatus({ text: "Not installed" });
+    else setStatus({ text: `Uninstall failed (${res.status}) — try again` });
   }
 
   return (
@@ -33,7 +52,14 @@ export function InstallButton({ configId }: { configId: string }) {
       <Button variant="outline" size="sm" onClick={() => void uninstall()}>
         Uninstall
       </Button>
-      {status && <span className="text-xs text-muted-foreground">{status}</span>}
+      {status &&
+        (status.href ? (
+          <Link href={status.href} className="text-xs text-foreground underline underline-offset-4">
+            {status.text}
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">{status.text}</span>
+        ))}
     </div>
   );
 }

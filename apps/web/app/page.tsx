@@ -53,7 +53,7 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-5xl gap-12 px-4 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-center lg:gap-14 lg:pt-24 lg:pb-28">
           <div>
             <p className="cafe-rise font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
-              ☕ community registry · anyone can publish
+              ☕ WebMCP tool registry · anyone can publish
             </p>
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
@@ -61,13 +61,12 @@ export default async function LandingPage() {
             </h1>
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
-              WebMCP lets a site publish real tools for AI agents. Almost no site has. WebMCP Cafe
-              is a community registry of tool configs, plus a browser extension that registers them
-              on the page for you — so an agent calls{" "}
+              Agents guess at the DOM because almost no site publishes real tools. Install a package
+              here and the extension registers them on the page — so your agent calls{" "}
               <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
                 reddit_comment
               </code>{" "}
-              instead of guessing which div is the reply box.
+              instead of hunting for the reply box.
             </p>
 
             <div className="cafe-rise mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
@@ -89,13 +88,13 @@ export default async function LandingPage() {
             </div>
 
             <p className="cafe-rise mt-4 font-mono text-xs text-muted-foreground [animation-delay:280ms]">
-              Free and open source · Chrome 149+ with the WebMCP flag on · nothing works without it
+              Requires Chrome 149+ with the WebMCP testing flag enabled
             </p>
 
             {stats ? (
               <dl className="cafe-rise mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t pt-6 [animation-delay:340ms]">
-                <Stat label="configs" value={stats.configs} />
-                {stats.tools > 0 ? <Stat label="tools" value={stats.tools} /> : null}
+                <Stat label="packages published" value={stats.configs} />
+                {stats.tools > 0 ? <Stat label="tools available" value={stats.tools} /> : null}
                 {stats.installs > 0 ? <Stat label="installs" value={stats.installs} /> : null}
               </dl>
             ) : null}
@@ -111,17 +110,17 @@ export default async function LandingPage() {
           <Reason
             index="01"
             title="Sites won't do this for you"
-            body="WebMCP is a live W3C proposal with a working Chrome implementation, and adoption is roughly zero. The sites you use every day are not going to be first, and they'd never ship the tools you actually want anyway."
+            body="WebMCP is a live W3C proposal and adoption is roughly zero. The sites you use every day are not going to be first, and they'd never ship the tools you actually want anyway."
           />
           <Reason
             index="02"
             title="Scraping rots quietly"
-            body="A selector breaks the day a class name changes and nothing tells you. A config that declares the site's own HTTP API fails loudly instead — a 4xx you can see beats a div you can't find."
+            body="A selector breaks the day a class name changes and nothing tells you. A package that declares the site's own HTTP API fails loudly instead — a 4xx you can see beats a div you can't find."
           />
           <Reason
             index="03"
-            title="Agents can write these"
-            body="A config is data: URL patterns, tool descriptions, and either DOM steps or an API block. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
+            title="Agents can write packages"
+            body="A package is data: URL patterns, tool descriptions, and either DOM steps or an API block. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
           />
         </div>
       </section>
@@ -134,7 +133,7 @@ export default async function LandingPage() {
           </p>
           <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Two ways in.</h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Same registry, same configs, same execution engine. The difference is where the agent
+            Same registry, same packages, same execution engine. The difference is where the agent
             sits — outside the browser, talking to the registry over MCP, or inside the page, using
             tools the extension already injected. Step through each one.
           </p>
@@ -143,25 +142,25 @@ export default async function LandingPage() {
         <div className="mt-14 flex flex-col gap-14">
           <ModeCard
             index="Mode 01"
-            title="LLM-first"
+            title="From your terminal"
             summary="An agent outside the browser — Claude Code, or any MCP client — searches the registry, publishes what's missing, and pins an install. The extension delivers that exact version into the page."
           >
             <FlowDiagram
               nodes={llmFirstNodes}
               steps={llmFirstSteps}
-              label="LLM-first mode: a terminal agent uses the Cafe MCP server to find, publish and install configs, which the extension then registers on the target site."
+              label="From your terminal: a terminal agent uses the Cafe MCP server to find, publish and install packages, which the extension then registers on the target site."
             />
           </ModeCard>
 
           <ModeCard
             index="Mode 02"
-            title="Chat in the browser"
-            summary="No terminal, no API key. The extension looks up configs for whatever page you're on and registers their tools, and the browser's own agent picks them up as if the site had shipped them."
+            title="In the browser"
+            summary="No terminal, no API key. The extension looks up packages for whatever page you're on and registers their tools, and the browser's own agent picks them up as if the site had shipped them."
           >
             <FlowDiagram
               nodes={inBrowserNodes}
               steps={inBrowserSteps}
-              label="Chat-in-the-browser mode: the extension fetches configs for the current URL and registers their tools on document.modelContext, where the browser's agent invokes them."
+              label="In the browser: the extension fetches packages for the current URL and registers their tools on document.modelContext, where the browser's agent invokes them."
             />
           </ModeCard>
         </div>
@@ -178,29 +177,29 @@ export default async function LandingPage() {
               An install count, not a checkmark.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              There is no approval queue and no verified badge. Configs run in pages you're signed
+              There is no approval queue and no verified badge. Packages run in pages you're signed
               into, so containment comes from the data model rather than from a promise.
             </p>
           </div>
 
           <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2">
-            <Guarantee title="Versions are append-only">
+            <TrustFact title="Versions are append-only">
               Publishing v4 leaves v3 byte-for-byte intact. The version rows are the served truth —
               there is no snapshot table to drift out of sync.
-            </Guarantee>
-            <Guarantee title="Installs pin to a version">
+            </TrustFact>
+            <TrustFact title="Installs pin to a version">
               You get the version you installed and nothing else. A malicious or broken update
               reaches zero installed users until each one opts in, and rollback is just re-pinning.
-            </Guarantee>
-            <Guarantee title="Rival configs are allowed">
+            </TrustFact>
+            <TrustFact title="Rival packages are allowed">
               Two packages may target the same site; install count and URL-pattern specificity rank
               them. Competition beats a gatekeeper.
-            </Guarantee>
-            <Guarantee title="Same-origin, no eval">
-              DOM configs have no arbitrary-code step. API-mode calls are locked to the config's own
-              origin, checked when it's published and again when it runs — a registry bug alone
-              can't break it.
-            </Guarantee>
+            </TrustFact>
+            <TrustFact title="Same-origin, no eval">
+              No package has an arbitrary-code step. API-mode calls are locked to the package&apos;s
+              own origin, checked when it&apos;s published and again when it runs — a registry bug
+              alone can&apos;t break it.
+            </TrustFact>
           </div>
         </div>
       </section>
@@ -213,9 +212,9 @@ export default async function LandingPage() {
               Start with the extension.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              It is the part that does the work — the registry is just where the configs live. Once
-              it's running, every config you've installed shows up as tools on the sites you visit.
-              Then write one of your own.
+              It is the part that does the work — the registry is just where the packages live. Once
+              it&apos;s running, every package you&apos;ve installed shows up as tools on the sites
+              you visit. Then write one of your own.
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
@@ -230,7 +229,7 @@ export default async function LandingPage() {
             </Button>
             <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
               <Link href="/submit">
-                Submit a config
+                Publish a package
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -241,7 +240,7 @@ export default async function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
           <p className="font-mono text-xs text-muted-foreground">
-            ☕ webmcp.cafe — a community registry of WebMCP tool configs.
+            ☕ webmcp.cafe — a community registry of WebMCP tool packages.
           </p>
           <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
             <Link href="/configs" className="hover:text-foreground hover:underline">
@@ -253,6 +252,12 @@ export default async function LandingPage() {
             <Link href={EXTENSION_HREF} className="hover:text-foreground hover:underline">
               Extension
             </Link>
+            <a
+              href="https://github.com/robertn702/webmcp-cafe"
+              className="hover:text-foreground hover:underline"
+            >
+              GitHub
+            </a>
           </div>
         </div>
       </footer>
@@ -304,7 +309,7 @@ function ModeCard({
   );
 }
 
-function Guarantee({ title, children }: { title: string; children: ReactNode }) {
+function TrustFact({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="border-l-2 border-brand/30 pl-5">
       <h3 className="text-sm font-semibold">{title}</h3>

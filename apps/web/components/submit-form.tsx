@@ -1,16 +1,32 @@
 "use client";
 
 import { createConfigSchema } from "@robertn702/webmcp-cafe-schema";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+/** `href`/`note` are only used by the signed-out case, which needs a real link. */
+type FormError = { text: string; href?: string; note?: string };
+
+/** Pull the `{ error }` envelope out of a failed response, falling back to raw text. */
+async function readErrorBody(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const body: unknown = JSON.parse(text);
+    const message = typeof body === "object" && body !== null ? Reflect.get(body, "error") : null;
+    return typeof message === "string" ? message : text;
+  } catch {
+    return text;
+  }
+}
+
 export function SubmitForm() {
   const router = useRouter();
   const [json, setJson] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FormError | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -18,13 +34,18 @@ export function SubmitForm() {
     let raw: unknown;
     try {
       raw = JSON.parse(json);
-    } catch {
-      setError("Not valid JSON");
+    } catch (err) {
+      // The parser reports the offending position — useless to discard it on a
+      // 200-line paste.
+      const message = err instanceof Error ? err.message : String(err);
+      setError({ text: `Not valid JSON — ${message}` });
       return;
     }
     const parsed = createConfigSchema.safeParse(raw);
     if (!parsed.success) {
-      setError(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"));
+      setError({
+        text: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"),
+      });
       return;
     }
     setBusy(true);
@@ -39,9 +60,13 @@ export function SubmitForm() {
       const id = typeof body === "object" && body !== null ? Reflect.get(body, "id") : undefined;
       router.push(typeof id === "string" ? `/configs/${id}` : "/");
     } else if (res.status === 401) {
-      setError("Sign in or use an API key to submit.");
+      setError({
+        text: "Sign in to publish",
+        href: "/auth",
+        note: "or POST to the API with a Bearer key",
+      });
     } else {
-      setError(`Submit failed (${res.status}): ${await res.text()}`);
+      setError({ text: `Publish failed (${res.status}): ${await readErrorBody(res)}` });
     }
   }
 
@@ -58,12 +83,21 @@ export function SubmitForm() {
       {error && (
         <Alert variant="destructive">
           <AlertDescription className="whitespace-pre-wrap font-mono text-xs">
-            {error}
+            {error.href ? (
+              <span>
+                <Link href={error.href} className="underline underline-offset-4">
+                  {error.text}
+                </Link>
+                {error.note ? ` ${error.note}` : null}
+              </span>
+            ) : (
+              error.text
+            )}
           </AlertDescription>
         </Alert>
       )}
       <Button onClick={() => void submit()} disabled={busy} className="w-fit">
-        {busy ? "Submitting…" : "Submit config"}
+        {busy ? "Publishing…" : "Publish package"}
       </Button>
     </div>
   );
