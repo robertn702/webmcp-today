@@ -65,10 +65,6 @@ sight; whoever completes an item deletes it in the same PR. Not a wishlist.
 
 ## Schema
 
-- **Nested-step template validation** — tool.ts superRefine only scans
-  top-level steps; `{{param}}` inside a `condition` step's then/else arrays
-  is unchecked and silently interpolates to "" at runtime. Recurse into
-  nested steps. (packages/schema/src/tool.ts:56; steps.ts ConditionStep)
 - **Param-description budget gap** — `inputSchema` property descriptions allow
   1,000 chars vs Chrome's 150 guidance; DOM `fields[]` enforce 150, API tools
   bypass it. Align or consciously relax. (packages/schema/src/input-schema.ts
