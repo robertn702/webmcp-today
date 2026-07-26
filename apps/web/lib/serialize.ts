@@ -20,6 +20,7 @@ export function serializeConfig(
     description: definition.description,
     tools: version.tools,
     ...(version.api ? { api: version.api } : {}),
+    ...(version.apiContentHash ? { apiContentHash: version.apiContentHash } : {}),
     ...(version.minEngine ? { minEngine: version.minEngine } : {}),
     ...(version.changelog ? { changelog: version.changelog } : {}),
     contributor: opts.contributorName ?? definition.contributorId,

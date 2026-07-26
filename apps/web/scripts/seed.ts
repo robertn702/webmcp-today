@@ -2,6 +2,7 @@
  * Seed the registry with the curated configs from @webmcp-cafe/definitions.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
+import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
 import { createDb, definitionVersions, user, webmcpDefinitions } from "@webmcp-cafe/db";
 import { definitions } from "@webmcp-cafe/definitions";
 
@@ -41,6 +42,7 @@ for (const input of definitions) {
     urlPatterns: input.urlPatterns,
     tools: input.tools,
     api: input.api,
+    apiContentHash: input.api ? await apiContentHash(input.api) : null,
     minEngine: input.minEngine,
     changelog: input.changelog,
   });
