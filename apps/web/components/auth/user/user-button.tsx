@@ -111,12 +111,15 @@ export function UserButton({
         aria-label={size === "icon" ? localization.auth.account : undefined}
         className={
           size === "icon"
-            ? cn("rounded-full", className)
+            ? // p-1 gives the bare avatar optical padding like the ghost icon
+              // buttons beside it; size-6 avatar + p-1 = 32px box = Button
+              // size="icon", so header controls share one height and rhythm.
+              cn("rounded-full p-1", className)
             : cn(buttonVariants({ variant, size: "lg" }), "py-2.5 h-auto font-normal", className)
         }
       >
         {size === "icon" ? (
-          <UserAvatar className="size-7" />
+          <UserAvatar className="size-6" />
         ) : (
           <>
             {session || sessionPending || settingActiveSession ? (

@@ -15,6 +15,22 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 - Landing typography/colour: `--font-display` (Instrument Serif) and the `--brand` amber
   are defined in `globals.css` and used only by the landing page.
 
+## Design language
+
+- Flat + hairline: surfaces are `rounded-2xl border bg-card` with no shadow; overlays
+  (dropdown, popover, sheet) all use `shadow-md ring-1 ring-foreground/10`.
+- Header utility controls follow the shadcn site-header idiom: ghost icon buttons
+  (`variant="ghost"`, `size="icon"`) + bare circular avatar — button chrome is
+  reserved for CTAs. The whole header row shares one `gap-2` rhythm, and every item
+  carries equivalent optical padding so the gaps read even: links get `px-2 py-1`,
+  the vendored UserButton trigger gets `p-1` with a `size-6` avatar (32px box =
+  Button `size="icon"`).
+  Nav links (desktop + mobile sheet) mark the current page
+  with `text-brand` + `aria-current` — brand amber always means "active".
+- Header lives in `app/layout.tsx` (server component); interactive parts are client
+  islands: `desktop-nav.tsx`, `mobile-nav.tsx` (sheet), `theme-toggle.tsx`. Link list +
+  active-route check are shared in `lib/nav-links.ts`.
+
 ## Registry model (the served truth)
 
 - **`definition_versions` rows are the served truth directly** — no snapshot table.
