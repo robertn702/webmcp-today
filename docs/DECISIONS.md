@@ -460,7 +460,7 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   draft: no governing-law or dispute clause (inventing a jurisdiction is worse than omitting
   one) and the only contact channel is the public issue tracker, because no mail provider is
   configured yet. Both gaps are marked `TODO(legal)` in the page.
-- 2026-07-25 — **`revocations.id` is a `bigserial`, not the repo's usual random uuid.**
+- 2026-07-26 — **`revocations.id` is a `bigserial`, not the repo's usual random uuid.**
   Every other PK in `packages/db` is `uuid().defaultRandom()` (`webmcp-schema.ts:23`,
   `:46`), but this id doubles as the client's poll cursor
   (`GET /api/revocations?since=<cursor>`, `WHERE id > cursor`) and a random uuid is not
@@ -468,7 +468,7 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   `revocationEntrySchema.id` are numbers rather than uuid strings, and the feed is served
   **ascending** so a capped page is a contiguous prefix of the unseen tail instead of a
   newest-first slice that would strand entries behind an advanced cursor.
-- 2026-07-25 — **The revocation wire schemas live in `packages/schema/src/registry.ts`**
+- 2026-07-26 — **The revocation wire schemas live in `packages/schema/src/registry.ts`**
   (`revocationEntrySchema`, `revocationsResponseSchema`). `docs/local-first-installs.md` §5
   specifies the endpoint but never says where its types live; `packages/schema` is the only
   module `apps/web` and `apps/extension` both reach — the extension already depends on it
@@ -476,7 +476,7 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   same discipline a feed that can disable installed packages needs. The consequence the
   design's step-2 blast-radius line ("Additive") omits: `packages/schema` is **published**,
   so the revocation read path is a published-package change and needs a changeset.
-- 2026-07-25 — **A client must complete one successful revocation poll before any package
+- 2026-07-26 — **A client must complete one successful revocation poll before any package
   becomes registerable** — `docs/local-first-installs.md` design gap 4, resolved
   fail-closed on first run. §5's fail-safe ("a failed poll leaves the last known list in
   place", `:241-242`) silently assumes a previous list exists. On a fresh client "fetch
