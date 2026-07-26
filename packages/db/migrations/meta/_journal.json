@@ -5,50 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784833825929,
+      "when": 1785041244610,
       "tag": "0000_init",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1784854141386,
-      "tag": "0001_apikey_reference_id",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1784854299952,
-      "tag": "0002_light_bedlam",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1784866395441,
-      "tag": "0003_webmcp_erd_redesign",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1784908843428,
-      "tag": "0004_min_engine_to_versions",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1784912000977,
-      "tag": "0005_complete_living_lightning",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1785038284523,
-      "tag": "0006_condemned_shinko_yamashiro",
       "breakpoints": true
     }
   ]
