@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { UserButton } from "@/components/auth/user/user-button";
+import { DesktopNavLinks } from "@/components/desktop-nav";
+import { MobileNav } from "@/components/mobile-nav";
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -39,8 +41,6 @@ const themeScript = `(() => {
   document.documentElement.classList.toggle("dark", dark);
 })();`;
 
-const navLinkClass = "text-sm text-muted-foreground hover:text-foreground hover:underline";
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
@@ -52,20 +52,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Providers>
           <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-            <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-              <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
-                ☕ webmcp.cafe
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link href="/configs" className={navLinkClass}>
-                  Browse
+            <nav
+              aria-label="Main"
+              className="mx-auto flex max-w-5xl items-center justify-between gap-x-4 px-4 py-3"
+            >
+              {/* Wayfinding (menu + logo) on the left, utilities on the right —
+                  the Material/shadcn mobile idiom. */}
+              <div className="flex items-center gap-2">
+                <MobileNav />
+                <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
+                  ☕ webmcp.cafe
                 </Link>
-                <Link href="/submit" className={navLinkClass}>
-                  Submit
-                </Link>
-                <Link href="/extension" className={navLinkClass}>
-                  Extension
-                </Link>
+              </div>
+              {/* One shared gap-2 rhythm across links + utilities so the
+                  spacing reads even — each item carries equivalent optical
+                  padding (links px-2, ghost icon buttons, avatar p-1). */}
+              <div className="flex items-center gap-2">
+                {/* Below md the links collapse into MobileNav's sheet. */}
+                <DesktopNavLinks />
                 <ThemeToggle />
                 <UserButton size="icon" align="end" />
               </div>
