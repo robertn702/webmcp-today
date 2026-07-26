@@ -28,6 +28,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "canonicalize": "^3.0.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }

@@ -9,6 +9,14 @@ import type { ApiBlock } from "./api.js";
 // change to it invalidates every copy a client already has. It is derived from
 // the value alone — never from Postgres jsonb text, and never from incidental
 // JSON.stringify key order.
+//
+// It implements JSON Canonicalization Scheme (RFC 8785), so a client that is
+// not this package — a non-JS service, or a third party reimplementing the
+// dedupe — has a published spec to target instead of our source. Kept in-tree
+// rather than taken as a runtime dependency precisely because it is frozen: a
+// dependency bump that "fixed" an edge case would silently invalidate every
+// stored hash. test/api-hash.test.ts pins conformance against the reference
+// `canonicalize` implementation (a devDependency) so the two cannot drift.
 
 /** Compare by UTF-16 code unit. Deliberately not localeCompare, whose ordering
  * depends on the runtime's ICU data and so differs between consumers. */
@@ -66,6 +74,8 @@ function canonicalValue(value: unknown): string {
  * Canonical string form of an api block: object keys sorted recursively, array
  * order preserved, numbers in a stable representation. Storage-independent and
  * consumer-independent — two logically identical blocks always agree.
+ *
+ * This is JSON Canonicalization Scheme (RFC 8785).
  */
 export function canonicalizeApiBlock(api: ApiBlock): string {
   return canonicalValue(api);

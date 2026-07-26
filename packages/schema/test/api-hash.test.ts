@@ -1,3 +1,4 @@
+import canonicalize from "canonicalize";
 import { describe, expect, it } from "vitest";
 import { apiContentHash, canonicalizeApiBlock, type ApiBlock } from "../src/index.js";
 
@@ -151,6 +152,51 @@ describe("canonicalizeApiBlock", () => {
     expect(canonicalizeApiBlock(minimal)).toBe(
       '{"baseUrl":"https://example.com","endpoints":{"ping":{"method":"GET","path":"/ping"}}}',
     );
+  });
+});
+
+describe("RFC 8785 (JCS) conformance", () => {
+  // The canonical form is frozen, so it is kept in-tree rather than taken as a
+  // runtime dependency. These assertions are what stops it drifting from the
+  // spec: every case is checked against the reference `canonicalize` package.
+  // Edge cases ride in `endpoints.probe.body`, which is genuinely `unknown` in
+  // the schema and so is the one place an api block can hold arbitrary JSON.
+  const edgeCases: [string, unknown][] = [
+    ["null", null],
+    ["booleans", { t: true, f: false }],
+    ["empty object", {}],
+    ["empty array", []],
+    ["empty-string key", { "": "empty" }],
+    ["uppercase sorts before lowercase", { auth: 1, Auth: 2, a: 3, A: 4, z: 5 }],
+    ["numeric-looking keys sort as strings", { "10": "ten", "2": "two", "1": "one" }],
+    ["non-ascii keys", { é: 1, z: 2, a: 3 }],
+    ["astral-plane key", { "😀": "grin", a: 1 }],
+    ["strings needing escapes", { s: 'quote " tab \t newline \n backslash \\' }],
+    ["negative zero", { n: -0 }],
+    ["integral float", { n: 1.0 }],
+    ["large exponent", { n: 1e21 }],
+    ["small exponent", { n: 1e-7 }],
+    ["max safe integer", { n: 2 ** 53 }],
+    ["fraction", { n: 3.14159 }],
+    ["negative", { n: -17 }],
+    ["undefined-valued key is dropped", { a: 1, b: undefined, c: 3 }],
+    ["array order is preserved", ["z", "a", "m", 3, 1, 2]],
+    ["undefined in an array becomes null", [1, undefined, 3]],
+    ["nested mixture", { b: [{ z: 1, a: [2, { y: 3, x: 4 }] }], a: { d: null, c: "x" } }],
+  ];
+
+  it.each(edgeCases)("matches the reference implementation: %s", (_label, value) => {
+    const block: ApiBlock = {
+      baseUrl: "https://example.com",
+      endpoints: { probe: { method: "POST", path: "/probe", body: value } },
+    };
+    expect(canonicalizeApiBlock(block)).toBe(canonicalize(block));
+  });
+
+  it("matches the reference implementation on the realistic fixtures", () => {
+    expect(canonicalizeApiBlock(base)).toBe(canonicalize(base));
+    expect(canonicalizeApiBlock(reordered)).toBe(canonicalize(reordered));
+    expect(canonicalizeApiBlock(minimal)).toBe(canonicalize(minimal));
   });
 });
 
