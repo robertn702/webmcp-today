@@ -66,7 +66,6 @@ export const createConfigObjectSchema = z.object({
   tools: toolsArraySchema,
   /** Tier-1 API execution surface; tools bind to it via their `endpoint`. */
   api: apiBlockSchema.optional(),
-  tags: z.array(z.string().max(50)).max(10).optional(),
   minEngine: engineLevelSchema.optional(),
   /** What changed in this version; shown to installed users deciding whether to update. */
   changelog: z.string().max(2000).optional(),

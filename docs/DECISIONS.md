@@ -525,3 +525,15 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   per-key rate limit is 10 requests / 24h (`rate_limit_max` = 10,
   `rate_limit_time_window` = 86400000 on each created key), which is now actually
   reachable and will need raising before agents run at any volume.
+- 2026-07-26 — **Dropped `webmcp_definitions.tags`.** Nothing read it: no query filtered,
+  sorted, or searched on it, no UI rendered it, the extension never looked at it, and one
+  of the six curated configs set one. It only ever round-tripped — accepted on submit
+  (`createConfigObjectSchema`), stored, echoed back in every served config, editable via
+  `PATCH /api/configs/:id`. Discovery is domain + urlPattern matching; ranking is install
+  count + pattern specificity. Removed from the zod config format (so it is also gone from
+  `updateDefinitionMetaSchema` and `webMcpConfigSchema`), the drizzle table, the seed and
+  insert paths, and `reddit.com.json`. Free-form tags are re-addable later if a browse
+  facet ever needs them — a nullable jsonb column costs nothing to re-add, and the format
+  is easier to widen than to narrow. Per the squash convention, the column was edited out
+  of `0000_init.sql` + its meta snapshot in place rather than stacking a drop migration
+  (verified drift-free with `drizzle-kit generate` → "No schema changes").

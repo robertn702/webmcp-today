@@ -28,7 +28,6 @@ for (const input of definitions) {
       pageType: input.pageType,
       title: input.title,
       description: input.description,
-      tags: input.tags,
       contributorId: SEED_USER_ID,
     })
     .returning({ id: webmcpDefinitions.id });

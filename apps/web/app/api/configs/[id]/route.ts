@@ -21,7 +21,7 @@ export async function GET(_request: Request, context: Context): Promise<NextResp
   return NextResponse.json(config);
 }
 
-/** PATCH /api/configs/:id — owner-only metadata edit (domain/title/description/tags/…). */
+/** PATCH /api/configs/:id — owner-only metadata edit (domain/title/description/pageType). */
 export async function PATCH(request: Request, context: Context): Promise<NextResponse> {
   const { id } = await context.params;
   const userId = await getAuthUserId(request);

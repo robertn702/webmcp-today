@@ -183,7 +183,7 @@ sequenceDiagram
 ```
 
 The model in one breath: `webmcp_definitions` is the one mutable row per package
-(title/description/tags/domain); `definition_versions` is append-only and **is** the
+(title/description/domain); `definition_versions` is append-only and **is** the
 served truth (no snapshot table); `installs` pins user→version and doubles as the
 trust signal (`COUNT(*) GROUP BY definition_id`, computed at query time). Installed
 users never auto-update — moving the pin is an explicit `POST …/update`, and rollback

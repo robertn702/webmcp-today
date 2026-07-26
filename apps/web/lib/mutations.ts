@@ -23,7 +23,6 @@ export async function insertDefinition(
       pageType: input.pageType,
       title: input.title,
       description: input.description,
-      tags: input.tags,
       contributorId,
     })
     .returning({ id: webmcpDefinitions.id });

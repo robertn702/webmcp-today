@@ -26,7 +26,6 @@ export const webmcpDefinitions = pgTable(
     pageType: text("page_type"),
     title: text("title").notNull(),
     description: text("description").notNull(),
-    tags: jsonb("tags").$type<string[]>(),
     contributorId: text("contributor_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
