@@ -9,6 +9,9 @@ implemented WebMCP — "Greasyfork for the agentic web".
   data. Skip production concerns (zero-downtime migrations, backfills, API
   backwards compat).
 - DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
+- Schema changes are squashed into `packages/db/migrations/0000_init.sql`: edit it and
+  its meta snapshot in place rather than stacking a migration, then confirm drift-free
+  with `drizzle-kit generate` ("No schema changes, nothing to migrate").
 
 ## Layout
 
@@ -116,6 +119,25 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
   `lsof -nP -i :3000 -i :5173 -i :9222`; killing a bun wrapper does NOT kill its node
   child.
 
+## Decision log (`docs/DECISIONS.md`)
+
+Append an entry only when all three hold; otherwise the artifact _is_ the record, so
+don't restate it.
+
+1. A real alternative was rejected — not "built the obvious thing".
+2. The reasoning is **not** recoverable from the code, schema, config or another doc.
+3. A future agent could plausibly undo or relitigate it.
+
+Never log implementation narratives, "verified X works" sessions, scaffolding/lint/docs
+housekeeping, or anything an `AGENTS.md` / `ARCHITECTURE.md` / `docs/*` already says.
+Anything an agent must obey _right now_ belongs in the nearest `AGENTS.md`; the log
+holds only the why.
+
+Format: one dated bullet, ≤10 lines, bold lede stating the decision, then the why, then
+the non-obvious consequence — the rejected alternative is the valuable half. When a
+decision supersedes an older entry, **rewrite or delete that entry** instead of stacking
+a correction, and prune entries whose reasoning has since migrated into code or docs.
+
 ## References
 
 | Need                            | File                                                                                                                            |
@@ -126,6 +148,6 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 | Data model ERD                  | `docs/erd.md`                                                                                                                   |
 | API execution model             | `docs/api-execution-model.md`                                                                                                   |
 | Platform risk register          | `docs/platform-risks.md`                                                                                                        |
-| Decision history (archive)      | `docs/DECISIONS.md`                                                                                                             |
+| Why non-obvious calls were made | `docs/DECISIONS.md`                                                                                                             |
 | Open follow-ups (prune as done) | `docs/BACKLOG.md`                                                                                                               |
 | Reference impl (MIT, ported)    | [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub) + [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension) |

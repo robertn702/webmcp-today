@@ -81,7 +81,7 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **`returns` projection for `reddit_comment`** — write output is Reddit's raw
   rendered HTML; project errors/permalink instead. Publish as v2 of the config
   (first exercise of the version-append path — worth proving before strangers
-  hit it). (docs/DECISIONS.md 2026-07-24 tier-1 e2e entry, item 4)
+  hit it). (packages/definitions/configs/reddit.com.json)
 - **Handle `SecurityError` on registration** — sites can reject injected tools
   via `Permissions-Policy: tools=()` (Chrome 150+); today a rejected
   `registerTool` would just fail. Catch it and mark the config site-blocked

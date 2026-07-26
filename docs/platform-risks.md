@@ -55,7 +55,7 @@ that will (banks, payment flows) were always hostile territory for injected
 write tools.
 
 An extension could strip the header via `declarativeNetRequest`. **Decision
-2026-07-24: we don't** (DECISIONS.md). It lowers the site's security posture
+2026-07-24: we don't**. It lowers the site's security posture
 for all scripts, not just ours; it's the pattern CWS review exists to catch;
 and the platform sides with the site if it escalates. Instead: catch the
 `SecurityError`, mark the config site-blocked in the UI, treat those domains as
