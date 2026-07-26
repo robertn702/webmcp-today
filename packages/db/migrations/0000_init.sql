@@ -108,7 +108,6 @@ CREATE TABLE "webmcp_definitions" (
 	"page_type" text,
 	"title" text NOT NULL,
 	"description" text NOT NULL,
-	"tags" jsonb,
 	"contributor_id" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL

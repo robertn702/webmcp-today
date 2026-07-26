@@ -46,7 +46,7 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   visible) — see `docs/erd.md`.
 - **Versions are append-only.** `POST /api/configs/:id/versions` (owner-only) inserts
   the next version; nothing is ever mutated or deleted. `PATCH /api/configs/:id` only
-  touches `webmcp_definitions` metadata (title/description/tags/domain) and never
+  touches `webmcp_definitions` metadata (title/description/domain) and never
   touches urlPatterns/tools/minEngine (the latter is version-scoped, on
   `definition_versions`).
 - **Installs are auth-only and pin-by-default.** `POST`/`DELETE /api/configs/:id/install`

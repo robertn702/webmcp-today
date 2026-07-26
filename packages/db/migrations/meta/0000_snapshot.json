@@ -804,12 +804,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "tags": {
-          "name": "tags",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "contributor_id": {
           "name": "contributor_id",
           "type": "text",

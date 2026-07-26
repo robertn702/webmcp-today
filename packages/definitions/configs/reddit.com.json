@@ -3,7 +3,6 @@
   "urlPatterns": ["*://*.reddit.com/*"],
   "title": "Reddit (JSON API)",
   "description": "Read and write Reddit via its own JSON API: list subreddit posts, read threads, search, comment, and vote — executed as the logged-in user. Tier-1 API execution (no DOM selectors).",
-  "tags": ["reddit", "api", "read-write"],
   "minEngine": 2,
   "changelog": "Initial version: reads (me, subreddit hot, search, thread) and writes (comment, vote) via Reddit's JSON API with the modhash CSRF flow.",
   "api": {

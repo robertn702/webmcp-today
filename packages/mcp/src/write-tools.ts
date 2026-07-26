@@ -25,7 +25,7 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
     "update_config_meta",
     {
       description:
-        "Update a config's metadata (domain, title, description, tags, pageType) — owner only. Never touches urlPatterns/tools/minEngine; use publish_config_version for that. Requires an API key.",
+        "Update a config's metadata (domain, title, description, pageType) — owner only. Never touches urlPatterns/tools/minEngine; use publish_config_version for that. Requires an API key.",
       inputSchema: {
         id: z.string().describe("Config (definition) id"),
         meta: updateDefinitionMetaSchema.describe("Metadata fields to change"),

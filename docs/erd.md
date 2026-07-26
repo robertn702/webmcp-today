@@ -25,7 +25,6 @@ erDiagram
         text page_type
         text title
         text description
-        jsonb tags "string[]"
         text contributor_id FK "-> users.id"
         timestamptz created_at
         timestamptz updated_at
@@ -145,7 +144,7 @@ erDiagram
   to `installs.version_id` until they explicitly call the update endpoint (npm-style, no
   auto-update); rollback is just setting `version_id` back to an older version.
 - **Append-only versions:** publishing a new version never mutates or deletes an old one.
-  `webmcp_definitions` (title/description/tags/domain) is the one mutable row per
+  `webmcp_definitions` (title/description/domain) is the one mutable row per
   package and is edited independently of publishing a version. `minEngine` lives on
   `definition_versions`, not the definition, since it's a property of a version's
   content.
