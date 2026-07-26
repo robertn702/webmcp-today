@@ -1,5 +1,5 @@
 {
-  "id": "4db3ec8f-bcf2-4f29-b233-5af8cef8c916",
+  "id": "750d677d-7d37-4b38-aea9-de062b63890f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -519,6 +519,12 @@
         "api": {
           "name": "api",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "api_content_hash": {
+          "name": "api_content_hash",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
