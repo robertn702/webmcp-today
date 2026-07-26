@@ -10,14 +10,14 @@ snapshot table — `definition_versions` rows are themselves the served truth.
 
 ```mermaid
 erDiagram
-    user ||--o{ webmcp_definitions : "contributes (contributor_id)"
-    user ||--o{ installs : installs
+    users ||--o{ webmcp_definitions : "contributes (contributor_id)"
+    users ||--o{ installs : installs
     webmcp_definitions ||--o{ definition_versions : "publishes (append-only, cascade)"
     webmcp_definitions ||--o{ installs : "has (cascade)"
     definition_versions ||--o{ installs : "pinned to (version_id)"
     webmcp_definitions ||--o{ revocations : "revoked by (cascade)"
     definition_versions ||--o{ revocations : "revoked at (version_id, nullable)"
-    user ||--o{ revocations : "revokes (revoked_by)"
+    users ||--o{ revocations : "revokes (revoked_by)"
 
     webmcp_definitions {
         uuid id PK
@@ -26,7 +26,7 @@ erDiagram
         text title
         text description
         jsonb tags "string[]"
-        text contributor_id FK "-> user.id"
+        text contributor_id FK "-> users.id"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -43,7 +43,7 @@ erDiagram
     }
 
     installs {
-        text user_id PK,FK "-> user.id"
+        text user_id PK,FK "-> users.id"
         uuid definition_id PK,FK "-> webmcp_definitions.id"
         uuid version_id FK "-> definition_versions.id, version the user is pinned to"
         timestamptz created_at
@@ -56,19 +56,24 @@ erDiagram
         uuid version_id FK "-> definition_versions.id, NULL = the whole package"
         text reason "short, shown to the user"
         timestamptz revoked_at
-        text revoked_by FK "-> user.id"
+        text revoked_by FK "-> users.id"
     }
 ```
 
-## Auth tables (better-auth-owned — treat as fixed)
+## Auth tables (better-auth-owned — treat the shapes as fixed)
+
+Column shapes come from better-auth's generated schema and must match the plugin's
+expectations. The _table names_ are ours: better-auth resolves models against the
+drizzle export names (`user`, `session`, …, `apikey` — kept singular in
+`packages/db/src/auth-schema.ts`), never against the SQL name.
 
 ```mermaid
 erDiagram
-    user ||--o{ session : has
-    user ||--o{ account : has
-    user ||--o{ apikey : "authenticates (reference_id)"
+    users ||--o{ sessions : has
+    users ||--o{ accounts : has
+    users ||--o{ api_keys : "authenticates (reference_id)"
 
-    user {
+    users {
         text id PK
         text name
         text email "unique"
@@ -78,20 +83,20 @@ erDiagram
         timestamp updated_at
     }
 
-    session {
+    sessions {
         text id PK
         text token "unique"
         timestamp expires_at
         text ip_address
         text user_agent
-        text user_id FK "-> user.id"
+        text user_id FK "-> users.id"
     }
 
-    account {
+    accounts {
         text id PK
         text account_id
         text provider_id
-        text user_id FK "-> user.id"
+        text user_id FK "-> users.id"
         text access_token
         text refresh_token
         text id_token
@@ -101,19 +106,19 @@ erDiagram
         text password
     }
 
-    verification {
+    verifications {
         text id PK
         text identifier
         text value
         timestamp expires_at
     }
 
-    apikey {
+    api_keys {
         text id PK
         text config_id "default 'default'"
         text name
         text start
-        text reference_id FK "-> user.id"
+        text reference_id FK "-> users.id"
         text prefix
         text key
         int refill_interval

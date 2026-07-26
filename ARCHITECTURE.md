@@ -209,7 +209,9 @@ validated by zod in `packages/schema`:
 - **Auth (apps/web):** better-auth — GitHub OAuth + email/password for the browser
   (session cookies); API keys (`Authorization: Bearer …`) for agents. The apiKey
   plugin keys owners as `reference_id`, not `user_id` — keep
-  `packages/db/src/apikey-schema.ts` matched to the plugin.
+  `packages/db/src/apikey-schema.ts` matched to the plugin. Auth tables are plural
+  snake_case in SQL (`users`, `api_keys`, …) but keep singular drizzle **export**
+  names, which is the only name better-auth resolves (`apps/web/AGENTS.md` § Auth).
 - **Trust = install count, not verification.** No per-tool verification, no approval
   gate: rival packages may target the same site, and installs + pattern specificity
   rank them. Version pinning is the containment mechanism — a malicious or broken

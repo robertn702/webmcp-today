@@ -74,6 +74,14 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Its 1.6.25 table schema keys the owner as `reference_id` (+ `config_id`),
   not `user_id` — keep `packages/db/src/apikey-schema.ts` matched to the
   plugin's expected fields or every api-key endpoint 500s.
+- **Auth table naming:** SQL names are plural snake_case like the app-owned tables
+  (`users`, `sessions`, `accounts`, `verifications`, `api_keys`), but the drizzle
+  **export names stay singular** (`user`, …, `apikey`). better-auth resolves models
+  as a `schema[model]` property read against `packages/db/src/index.ts`'s `schema`
+  object and never sees the SQL name — rename an export and you get
+  `[# Drizzle Adapter]: The model "user" was not found in the schema object`.
+  Don't "fix" the mismatch, and don't set `usePlural` (it naively appends `s`,
+  which would want `apikeys`).
 - Agent writes use `Authorization: Bearer <api key>` (created at
   `/settings/security`); browser flows use session cookies.
 - Auth UI is **better-auth-ui** (vendored shadcn registry components in

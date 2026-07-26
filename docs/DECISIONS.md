@@ -488,3 +488,21 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   restrictive, never re-enabling. Precedent: OCSP soft-fail versus Chrome's CRLSets — OCSP's
   flaw was not the concept but failing open under a network condition the attacker controls.
   **Recorded now, implemented at step 4** — not in the PR that records it.
+- 2026-07-26 — **Auth tables renamed to plural snake_case in SQL; drizzle export names
+  stay singular.** `user|session|account|verification|apikey` became
+  `users|sessions|accounts|verifications|api_keys` as Postgres table names, matching the
+  app-owned tables (`webmcp_definitions`, `installs`, …). The two names are independent:
+  better-auth resolves models by a plain `schema[model]` property read against
+  `packages/db/src/index.ts`'s `schema` object (`@better-auth/drizzle-adapter` `getSchema`),
+  and the api-key plugin hardcodes its model as `apikey` (`API_KEY_TABLE_NAME`), so the
+  **export** names are load-bearing and stay singular; the `pgTable()` first argument is
+  drizzle's alone and better-auth never sees it. Rejected `usePlural: true`, which naively
+  appends `s` (`@better-auth/core` `get-model-name.mjs`) and so yields `apikeys` — not
+  snake_case, and it would have pinned the export names too. Also rejected per-model
+  `modelName` overrides (core `BetterAuthDBOptions.modelName` + the plugin's `schema`
+  option): five more config surfaces to hand-sync, and they drift every time
+  `@better-auth/cli generate` runs. Extra motive for `user` specifically: it's a reserved
+  word in Postgres, so `SELECT * FROM user` is a syntax error unquoted — relevant because
+  revocation writes are hand-run SQL in v1. Migrations 0000–0006 were squashed into a
+  single `0000_init.sql` rather than stacking a rename migration (pre-production, DB is
+  wiped and re-migrated; also sidesteps drizzle-kit's interactive rename prompt).
