@@ -31,6 +31,35 @@ export const statsResponseSchema = z.object({
   topDomains: z.array(z.object({ domain: z.string(), count: z.number().int().min(0) })),
 });
 
+/**
+ * One entry in the revocation feed. Once installed config bodies live on the
+ * client's disk the registry is off the read path, so this feed is the only
+ * lever it keeps after install: a package pulled for malware otherwise runs
+ * forever on every machine that has it.
+ *
+ * `id` is monotonic and doubles as the client's poll cursor — hence a number
+ * rather than the uuid the registry's other ids use.
+ */
+export const revocationEntrySchema = z.object({
+  id: z.number().int().positive(),
+  definitionId: z.string(),
+  /** Null revokes the whole package; otherwise only this one version. */
+  versionId: z.string().nullable(),
+  reason: z.string(),
+  revokedAt: z.iso.datetime(),
+});
+
+/**
+ * `GET /api/revocations?since=<cursor>`. `cursor` is what the client sends next
+ * time, and is echoed back unchanged when there is nothing new.
+ */
+export const revocationsResponseSchema = z.object({
+  cursor: z.number().int(),
+  entries: z.array(revocationEntrySchema),
+});
+
 export type WebMcpConfig = z.infer<typeof webMcpConfigSchema>;
 export type ConfigListResponse = z.infer<typeof configListResponseSchema>;
 export type StatsResponse = z.infer<typeof statsResponseSchema>;
+export type RevocationEntry = z.infer<typeof revocationEntrySchema>;
+export type RevocationsResponse = z.infer<typeof revocationsResponseSchema>;

@@ -15,6 +15,9 @@ erDiagram
     webmcp_definitions ||--o{ definition_versions : "publishes (append-only, cascade)"
     webmcp_definitions ||--o{ installs : "has (cascade)"
     definition_versions ||--o{ installs : "pinned to (version_id)"
+    webmcp_definitions ||--o{ revocations : "revoked by (cascade)"
+    definition_versions ||--o{ revocations : "revoked at (version_id, nullable)"
+    user ||--o{ revocations : "revokes (revoked_by)"
 
     webmcp_definitions {
         uuid id PK
@@ -45,6 +48,15 @@ erDiagram
         uuid version_id FK "-> definition_versions.id, version the user is pinned to"
         timestamptz created_at
         timestamptz updated_at
+    }
+
+    revocations {
+        bigserial id PK "monotonic — doubles as the client's poll cursor"
+        uuid definition_id FK "-> webmcp_definitions.id (cascade)"
+        uuid version_id FK "-> definition_versions.id, NULL = the whole package"
+        text reason "short, shown to the user"
+        timestamptz revoked_at
+        text revoked_by FK "-> user.id"
     }
 ```
 
@@ -140,3 +152,10 @@ erDiagram
 - **`installs` does double duty:** `WHERE user_id = ?` drives what the extension should
   fetch for a signed-in user (with `version_id` saying which version); `GROUP BY
 definition_id` drives the trust signal.
+- **`revocations` is append-only and read-only over HTTP.** Served by
+  `GET /api/revocations?since=<cursor>` (public, `WHERE id > cursor ORDER BY id`); writes
+  are hand-run SQL in v1 — there is no admin role and no write endpoint. `id` is a
+  `bigserial` rather than a random uuid precisely because it is that cursor. It exists
+  for the local-install model (`docs/local-first-installs.md` §5): once config bodies
+  live on the client's disk, this feed is the only lever the registry keeps after
+  install.
