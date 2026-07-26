@@ -12,6 +12,13 @@ export const webMcpConfigSchema = createConfigObjectSchema.extend({
   id: z.string(),
   versionId: z.string(),
   version: z.number().int().min(1),
+  /**
+   * Content identifier for this version's `api` block (see apiContentHash);
+   * absent exactly when there is no `api`. Lets a client recognise a surface
+   * it already holds — the same block recurs across a package's versions and
+   * across rival packages targeting the same site.
+   */
+  apiContentHash: z.string().optional(),
   contributor: z.string(),
   installCount: z.number().int().min(0).optional(),
   createdAt: z.iso.datetime(),
