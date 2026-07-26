@@ -1,7 +1,8 @@
-import type {
-  CreateConfigInput,
-  PublishVersionInput,
-  UpdateDefinitionMetaInput,
+import {
+  apiContentHash,
+  type CreateConfigInput,
+  type PublishVersionInput,
+  type UpdateDefinitionMetaInput,
 } from "@robertn702/webmcp-cafe-schema";
 import { definitionVersions, installs, webmcpDefinitions } from "@webmcp-cafe/db";
 import { and, eq, sql } from "drizzle-orm";
@@ -36,6 +37,7 @@ export async function insertDefinition(
       urlPatterns: input.urlPatterns,
       tools: input.tools,
       api: input.api,
+      apiContentHash: input.api ? await apiContentHash(input.api) : null,
       minEngine: input.minEngine,
       changelog: input.changelog,
     })
@@ -69,6 +71,9 @@ export async function publishVersion(
   definitionId: string,
   input: PublishVersionInput,
 ): Promise<{ versionId: string; version: number }> {
+  // Depends only on the api block, so it survives a collision retry unchanged.
+  const contentHash = input.api ? await apiContentHash(input.api) : null;
+
   for (let attempt = 1; attempt <= PUBLISH_MAX_ATTEMPTS; attempt++) {
     const [row] = await db
       .select({ maxVersion: sql<number>`coalesce(max(${definitionVersions.version}), 0)` })
@@ -86,6 +91,7 @@ export async function publishVersion(
           urlPatterns: input.urlPatterns,
           tools: input.tools,
           api: input.api,
+          apiContentHash: contentHash,
           minEngine: input.minEngine,
           changelog: input.changelog,
         })
