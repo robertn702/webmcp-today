@@ -59,10 +59,17 @@ else
   echo "Skipping .vercel symlink: $VERCEL_LINK not a directory"
 fi
 
-# 5. Install dependencies so the workspace is immediately usable.
+# 5. Install dependencies, then build the workspace packages that consumers
+#    resolve through dist/ (schema + mcp). dist/ is gitignored, so a fresh
+#    worktree has none and every consumer fails with "Failed to resolve entry
+#    for package @robertn702/webmcp-cafe-schema" until it is built. Scoped to
+#    ./packages/* on purpose: apps/web's build needs real env vars (t3-env
+#    validates at build) and is not needed to make the workspace usable.
 if command -v bun >/dev/null 2>&1; then
   echo "Installing dependencies with bun..."
   bun install
+  echo "Building workspace packages (dist/ consumers)..."
+  bunx turbo run build --filter='./packages/*'
 else
   echo "Skipping bun install: bun not found on PATH"
 fi
