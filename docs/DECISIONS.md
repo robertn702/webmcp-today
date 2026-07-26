@@ -522,3 +522,19 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   per-key rate limit is 10 requests / 24h (`rate_limit_max` = 10,
   `rate_limit_time_window` = 86400000 on each created key), which is now actually
   reachable and will need raising before agents run at any volume.
+- 2026-07-26 — **`webmcp.cafe` nameserver cutover is done; the domain is live.** Verified
+  rather than assumed: `NS` returns `diva`/`patrick.ns.cloudflare.com` (so Namecheap
+  delegation happened), apex `A` is `76.76.21.21`, `www` `CNAME`s to
+  `cname.vercel-dns.com` and 308s to the apex, both hostnames report `verified: true` on
+  the Vercel project, and the apex serves `200` over valid TLS. Smoke-tested through the
+  app, not just the edge: `GET /api/configs/lookup?url=https://reddit.com/r/all` returns
+  the seeded Reddit config on both `webmcp.cafe` and `webmcp-cafe.vercel.app`. Retired the
+  corresponding docs/BACKLOG.md item. Note this does **not** change the pre-production
+  status in AGENTS.md — reachable at a domain is not launched, and there are still no real
+  users or data.
+- 2026-07-26 — **Vercel preview builds fail by design-gap, not by regression.** All five
+  required env vars are scoped to Production only, so t3-env throws
+  `Invalid environment variables` at "Collecting page data" on every preview build; PRs
+  #33–#36 all carry the same red Vercel check. Recorded in AGENTS.md so agents stop
+  attributing it to their own diff, and in docs/BACKLOG.md as the open decision (does
+  preview share Production's `DATABASE_URL`, or get its own Neon branch?).

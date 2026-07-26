@@ -38,16 +38,21 @@ packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 - Hosting: Vercel project `webmcp-cafe`, team `robert-1554` (orgId
   `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. Prod deploy:
   `vercel --prod` from the repo root.
-- Required env vars must exist in the Vercel project (Production) or the build
-  fails at "Collecting page data" (t3-env validates on import). Set with
+- Required env vars must exist in the Vercel project or the build fails at
+  "Collecting page data" (t3-env validates on import). Set with
   `vercel env add <NAME> production`; local source of truth is `apps/web/.env`
   (override `BETTER_AUTH_URL` to the prod origin for Production).
-- Domain `webmcp.cafe`: registered at **Namecheap**, DNS on **Cloudflare** (zone
-  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud). Records:
-  `A @ → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`; www 308→apex. Going live
-  needs the Namecheap nameservers switched to the two Cloudflare NS
-  (`diva`/`patrick.ns.cloudflare.com`). CF API token: 1Password robertn702 →
-  Private, "Cloudflare API Token (webmcp-cafe)".
+- They are currently set for **Production only**, so every PR's **preview** build
+  fails that same validation. The red Vercel check on a PR is expected and is not
+  your change; **CI (typecheck + lint + test) is the real gate**. Tracked in
+  docs/BACKLOG.md.
+- Domain `webmcp.cafe` is **live** — nameserver cutover is done, the apex serves the
+  app over TLS, and both `webmcp.cafe` and `www.webmcp.cafe` are verified on the
+  Vercel project. Registered at **Namecheap**, delegated to the two Cloudflare NS
+  (`diva`/`patrick.ns.cloudflare.com`); DNS on **Cloudflare** (zone
+  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud) with
+  `A @ → 76.76.21.21` and `CNAME www → cname.vercel-dns.com`; www 308→apex. CF API
+  token: 1Password robertn702 → Private, "Cloudflare API Token (webmcp-cafe)".
 - Vercel token/scope quirks (which token to use, the `robertniimi` 403 trap):
   global `~/.config/opencode/AGENTS.md` "Vercel". Vercel refuses
   `vercel domains add` while the latest prod deploy is errored — fix the deploy

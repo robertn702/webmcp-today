@@ -47,9 +47,12 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   identity, privacy policy page. The tiers 2–3 "no remote code" answer can
   follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
-- **Switch Namecheap nameservers to Cloudflare** — the last step before
-  `webmcp.cafe` resolves; Robert's action, then propagation time.
-  (AGENTS.md → Deploy, domain & DNS)
+- **Vercel Preview env vars** — all five required vars exist only in Production, so
+  every PR's preview build dies at "Collecting page data" on t3-env validation
+  (`Invalid environment variables`). Fix is `vercel env add <NAME> preview` ×5, but it
+  needs a call on whether preview shares Production's `DATABASE_URL` or gets its own
+  Neon branch. Until then the red Vercel check on PRs is expected and CI
+  (typecheck/lint/test) is the real gate. (AGENTS.md → Deploy, domain & DNS)
 - **Email service** (password reset, verification) — pick a provider (needs
   Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip
