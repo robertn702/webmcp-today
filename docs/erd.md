@@ -37,6 +37,7 @@ erDiagram
         int version "uq: definition_id+version"
         jsonb url_patterns "string[] — Chrome @match style, e.g. *://*.wikipedia.org/wiki/*"
         jsonb tools "ToolDescriptor[] — matches zod schema"
+        jsonb api "ApiBlock, nullable — tier-1 API execution surface (docs/api-execution-model.md)"
         int min_engine "capability floor this version's content requires"
         text changelog "optional, shown to installed users deciding whether to update"
         timestamptz created_at "immutable: no updated_at"

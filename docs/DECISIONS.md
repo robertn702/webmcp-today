@@ -233,7 +233,10 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   of that definition's versions by casting the leading major-version digits to an
   integer (`'1.0.0'` → `1`); applied clean to the dev DB (no rows had a value set, so
   it was a no-op in practice). No engine-enforcement logic was added — the extension
-  still doesn't check `minEngine` at all; that's a later step.
+  still doesn't check `minEngine` at all; that's a later step. (Superseded the
+  same day by 5b99380, which added the per-config gate —
+  `apps/extension/src/lib/engine-gate.ts` + `register-tools.ts`; see
+  ARCHITECTURE.md "Engine gate".)
 - 2026-07-24 — Authored the Reddit flagship config
   (`apps/extension/configs/reddit.com.json`, build-order step 3 in
   docs/api-execution-model.md): 6 tier-1 tools — `reddit_me`,
