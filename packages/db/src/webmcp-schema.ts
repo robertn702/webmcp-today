@@ -1,5 +1,6 @@
 import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
 import {
+  bigserial,
   index,
   integer,
   jsonb,
@@ -84,3 +85,26 @@ export const installs = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.definitionId] })],
 );
+
+/**
+ * Append-only kill list, polled by clients with `id` as the cursor. Once
+ * installed config bodies live in the extension's storage the registry is off
+ * the read path, so this is the only lever it keeps after install
+ * (docs/local-first-installs.md §5). Writes are hand-run SQL in v1 — there is
+ * no admin role and no write endpoint.
+ *
+ * `id` is a bigserial rather than this schema's usual `uuid().defaultRandom()`
+ * precisely because it is that cursor: a random uuid is not monotonic.
+ */
+export const revocations = pgTable("revocations", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  definitionId: uuid("definition_id")
+    .notNull()
+    .references(() => webmcpDefinitions.id, { onDelete: "cascade" }),
+  /** Null revokes the whole package; otherwise only this version. */
+  versionId: uuid("version_id").references(() => definitionVersions.id),
+  /** Short, and shown to the user — a package never silently vanishes. */
+  reason: text("reason").notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }).notNull().defaultNow(),
+  revokedBy: text("revoked_by").references(() => user.id),
+});

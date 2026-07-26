@@ -43,6 +43,13 @@
       "when": 1784912000977,
       "tag": "0005_complete_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785038284523,
+      "tag": "0006_condemned_shinko_yamashiro",
+      "breakpoints": true
     }
   ]
 }
