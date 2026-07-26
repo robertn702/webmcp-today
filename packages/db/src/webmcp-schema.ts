@@ -52,6 +52,13 @@ export const definitionVersions = pgTable(
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
     /** Tier-1 API execution surface for this version's API-mode tools (see docs/api-execution-model.md). */
     api: jsonb("api").$type<ApiBlock>(),
+    /**
+     * Content identifier for `api` (apiContentHash in packages/schema) — null
+     * exactly when `api` is null. The same surface recurs across a package's
+     * versions and across rival packages targeting the same site, so this is
+     * the dedupe key clients store one copy under.
+     */
+    apiContentHash: text("api_content_hash"),
     /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). */
     minEngine: integer("min_engine"),
     changelog: text("changelog"),

@@ -80,6 +80,7 @@ CREATE TABLE "definition_versions" (
 	"url_patterns" jsonb NOT NULL,
 	"tools" jsonb NOT NULL,
 	"api" jsonb,
+	"api_content_hash" text,
 	"min_engine" integer,
 	"changelog" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
