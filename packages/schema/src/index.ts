@@ -6,6 +6,7 @@ export * from "./execution.js";
 export * from "./input-schema.js";
 export * from "./tool.js";
 export * from "./api.js";
+export * from "./api-hash.js";
 export * from "./config.js";
 export * from "./registry.js";
 export * from "./derive-schema.js";
