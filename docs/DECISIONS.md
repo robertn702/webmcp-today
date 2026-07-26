@@ -146,3 +146,15 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   it. Discovery is domain + urlPattern matching; ranking is install count + pattern
   specificity. Re-addable later if a browse facet needs one — a nullable jsonb column
   costs nothing to re-add, and the format is easier to widen than to narrow.
+
+- 2026-07-26 — **better-auth's tables live in an `auth` Postgres schema, not `public`.**
+  `public` was never chosen — it's drizzle's default and no schema was ever named. The
+  motive is a grant boundary around the only credential material in the database
+  (`accounts.access_token`/`refresh_token`, `api_keys.key`): one
+  `REVOKE ... ON SCHEMA auth` covers them, where per-table grants silently miss whatever
+  table is added next. Explicitly *not* the Supabase/Neon Auth rationale — there the
+  namespace is owned by another party, which doesn't apply to a library whose migrations
+  we write. Deferred on purpose: the restricted role that would use the boundary doesn't
+  exist yet, so this buys the option, not the protection. Non-obvious consequence:
+  `drizzle.config.ts` must set `schemaFilter: ["public", "auth"]` — it defaults to
+  `["public"]`, and introspect/push would otherwise propose dropping the auth set.

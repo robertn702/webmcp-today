@@ -74,11 +74,17 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Its 1.6.25 table schema keys the owner as `reference_id` (+ `config_id`),
   not `user_id` — keep `packages/db/src/apikey-schema.ts` matched to the
   plugin's expected fields or every api-key endpoint 500s.
+- **Auth tables live in the `auth` Postgres schema**, not `public` (`pgSchema("auth")`
+  in `packages/db/src/auth-schema.ts`; `apikey-schema.ts` hangs off the same
+  `authDbSchema`). Hand-run SQL needs the qualifier — `select * from auth.users`.
+  App tables stay in `public` and reference `auth.users` across schemas.
+  `drizzle.config.ts` sets `schemaFilter: ["public", "auth"]`; without it
+  introspect/push default to `public` only and would propose dropping the auth set.
 - **Auth table naming:** SQL names are plural snake_case like the app-owned tables
   (`users`, `sessions`, `accounts`, `verifications`, `api_keys`), but the drizzle
   **export names stay singular** (`user`, …, `apikey`). better-auth resolves models
   as a `schema[model]` property read against `packages/db/src/index.ts`'s `schema`
-  object and never sees the SQL name — rename an export and you get
+  object and never sees the SQL name (or the namespace) — rename an export and you get
   `[# Drizzle Adapter]: The model "user" was not found in the schema object`.
   Don't "fix" the mismatch, and don't set `usePlural` (it naively appends `s`,
   which would want `apikeys`).

@@ -8,6 +8,9 @@ schema changes.
 Package-install model: trust is install count, not per-tool verification. There is no
 snapshot table — `definition_versions` rows are themselves the served truth.
 
+These tables are in `public`; `users` below is the cross-schema `auth.users` (see the
+next section). Mermaid entity names can't carry the qualifier, so the FK notes do.
+
 ```mermaid
 erDiagram
     users ||--o{ webmcp_definitions : "contributes (contributor_id)"
@@ -25,7 +28,7 @@ erDiagram
         text page_type
         text title
         text description
-        text contributor_id FK "-> users.id"
+        text contributor_id FK "-> auth.users.id"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -43,7 +46,7 @@ erDiagram
     }
 
     installs {
-        text user_id PK,FK "-> users.id"
+        text user_id PK,FK "-> auth.users.id"
         uuid definition_id PK,FK "-> webmcp_definitions.id"
         uuid version_id FK "-> definition_versions.id, version the user is pinned to"
         timestamptz created_at
@@ -56,11 +59,16 @@ erDiagram
         uuid version_id FK "-> definition_versions.id, NULL = the whole package"
         text reason "short, shown to the user"
         timestamptz revoked_at
-        text revoked_by FK "-> users.id"
+        text revoked_by FK "-> auth.users.id"
     }
 ```
 
 ## Auth tables (better-auth-owned — treat the shapes as fixed)
+
+These live in the **`auth` Postgres schema**, not `public` — the tables below are all
+`auth.users`, `auth.sessions`, … The split keeps the credential-bearing columns
+(`accounts.access_token`/`refresh_token`, `api_keys.key`) behind one schema-level grant
+and leaves `public` app-owned.
 
 Column shapes come from better-auth's generated schema and must match the plugin's
 expectations. The _table names_ are ours: better-auth resolves models against the
