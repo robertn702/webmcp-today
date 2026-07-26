@@ -1,13 +1,15 @@
-import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema";
+import { boolean, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { authDbSchema, user } from "./auth-schema";
 
 // better-auth apiKey plugin table (agents authenticate uploads with Bearer keys).
 //
 // The export stays `apikey` — the plugin hardcodes that as its model name
 // (`API_KEY_TABLE_NAME`) and the drizzle adapter resolves it as a `schema[model]`
 // property read. The SQL name is ours to pick; see auth-schema.ts for the split.
+// Lives in the `auth` namespace with the core tables: `key` is credential
+// material, which is the whole point of the boundary.
 
-export const apikey = pgTable("api_keys", {
+export const apikey = authDbSchema.table("api_keys", {
   id: text("id").primaryKey(),
   configId: text("config_id").notNull().default("default"),
   name: text("name"),

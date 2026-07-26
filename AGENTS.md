@@ -108,6 +108,8 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
   user→version). ERD: `docs/erd.md`; served-truth rules: `apps/web/AGENTS.md`.
 - No `(domain, url_pattern)` uniqueness — rival packages may target the same site;
   installs + pattern specificity rank them.
+- Two Postgres namespaces: app tables in `public`, better-auth's in `auth`
+  (`auth.users`, …) — hand-run SQL must qualify. See `apps/web/AGENTS.md` § Auth.
 
 ## Gotchas
 

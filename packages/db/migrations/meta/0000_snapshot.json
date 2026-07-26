@@ -1,12 +1,12 @@
 {
-  "id": "01877a06-4e8b-4edb-b28a-d1ba6568e3d4",
+  "id": "4db3ec8f-bcf2-4f29-b233-5af8cef8c916",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.api_keys": {
+    "auth.api_keys": {
       "name": "api_keys",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -153,6 +153,7 @@
           "name": "api_keys_reference_id_users_id_fk",
           "tableFrom": "api_keys",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "reference_id"
           ],
@@ -169,9 +170,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.accounts": {
+    "auth.accounts": {
       "name": "accounts",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -260,6 +261,7 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -276,9 +278,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.sessions": {
+    "auth.sessions": {
       "name": "sessions",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -337,6 +339,7 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -361,9 +364,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.users": {
+    "auth.users": {
       "name": "users",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -427,9 +430,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.verifications": {
+    "auth.verifications": {
       "name": "verifications",
-      "schema": "",
+      "schema": "auth",
       "columns": {
         "id": {
           "name": "id",
@@ -629,6 +632,7 @@
           "name": "installs_user_id_users_id_fk",
           "tableFrom": "installs",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "user_id"
           ],
@@ -753,6 +757,7 @@
           "name": "revocations_revoked_by_users_id_fk",
           "tableFrom": "revocations",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "revoked_by"
           ],
@@ -847,6 +852,7 @@
           "name": "webmcp_definitions_contributor_id_users_id_fk",
           "tableFrom": "webmcp_definitions",
           "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "contributor_id"
           ],
@@ -865,7 +871,9 @@
     }
   },
   "enums": {},
-  "schemas": {},
+  "schemas": {
+    "auth": "auth"
+  },
   "sequences": {},
   "roles": {},
   "policies": {},

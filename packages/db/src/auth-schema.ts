@@ -1,7 +1,13 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgSchema, text, timestamp } from "drizzle-orm/pg-core";
 
 // better-auth core tables (drizzle adapter, provider "pg"). Shapes follow
 // better-auth's generated schema.
+//
+// These live in their own `auth` Postgres namespace rather than `public`, so
+// the token-bearing tables (`accounts.access_token`, `api_keys.key`) sit behind
+// a schema-level grant boundary and `public` stays app-owned. better-auth is
+// indifferent: the adapter is handed the drizzle table object, which carries
+// its own namespace.
 //
 // Two names are in play and only one of them is better-auth's business:
 //   - The *export name* (`user`, `session`, …) is what better-auth resolves. The
@@ -10,13 +16,20 @@ import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 //     stay singular to match better-auth's model names. Renaming one throws
 //     `[# Drizzle Adapter]: The model "user" was not found in the schema object`.
 //   - The *SQL table name* (`users`, `sessions`, …) is drizzle's alone —
-//     better-auth never sees it. Pluralized to match the app-owned tables, and
-//     because `user` is a reserved word in Postgres (`SELECT * FROM user` is a
-//     syntax error unquoted, which bites hand-run SQL and psql sessions).
+//     better-auth never sees it. Pluralized as house style, and because `user`
+//     is a reserved word in Postgres (`SELECT * FROM user` is a syntax error
+//     unquoted, which bites hand-run SQL and psql sessions).
 // Column names are snake_case for the same reason: the adapter maps by TS
 // property name, not column name.
 
-export const user = pgTable("users", {
+/**
+ * The `auth` namespace itself. Exported only so apikey-schema.ts can hang its
+ * table off it — nothing reads it off the `schema` object in index.ts (drizzle
+ * ignores non-table values there, and better-auth resolves models by key).
+ */
+export const authDbSchema = pgSchema("auth");
+
+export const user = authDbSchema.table("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -26,7 +39,7 @@ export const user = pgTable("users", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const session = pgTable("sessions", {
+export const session = authDbSchema.table("sessions", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
@@ -39,7 +52,7 @@ export const session = pgTable("sessions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const account = pgTable("accounts", {
+export const account = authDbSchema.table("accounts", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -57,7 +70,7 @@ export const account = pgTable("accounts", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const verification = pgTable("verifications", {
+export const verification = authDbSchema.table("verifications", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
