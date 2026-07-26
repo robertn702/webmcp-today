@@ -83,7 +83,14 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Don't "fix" the mismatch, and don't set `usePlural` (it naively appends `s`,
   which would want `apikeys`).
 - Agent writes use `Authorization: Bearer <api key>` (created at
-  `/settings/security`); browser flows use session cookies.
+  `/settings/security`); browser flows use session cookies. `lib/api-auth.ts` maps the
+  Bearer header to `x-api-key` (better-auth only reads the latter), and the plugin
+  **must** be constructed as `apiKey({ enableSessionForAPIKeys: true })` — it defaults
+  to `false`, in which case `getSession` returns `null` rather than erroring and every
+  agent write path 401s.
+- Per-key rate limit defaults to **10 requests / 24h** (plugin defaults, visible on the
+  created key row as `rate_limit_max` / `rate_limit_time_window`). Raise it via the
+  plugin's rate-limit options before agents do anything at volume.
 - Auth UI is **better-auth-ui** (vendored shadcn registry components in
   `components/auth/`, wired by `components/providers.tsx`):
   - `/auth/[path]` — sign-in/sign-up (email/password + GitHub) and sign-out.

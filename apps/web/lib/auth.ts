@@ -19,7 +19,10 @@ export const auth = betterAuth({
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
-  // Agents authenticate config uploads with Bearer API keys; the plugin makes
-  // auth.api.getSession resolve x-api-key headers to the key owner's session.
-  plugins: [apiKey()],
+  // Agents authenticate config uploads with Bearer API keys. `enableSessionForAPIKeys`
+  // is what makes auth.api.getSession resolve an x-api-key header to the key owner's
+  // session, and it defaults to *false* — without it the plugin's before-hook matcher
+  // skips every request and getSession silently returns null (not an error), so every
+  // agent write path 401s. Don't drop it.
+  plugins: [apiKey({ enableSessionForAPIKeys: true })],
 });

@@ -506,3 +506,19 @@ forgotPassword: false }}` in `providers.tsx` — the vendored better-auth-ui
   revocation writes are hand-run SQL in v1. Migrations 0000–0006 were squashed into a
   single `0000_init.sql` rather than stacking a rename migration (pre-production, DB is
   wiped and re-migrated; also sidesteps drizzle-kit's interactive rename prompt).
+- 2026-07-26 — **Fixed agent Bearer auth: the apiKey plugin needs
+  `enableSessionForAPIKeys: true`.** `apps/web/lib/auth.ts` constructed the plugin bare,
+  and `@better-auth/api-key` 1.6.25 defaults that option to `false`
+  (`enableSessionForAPIKeys: config?.enableSessionForAPIKeys ?? false`), while its
+  session-resolving before-hook matcher bails on any config without it
+  (`if (!config.enableSessionForAPIKeys) continue`). Net effect: `auth.api.getSession`
+  returned `null` for every API key — silently, not as an error — so `getAuthUserId`
+  resolved to no user and every agent write path (publish, versions, install) 401'd.
+  Found while verifying the auth-table rename, not caused by it; the failure is header/
+  config gating, unrelated to table resolution. Verified both directions against live
+  Neon: bare `apiKey()` → `401`, `apiKey({ enableSessionForAPIKeys: true })` → `200`.
+  The stale claims in `apps/web/lib/auth.ts` and `apps/web/AGENTS.md` that this already
+  worked were corrected in the same change. **Not addressed here:** the plugin's default
+  per-key rate limit is 10 requests / 24h (`rate_limit_max` = 10,
+  `rate_limit_time_window` = 86400000 on each created key), which is now actually
+  reachable and will need raising before agents run at any volume.
