@@ -369,7 +369,10 @@ data — so it is buildable today and is not blocked on the spike.
   The canary (out of scope per SPEC but reserved-for in the schema) should replay
   tier-1 calls against live sites; what runs it, and how do auth'd writes get canaried
   safely (a write canary posts real comments)?
-- **`minEngine` bump policy.** The `api` block is additive, but executors that don't
-  understand it must not silently register inert tools. Presumably configs using `api`
-  set `minEngine` to the engine version that introduces it — confirm the extension
-  actually refuses too-new configs today.
+- **`minEngine` bump policy — resolved.** Configs using `api` set `minEngine` to the
+  engine level that introduced it (`ENGINE_VERSION` is 2; the Reddit config sets
+  `minEngine: 2`). The extension refuses a too-new config _whole_ rather than
+  registering tools it cannot run — `supportsConfigEngine`
+  (`apps/extension/src/lib/engine-gate.ts`), applied per config in `register-tools.ts`.
+  What remains is UX, not correctness: the gate fires at registration, so a user can
+  install a config their build cannot run and sees only a page-console warning.
