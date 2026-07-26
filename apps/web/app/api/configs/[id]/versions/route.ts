@@ -3,9 +3,28 @@ import { webmcpDefinitions } from "@webmcp-cafe/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
+import { listVersions } from "@/lib/configs-repo";
 import { db } from "@/lib/db";
 import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";
 import { publishVersion } from "@/lib/mutations";
+
+/**
+ * GET /api/configs/:id/versions — this definition's versions, newest first.
+ * Public: update and rollback both need the list, and neither is account-scoped.
+ *
+ * Publishing always writes version 1, so an empty list means the definition
+ * doesn't exist rather than "no versions yet" — hence the 404 without a second
+ * query.
+ */
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+): Promise<NextResponse> {
+  const { id } = await context.params;
+  const versions = await listVersions(id);
+  if (versions.length === 0) return jsonError(404, "Config not found");
+  return NextResponse.json({ versions });
+}
 
 /**
  * POST /api/configs/:id/versions — publish the next version of an existing

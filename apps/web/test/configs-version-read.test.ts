@@ -1,0 +1,129 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GET as getVersion } from "@/app/api/configs/[id]/versions/[versionId]/route";
+import { GET as getVersionList } from "@/app/api/configs/[id]/versions/route";
+
+// A local install pins by possession, so it fetches one exact version rather
+// than "latest" — these two reads are the only version-addressed surface in the
+// API. There is no test database here: the repo layer is mocked so the routes'
+// own behaviour (404 on unknown, list shape, order pass-through) is what gets
+// exercised.
+const state = vi.hoisted(
+  (): {
+    configs: Record<string, unknown>;
+    versions: { versionId: string; version: number; changelog: string | null; createdAt: Date }[];
+  } => ({ configs: {}, versions: [] }),
+);
+
+vi.mock("@/lib/db", () => ({ db: {} }));
+
+vi.mock("@/lib/api-auth", () => ({ getAuthUserId: () => Promise.resolve(null) }));
+
+vi.mock("@/lib/mutations", () => ({
+  publishVersion: () => Promise.resolve({ versionId: "ver-1", version: 1 }),
+}));
+
+// Mocked wholesale, so every export the two route modules import lives here.
+vi.mock("@/lib/configs-repo", () => ({
+  getConfigAtVersion: (id: string, versionId: string) =>
+    Promise.resolve(state.configs[id + "/" + versionId] ?? null),
+  listVersions: () => Promise.resolve(state.versions),
+}));
+
+const configAtV1 = {
+  id: "def-1",
+  versionId: "ver-1",
+  version: 1,
+  domain: "reddit.com",
+  urlPatterns: ["*://*.reddit.com/*"],
+  title: "Reddit",
+  description: "Read and search Reddit",
+  tools: [],
+  contributor: "robert",
+  createdAt: "2026-07-01T00:00:00.000Z",
+  updatedAt: "2026-07-01T00:00:00.000Z",
+};
+
+function readVersion(id: string, versionId: string): Promise<Response> {
+  return getVersion(new Request("https://webmcp.cafe/api/configs/x/versions/y"), {
+    params: Promise.resolve({ id, versionId }),
+  });
+}
+
+function readVersionList(id: string): Promise<Response> {
+  return getVersionList(new Request("https://webmcp.cafe/api/configs/x/versions"), {
+    params: Promise.resolve({ id }),
+  });
+}
+
+describe("GET /api/configs/:id/versions/:versionId", () => {
+  beforeEach(() => {
+    state.configs = { "def-1/ver-1": configAtV1 };
+  });
+
+  it("serves the config document at that exact version", async () => {
+    const response = await readVersion("def-1", "ver-1");
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(configAtV1);
+  });
+
+  it("404s on a version that does not belong to this definition", async () => {
+    const response = await readVersion("def-1", "ver-9");
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Config version not found" });
+  });
+
+  it("404s on an unknown definition", async () => {
+    const response = await readVersion("def-nope", "ver-1");
+    expect(response.status).toBe(404);
+  });
+});
+
+describe("GET /api/configs/:id/versions", () => {
+  beforeEach(() => {
+    state.versions = [
+      {
+        versionId: "ver-3",
+        version: 3,
+        changelog: "Fix the search tool",
+        createdAt: new Date("2026-07-03T00:00:00.000Z"),
+      },
+      {
+        versionId: "ver-2",
+        version: 2,
+        changelog: null,
+        createdAt: new Date("2026-07-02T00:00:00.000Z"),
+      },
+      {
+        versionId: "ver-1",
+        version: 1,
+        changelog: null,
+        createdAt: new Date("2026-07-01T00:00:00.000Z"),
+      },
+    ];
+  });
+
+  it("lists versions newest first", async () => {
+    const response = await readVersionList("def-1");
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.versions.map((v: { version: number }) => v.version)).toEqual([3, 2, 1]);
+  });
+
+  it("serves versionId, version, changelog and createdAt", async () => {
+    const response = await readVersionList("def-1");
+    const body = await response.json();
+    expect(body.versions[0]).toEqual({
+      versionId: "ver-3",
+      version: 3,
+      changelog: "Fix the search tool",
+      createdAt: "2026-07-03T00:00:00.000Z",
+    });
+  });
+
+  it("404s when the definition has no versions, which means it does not exist", async () => {
+    state.versions = [];
+    const response = await readVersionList("def-nope");
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Config not found" });
+  });
+});

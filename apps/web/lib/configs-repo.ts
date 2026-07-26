@@ -125,6 +125,46 @@ export async function getVersionById(
   return rows[0] ?? null;
 }
 
+/**
+ * One definition at an exact version — the served document, not the bare row
+ * `getVersionById` returns. This is what an install fetches and keeps, so it has
+ * to be the same shape browse and lookup serve.
+ */
+export async function getConfigAtVersion(
+  definitionId: string,
+  versionId: string,
+): Promise<WebMcpConfig | null> {
+  const [definitionRows, version] = await Promise.all([
+    db.select().from(webmcpDefinitions).where(eq(webmcpDefinitions.id, definitionId)).limit(1),
+    getVersionById(definitionId, versionId),
+  ]);
+  const definition = definitionRows[0];
+  if (!definition || !version) return null;
+  const hydrated = await hydrate([definition], new Map([[definition.id, version]]));
+  return hydrated[0] ?? null;
+}
+
+export type VersionSummary = {
+  versionId: string;
+  version: number;
+  changelog: string | null;
+  createdAt: Date;
+};
+
+/** A definition's versions, newest first — what update and rollback choose from. */
+export function listVersions(definitionId: string): Promise<VersionSummary[]> {
+  return db
+    .select({
+      versionId: definitionVersions.id,
+      version: definitionVersions.version,
+      changelog: definitionVersions.changelog,
+      createdAt: definitionVersions.createdAt,
+    })
+    .from(definitionVersions)
+    .where(eq(definitionVersions.definitionId, definitionId))
+    .orderBy(desc(definitionVersions.version));
+}
+
 /** A user's installed configs, each pinned to `installs.versionId`. */
 export async function getInstalledConfigs(userId: string): Promise<WebMcpConfig[]> {
   const installRows = await db.select().from(installs).where(eq(installs.userId, userId));
