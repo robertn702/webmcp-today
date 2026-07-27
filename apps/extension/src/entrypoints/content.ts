@@ -37,5 +37,7 @@ function siteDeclaredToolNames(): Set<string> {
 
 /** Fire-and-forget: nothing here should fail a registration pass. */
 function reportStatus(status: PageStatus): void {
-  void browser.runtime.sendMessage({ type: STATUS_MESSAGE_TYPE, status }).catch(() => {});
+  void browser.runtime
+    .sendMessage({ type: STATUS_MESSAGE_TYPE, status, hostname: window.location.hostname })
+    .catch(() => {});
 }

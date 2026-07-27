@@ -23,12 +23,18 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   server isn't on — extension loads but nothing works). Find strays with
   `lsof -nP -i :3000 -i :5173 -i :9222`; killing the bun wrapper does NOT kill
   the node child.
-- **Silent-fallback trap.** The registry lookup is fetched in the background
-  worker (CSP sidestep) but the content script logs the outcome, so watch the
-  **page console**: any failure (network, non-2xx, zero matches, or schema
-  mismatch) silently falls back to the bundled curated packages, and a "working"
-  test may never touch the registry. Any full-loop claim must cite the page-console
-  line `[webmcp-cafe] Using N package(s) from the registry` (vs the fallback variant).
+- **Page loads never hit the network.** The background resolves every URL from
+  `chrome.storage.local` (install index + bodies); the registry is only polled
+  for revocations. Ground truth is the **page-console** line
+  `[webmcp-cafe] N installed package(s) matched this URL`. With an empty store
+  every page logs `0 installed package(s)` and registers nothing — that is the
+  expected state, not a failure. An actual failure is the warn
+  `Lookup failed — the extension background did not answer`.
+  To exercise a match before the install UI lands, seed `chrome.storage.local`
+  from the service-worker console using the keys in `src/lib/store-schema.ts`
+  (`schemaVersion`, `index`, `pkg:<id>`, and `revoked` — the last one is
+  mandatory: its absence is the fail-closed gate and pages then report
+  "paused, waiting on the safety list" instead of matching).
 - **Isolated-world blind spot.** A content script cannot see the page's
   `history.pushState` — patching `history` only intercepts the isolated world's
   own calls, so SPA navigation is detected by polling `location.href`
@@ -45,32 +51,44 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
   `list_webmcp_tools` / `execute_webmcp_tool`. If the agent session lacks that
   server, spawn it over stdio — `packages/mcp/.scratch/call-tool.mjs`
   (`bun ... <toolName> '<inputJson>'`) is a working driver.
-- All extension logging (package source, registered/skipped tools, executor
+- All extension logging (match counts, registered/skipped tools, executor
   failures) lands in the **page console** — not the service worker, not the
   WXT terminal.
-- `reddit.com` is deliberately excluded from the bundled fallback
-  (`BUNDLED_DOMAINS` in `src/lib/packages.ts`) — on reddit.com, no log line + no
-  tools registered = the registry lookup failed.
+- Registry-unreachable signal: a `!` badge plus the popup's "Packages paused —
+  waiting on the safety list" means no revocation poll has ever succeeded
+  (fail-closed: installed packages stay dormant until `GET /api/revocations`
+  succeeds once). Pages in that state report `safety-list-missing` and register
+  nothing.
 - `destructiveHint` tools gate on a blocking `window.confirm`. Invoked via
   chrome-devtools-mcp, the call surfaces an "open dialog" notice and the write
   waits until a human approves in the browser (or sends `handle_dialog`).
 
 ## Structure
 
-- `src/entrypoints/background.ts` — fetches packages from the registry
-  (`WXT_REGISTRY_API_URL`, default `http://localhost:3000`); content script asks
-  via `browser.runtime.sendMessage`. Registry responses are zod-validated with
-  `webMcpPackageSchema` at the boundary.
+- `src/entrypoints/background.ts` — resolves page-load lookups from LOCAL
+  storage (`src/lib/local-lookup.ts` over the install index) and polls
+  `GET /api/revocations` on a 6h `chrome.alarms` tick + startup/popup-open from
+  `WXT_REGISTRY_API_URL` (default `https://webmcp.cafe`; polls only — page
+  loads never fetch). Everything crossing a boundary is zod-validated.
+- Storage lives in `chrome.storage.local` under four keys
+  (`src/lib/store-schema.ts`): `schemaVersion`, `index` (install metadata),
+  `pkg:<id>` (served bodies verbatim), `revoked` (kill list + cursor).
+  Read/write goes through `src/lib/installs-store.ts` over an injected
+  `StorageArea` seam (`src/lib/storage.ts`); tests use
+  `test/fake-storage-area.ts`, never `fakeBrowser`/`wxt/browser`.
 - `src/lib/register-tools.ts` — one registration pass (package lookup → WebMCP
   probe → registerTool), taking its side effects as injected deps so it is
-  unit-testable; the content script supplies the real ones.
-- `src/entrypoints/popup/` + the action badge — where a missing WebMCP API is
-  surfaced (page-console `console.warn` too). Never inject UI into the page.
+  unit-testable; the content script supplies the real ones. A
+  `Permissions-Policy: tools=()` page throws `SecurityError` at registerTool —
+  reported as the distinct `site-blocked` status, not "package broken".
+- `src/entrypoints/popup/` + the action badge — per-tab status, the install
+  list (with uninstall), and the paused/recovery states. Never inject UI into
+  the page.
 - `src/lib/executor.ts` + `steps.ts` — DOM executor ported from Joakim Selemyr's
   MIT webmcp-extension; no `evaluate` step by design.
-- Bundled fallback packages come from `@webmcp-cafe/definitions`
-  (`packages/definitions`), which is also the seed source for the registry
-  (`apps/web/scripts/seed.ts`).
+- The bundled fallback (`@webmcp-cafe/definitions`) is disconnected from the
+  page-load path; the dependency itself is removed by step 5b (U7). It remains
+  the seed source for the registry (`apps/web/scripts/seed.ts`).
 - `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and
   lists the deps the build inlines (currently zod + the MPL-2.0 jmespath).
   Update it whenever bundled dependencies change — including if a tree-shaken

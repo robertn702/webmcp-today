@@ -10,29 +10,76 @@ import { z } from "zod";
 export const WEBMCP_FLAG_URL = "chrome://flags/#enable-webmcp-testing";
 
 export const STATUS_MESSAGE_TYPE = "webmcp-cafe:page-status";
-export const STATUS_QUERY_TYPE = "webmcp-cafe:get-status";
+export const POPUP_STATE_QUERY_TYPE = "webmcp-cafe:get-popup-state";
+export const UNINSTALL_MESSAGE_TYPE = "webmcp-cafe:uninstall";
 
 export const pageStatusSchema = z.discriminatedUnion("kind", [
-  /** No community package matches this URL — nothing to say, no badge. */
+  /** No installed package matches this URL — nothing to say, no badge. */
   z.object({ kind: z.literal("no-packages") }),
   /** Packages matched but Chrome exposes no modelContext: the flag is off. */
   z.object({ kind: z.literal("webmcp-unavailable"), packageCount: z.number().int().positive() }),
   z.object({ kind: z.literal("registered"), toolNames: z.array(z.string()) }),
+  /** The site itself blocks WebMCP (`Permissions-Policy: tools=()`) — distinct
+   * from a broken package: nothing this extension holds can register here. */
+  z.object({ kind: z.literal("site-blocked"), packageCount: z.number().int().positive() }),
+  /** Fail-closed gate: no revocation list has ever been fetched, so installed
+   * packages stay paused until the registry's safety list is reachable. */
+  z.object({ kind: z.literal("safety-list-missing") }),
+  /** Local storage was written by a newer build (or is unreadable) — register
+   * nothing until the extension updates. */
+  z.object({ kind: z.literal("storage-unreadable") }),
 ]);
 
 export type PageStatus = z.infer<typeof pageStatusSchema>;
 
-/** Content script → background, per registration pass. */
+/** Content script → background, per registration pass. `hostname` lets the
+ * background and popup talk about the site without re-deriving it. */
 export const statusMessageSchema = z.object({
   type: z.literal(STATUS_MESSAGE_TYPE),
   status: pageStatusSchema,
+  hostname: z.string(),
 });
 
-/** Popup → background, asking about the active tab. */
-export const statusQuerySchema = z.object({ type: z.literal(STATUS_QUERY_TYPE) });
+// ---------------------------------------------------------------------------
+// Popup ↔ background
 
-/** `null` when the background has no status for the tab (e.g. the service
- * worker restarted since the page loaded). */
-export const statusResponseSchema = z.object({ status: pageStatusSchema.nullable() });
+export const popupStateQuerySchema = z.object({ type: z.literal(POPUP_STATE_QUERY_TYPE) });
 
-export type StatusResponse = z.infer<typeof statusResponseSchema>;
+export const popupInstallSchema = z.object({
+  packageId: z.string(),
+  title: z.string(),
+  version: z.number().int().min(1),
+  domain: z.string(),
+  state: z.enum(["ok", "revoked", "broken", "engine-too-old"]),
+  revokedReason: z.string().optional(),
+  /** Absent when the stored body is unreadable (state "broken"). */
+  toolCount: z.number().int().min(0).optional(),
+  matchesTab: z.boolean(),
+});
+export type PopupInstall = z.infer<typeof popupInstallSchema>;
+
+export const popupStateSchema = z.object({
+  /** `null` when the background has no status for the tab (e.g. the service
+   * worker restarted since the page loaded). */
+  status: pageStatusSchema.nullable(),
+  hostname: z.string().nullable(),
+  schemaState: z.enum(["ok", "newer", "corrupt"]),
+  safetyListPresent: z.boolean(),
+  safetyListFetchedAt: z.iso.datetime().optional(),
+  installs: z.array(popupInstallSchema),
+  /** "index-corrupt": the index key exists but doesn't parse.
+   * "installs-vanished": the index is empty though this worker saw installs —
+   * eviction/corruption. v1 recovery is manual reinstall from the registry. */
+  recovery: z.enum(["index-corrupt", "installs-vanished"]).optional(),
+});
+export type PopupState = z.infer<typeof popupStateSchema>;
+
+export const uninstallMessageSchema = z.object({
+  type: z.literal(UNINSTALL_MESSAGE_TYPE),
+  packageId: z.string(),
+});
+export type UninstallMessage = z.infer<typeof uninstallMessageSchema>;
+
+/** `removed` reflects a re-read of the index, not the uninstall call's own
+ * outcome — a thrown uninstall may still have committed its index removal. */
+export const uninstallResponseSchema = z.object({ removed: z.boolean() });

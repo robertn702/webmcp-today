@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@robertn702/webmcp-cafe-schema";
+import type { PageLoadPackages } from "../src/lib/local-lookup.js";
 import type { ModelContextLike } from "../src/lib/model-context.js";
 import { runRegistrationPass, type RegistrationDeps } from "../src/lib/register-tools.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "../src/lib/status.js";
 
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";
 
-function pkg(...toolNames: string[]): CreatePackageInput {
-  return createPackageSchema.parse({
+function pkg(...toolNames: string[]): WebMcpPackage {
+  return webMcpPackageSchema.parse({
+    id: "pkg-wiki",
+    versionId: "ver-1",
+    version: 1,
+    contributor: "robert",
+    createdAt: "2026-07-27T00:00:00.000Z",
+    updatedAt: "2026-07-27T00:00:00.000Z",
     domain: "en.wikipedia.org",
     urlPatterns: ["*://en.wikipedia.org/wiki/*"],
     title: "Wikipedia article",
@@ -47,14 +54,15 @@ function recordingContext(reject: string[] = []): {
 }
 
 function harness(
-  packages: CreatePackageInput[],
+  load: WebMcpPackage[] | PageLoadPackages,
   mc: ModelContextLike | undefined,
   declared: string[] = [],
 ): { deps: RegistrationDeps; statuses: PageStatus[]; getModelContext: () => unknown } {
+  const result: PageLoadPackages = Array.isArray(load) ? { packages: load } : load;
   const statuses: PageStatus[] = [];
   const getModelContext = vi.fn(() => mc);
   const deps: RegistrationDeps = {
-    loadPackages: vi.fn(async () => packages),
+    loadPackages: vi.fn(async () => result),
     getModelContext,
     siteDeclaredToolNames: () => new Set(declared),
     reportStatus: (status) => {
@@ -137,7 +145,7 @@ describe("runRegistrationPass", () => {
     const deps: RegistrationDeps = {
       loadPackages: async () => {
         controller.abort();
-        return [pkg("wiki_summary")];
+        return { packages: [pkg("wiki_summary")] };
       },
       getModelContext: () => mc,
       siteDeclaredToolNames: () => new Set(),
@@ -176,5 +184,62 @@ describe("runRegistrationPass", () => {
 
     expect(registered).toEqual(["wiki_search"]);
     expect(statuses).toEqual([{ kind: "registered", toolNames: ["wiki_search"] }]);
+  });
+
+  it("registers nothing and reports site-blocked when the site forbids WebMCP (SecurityError)", async () => {
+    const registered: string[] = [];
+    const mc: ModelContextLike = {
+      registerTool: async () => {
+        // What Chrome throws on a Permissions-Policy: tools=() page.
+        throw new DOMException(
+          "WebMCP is disallowed by Permissions-Policy on this page",
+          "SecurityError",
+        );
+      },
+    };
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc);
+
+    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
+
+    expect(registered).toEqual([]);
+    expect(statuses).toEqual([{ kind: "site-blocked", packageCount: 1 }]);
+  });
+
+  it("treats other registerTool errors as per-tool skips, not site-blocked", async () => {
+    const registered: string[] = [];
+    const mc: ModelContextLike = {
+      registerTool: async (descriptor) => {
+        if (descriptor.name === "wiki_summary") {
+          throw new DOMException("quota exceeded", "QuotaExceededError");
+        }
+        registered.push(descriptor.name);
+      },
+    };
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc);
+
+    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
+
+    expect(registered).toEqual(["wiki_search"]);
+    expect(statuses).toEqual([{ kind: "registered", toolNames: ["wiki_search"] }]);
+  });
+
+  it("reports safety-list-missing when the fail-closed gate blocks the pass", async () => {
+    const { deps, statuses, getModelContext } = harness(
+      { packages: [], blocked: "no-revocation-list" },
+      undefined,
+    );
+
+    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
+
+    expect(statuses).toEqual([{ kind: "safety-list-missing" }]);
+    expect(getModelContext).not.toHaveBeenCalled();
+  });
+
+  it("reports storage-unreadable when storage was written by a newer build", async () => {
+    const { deps, statuses } = harness({ packages: [], blocked: "storage-unreadable" }, undefined);
+
+    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
+
+    expect(statuses).toEqual([{ kind: "storage-unreadable" }]);
   });
 });
