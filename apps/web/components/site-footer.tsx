@@ -15,7 +15,7 @@ export function SiteFooter() {
           ☕ webmcp.cafe · a community registry of WebMCP tool packages.
         </p>
         <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-          <Link href="/configs" className="hover:text-foreground hover:underline">
+          <Link href="/packages" className="hover:text-foreground hover:underline">
             Browse
           </Link>
           <Link href="/submit" className="hover:text-foreground hover:underline">

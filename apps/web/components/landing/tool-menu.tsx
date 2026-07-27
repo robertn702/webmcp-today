@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 /**
  * Hero visual: what an agent sees once a package is injected, laid out like a
  * cafe menu board. Illustrative — the tool names are the ones from the Reddit
- * tier-1 config in docs/api-execution-model.md.
+ * tier-1 package in docs/api-execution-model.md.
  */
 
 const TOOLS = [

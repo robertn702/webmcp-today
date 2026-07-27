@@ -1,9 +1,9 @@
 /**
- * Seed the registry with the curated configs from @webmcp-cafe/definitions.
+ * Seed the registry with the curated packages from @webmcp-cafe/definitions.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
 import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
-import { createDb, definitionVersions, user, webmcpDefinitions } from "@webmcp-cafe/db";
+import { createDb, packages, packageVersions, user } from "@webmcp-cafe/db";
 import { definitions } from "@webmcp-cafe/definitions";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -22,8 +22,8 @@ await db
   .onConflictDoNothing();
 
 for (const input of definitions) {
-  const [definition] = await db
-    .insert(webmcpDefinitions)
+  const [pkg] = await db
+    .insert(packages)
     .values({
       domain: input.domain,
       pageType: input.pageType,
@@ -31,13 +31,13 @@ for (const input of definitions) {
       description: input.description,
       contributorId: SEED_USER_ID,
     })
-    .returning({ id: webmcpDefinitions.id });
-  if (!definition) {
+    .returning({ id: packages.id });
+  if (!pkg) {
     console.log(`skip ${input.domain}: insert returned no row`);
     continue;
   }
-  await db.insert(definitionVersions).values({
-    definitionId: definition.id,
+  await db.insert(packageVersions).values({
+    packageId: pkg.id,
     version: 1,
     urlPatterns: input.urlPatterns,
     tools: input.tools,
@@ -46,5 +46,5 @@ for (const input of definitions) {
     minEngine: input.minEngine,
     changelog: input.changelog,
   });
-  console.log(`seeded ${input.domain} → ${definition.id} (0 installs)`);
+  console.log(`seeded ${input.domain} → ${pkg.id} (0 installs)`);
 }

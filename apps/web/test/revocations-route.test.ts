@@ -2,7 +2,7 @@ import { revocationsResponseSchema } from "@robertn702/webmcp-cafe-schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/revocations/route";
 
-// The kill list is the only lever the registry keeps once config bodies live on
+// The kill list is the only lever the registry keeps once package bodies live on
 // the client's disk, and the client drives it entirely through the cursor — so
 // cursor handling is the contract worth pinning. No test database: the repo
 // layer is mocked and records the cursor it was called with.
@@ -10,7 +10,7 @@ const state = vi.hoisted(
   (): {
     rows: {
       id: number;
-      definitionId: string;
+      packageId: string;
       versionId: string | null;
       reason: string;
       revokedAt: Date;
@@ -29,7 +29,7 @@ vi.mock("@/lib/revocations-repo", () => ({
 function revoked(id: number, versionId: string | null): (typeof state.rows)[number] {
   return {
     id,
-    definitionId: "def-" + id,
+    packageId: "pkg-" + id,
     versionId,
     reason: "Exfiltrated form values",
     revokedAt: new Date("2026-07-0" + id + "T00:00:00.000Z"),
@@ -63,7 +63,7 @@ describe("GET /api/revocations", () => {
       entries: [
         {
           id: 3,
-          definitionId: "def-3",
+          packageId: "pkg-3",
           versionId: null,
           reason: "Exfiltrated form values",
           revokedAt: "2026-07-03T00:00:00.000Z",

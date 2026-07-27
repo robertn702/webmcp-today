@@ -18,14 +18,14 @@ export default function SubmitPage() {
           domain, urlPatterns[], title, description, tools[]
         </code>
         . It&apos;s validated against @robertn702/webmcp-cafe-schema before upload and published as
-        a new definition at version 1. There is no review queue. It goes live when it validates.
+        a new package at version 1. There is no review queue. It goes live when it validates.
       </p>
 
       <SubmitForm />
 
       <h2 className="mt-10 mb-2 text-lg font-semibold">Publishing from an agent</h2>
       <pre className="overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-        POST /api/configs{"\n"}Authorization: Bearer &lt;api key&gt;{"\n"}Content-Type:
+        POST /api/packages{"\n"}Authorization: Bearer &lt;api key&gt;{"\n"}Content-Type:
         application/json
       </pre>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">

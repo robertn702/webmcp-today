@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET as getVersion } from "@/app/api/configs/[id]/versions/[versionId]/route";
-import { GET as getVersionList } from "@/app/api/configs/[id]/versions/route";
+import { GET as getVersion } from "@/app/api/packages/[id]/versions/[versionId]/route";
+import { GET as getVersionList } from "@/app/api/packages/[id]/versions/route";
 
 // A local install pins by possession, so it fetches one exact version rather
 // than "latest" — these two reads are the only version-addressed surface in the
@@ -9,9 +9,9 @@ import { GET as getVersionList } from "@/app/api/configs/[id]/versions/route";
 // exercised.
 const state = vi.hoisted(
   (): {
-    configs: Record<string, unknown>;
+    packages: Record<string, unknown>;
     versions: { versionId: string; version: number; changelog: string | null; createdAt: Date }[];
-  } => ({ configs: {}, versions: [] }),
+  } => ({ packages: {}, versions: [] }),
 );
 
 vi.mock("@/lib/db", () => ({ db: {} }));
@@ -23,14 +23,14 @@ vi.mock("@/lib/mutations", () => ({
 }));
 
 // Mocked wholesale, so every export the two route modules import lives here.
-vi.mock("@/lib/configs-repo", () => ({
-  getConfigAtVersion: (id: string, versionId: string) =>
-    Promise.resolve(state.configs[id + "/" + versionId] ?? null),
+vi.mock("@/lib/packages-repo", () => ({
+  getPackageAtVersion: (id: string, versionId: string) =>
+    Promise.resolve(state.packages[id + "/" + versionId] ?? null),
   listVersions: () => Promise.resolve(state.versions),
 }));
 
-const configAtV1 = {
-  id: "def-1",
+const packageAtV1 = {
+  id: "pkg-1",
   versionId: "ver-1",
   version: 1,
   domain: "reddit.com",
@@ -44,41 +44,41 @@ const configAtV1 = {
 };
 
 function readVersion(id: string, versionId: string): Promise<Response> {
-  return getVersion(new Request("https://webmcp.cafe/api/configs/x/versions/y"), {
+  return getVersion(new Request("https://webmcp.cafe/api/packages/x/versions/y"), {
     params: Promise.resolve({ id, versionId }),
   });
 }
 
 function readVersionList(id: string): Promise<Response> {
-  return getVersionList(new Request("https://webmcp.cafe/api/configs/x/versions"), {
+  return getVersionList(new Request("https://webmcp.cafe/api/packages/x/versions"), {
     params: Promise.resolve({ id }),
   });
 }
 
-describe("GET /api/configs/:id/versions/:versionId", () => {
+describe("GET /api/packages/:id/versions/:versionId", () => {
   beforeEach(() => {
-    state.configs = { "def-1/ver-1": configAtV1 };
+    state.packages = { "pkg-1/ver-1": packageAtV1 };
   });
 
-  it("serves the config document at that exact version", async () => {
-    const response = await readVersion("def-1", "ver-1");
+  it("serves the package document at that exact version", async () => {
+    const response = await readVersion("pkg-1", "ver-1");
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual(configAtV1);
+    await expect(response.json()).resolves.toEqual(packageAtV1);
   });
 
-  it("404s on a version that does not belong to this definition", async () => {
-    const response = await readVersion("def-1", "ver-9");
+  it("404s on a version that does not belong to this package", async () => {
+    const response = await readVersion("pkg-1", "ver-9");
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Config version not found" });
+    await expect(response.json()).resolves.toEqual({ error: "Package version not found" });
   });
 
-  it("404s on an unknown definition", async () => {
-    const response = await readVersion("def-nope", "ver-1");
+  it("404s on an unknown package", async () => {
+    const response = await readVersion("pkg-nope", "ver-1");
     expect(response.status).toBe(404);
   });
 });
 
-describe("GET /api/configs/:id/versions", () => {
+describe("GET /api/packages/:id/versions", () => {
   beforeEach(() => {
     state.versions = [
       {
@@ -103,14 +103,14 @@ describe("GET /api/configs/:id/versions", () => {
   });
 
   it("lists versions newest first", async () => {
-    const response = await readVersionList("def-1");
+    const response = await readVersionList("pkg-1");
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.versions.map((v: { version: number }) => v.version)).toEqual([3, 2, 1]);
   });
 
   it("serves versionId, version, changelog and createdAt", async () => {
-    const response = await readVersionList("def-1");
+    const response = await readVersionList("pkg-1");
     const body = await response.json();
     expect(body.versions[0]).toEqual({
       versionId: "ver-3",
@@ -120,10 +120,10 @@ describe("GET /api/configs/:id/versions", () => {
     });
   });
 
-  it("404s when the definition has no versions, which means it does not exist", async () => {
+  it("404s when the package has no versions, which means it does not exist", async () => {
     state.versions = [];
-    const response = await readVersionList("def-nope");
+    const response = await readVersionList("pkg-nope");
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Config not found" });
+    await expect(response.json()).resolves.toEqual({ error: "Package not found" });
   });
 });

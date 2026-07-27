@@ -6,7 +6,7 @@ export type NavLink = {
 // Shared between the desktop header links (app/layout.tsx) and the mobile
 // sheet menu (components/mobile-nav.tsx) so the two never drift.
 export const NAV_LINKS: NavLink[] = [
-  { href: "/configs", label: "Browse" },
+  { href: "/packages", label: "Browse" },
   { href: "/submit", label: "Submit" },
   { href: "/extension", label: "Extension" },
 ];

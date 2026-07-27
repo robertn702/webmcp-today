@@ -1,6 +1,6 @@
 "use client";
 
-import { createConfigSchema } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema } from "@robertn702/webmcp-cafe-schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -41,7 +41,7 @@ export function SubmitForm() {
       setError({ text: `Not valid JSON. ${message}` });
       return;
     }
-    const parsed = createConfigSchema.safeParse(raw);
+    const parsed = createPackageSchema.safeParse(raw);
     if (!parsed.success) {
       setError({
         text: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"),
@@ -49,7 +49,7 @@ export function SubmitForm() {
       return;
     }
     setBusy(true);
-    const res = await fetch("/api/configs", {
+    const res = await fetch("/api/packages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),
@@ -58,7 +58,7 @@ export function SubmitForm() {
     if (res.ok) {
       const body: unknown = await res.json();
       const id = typeof body === "object" && body !== null ? Reflect.get(body, "id") : undefined;
-      router.push(typeof id === "string" ? `/configs/${id}` : "/");
+      router.push(typeof id === "string" ? `/packages/${id}` : "/");
     } else if (res.status === 401) {
       setError({
         text: "Sign in to publish",

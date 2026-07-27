@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PATCH } from "@/app/api/configs/[id]/route";
+import { PATCH } from "@/app/api/packages/[id]/route";
 
-// `domain` (the lookup key) lives on the definition row while urlPatterns are
+// `domain` (the lookup key) lives on the package row while urlPatterns are
 // version-scoped, so a metadata PATCH is the one surface that can move a domain
 // off the patterns publish-time validation already enforces. There is no test
 // database here: the route's data access is mocked so the guard itself is what
@@ -9,12 +9,12 @@ import { PATCH } from "@/app/api/configs/[id]/route";
 const state = vi.hoisted(
   (): {
     userId: string | null;
-    definitionRows: { id: string; contributorId: string }[];
+    packageRows: { id: string; contributorId: string }[];
     latest: { urlPatterns: string[] } | null;
     updates: { domain?: string; title?: string }[];
   } => ({
     userId: "user-1",
-    definitionRows: [{ id: "def-1", contributorId: "user-1" }],
+    packageRows: [{ id: "pkg-1", contributorId: "user-1" }],
     latest: { urlPatterns: ["*://*.reddit.com/*"] },
     updates: [],
   }),
@@ -28,19 +28,19 @@ vi.mock("@/lib/db", () => ({
   db: {
     select: () => ({
       from: () => ({
-        where: () => ({ limit: () => Promise.resolve(state.definitionRows) }),
+        where: () => ({ limit: () => Promise.resolve(state.packageRows) }),
       }),
     }),
   },
 }));
 
-vi.mock("@/lib/configs-repo", () => ({
-  getConfigById: () => Promise.resolve({ id: "def-1", domain: "reddit.com" }),
+vi.mock("@/lib/packages-repo", () => ({
+  getPackageById: () => Promise.resolve({ id: "pkg-1", domain: "reddit.com" }),
   getLatestVersion: () => Promise.resolve(state.latest),
 }));
 
 vi.mock("@/lib/mutations", () => ({
-  updateDefinitionMeta: (_id: string, meta: { domain?: string; title?: string }) => {
+  updatePackageMeta: (_id: string, meta: { domain?: string; title?: string }) => {
     state.updates.push(meta);
     return Promise.resolve();
   },
@@ -48,19 +48,19 @@ vi.mock("@/lib/mutations", () => ({
 
 function patch(body: unknown): Promise<Response> {
   return PATCH(
-    new Request("https://webmcp.cafe/api/configs/def-1", {
+    new Request("https://webmcp.cafe/api/packages/pkg-1", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     }),
-    { params: Promise.resolve({ id: "def-1" }) },
+    { params: Promise.resolve({ id: "pkg-1" }) },
   );
 }
 
-describe("PATCH /api/configs/:id — domain coverage guard", () => {
+describe("PATCH /api/packages/:id — domain coverage guard", () => {
   beforeEach(() => {
     state.userId = "user-1";
-    state.definitionRows = [{ id: "def-1", contributorId: "user-1" }];
+    state.packageRows = [{ id: "pkg-1", contributorId: "user-1" }];
     state.latest = { urlPatterns: ["*://*.reddit.com/*"] };
     state.updates = [];
   });

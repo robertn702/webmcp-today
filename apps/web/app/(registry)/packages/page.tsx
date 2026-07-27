@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { listConfigs } from "@/lib/configs-repo";
+import { listPackages } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description: "Community WebMCP tool packages, newest version of each.",
 };
 
-export default async function ConfigsPage() {
-  const { configs, total } = await listConfigs({ page: 1, pageSize: 50 });
+export default async function PackagesPage() {
+  const { packages, total } = await listPackages({ page: 1, pageSize: 50 });
 
   return (
     <div>
@@ -22,7 +22,7 @@ export default async function ConfigsPage() {
         any. Install one and the extension registers it on matching pages.
       </p>
 
-      {configs.length === 0 ? (
+      {packages.length === 0 ? (
         <p className="rounded border border-dashed border-border p-8 text-center text-muted-foreground">
           No packages yet.{" "}
           <Link href="/submit" className="underline">
@@ -31,22 +31,22 @@ export default async function ConfigsPage() {
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {configs.map((config) => (
-            <li key={config.id}>
+          {packages.map((pkg) => (
+            <li key={pkg.id}>
               <Card>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <Link href={`/configs/${config.id}`} className="font-semibold hover:underline">
-                      {config.title}
+                    <Link href={`/packages/${pkg.id}`} className="font-semibold hover:underline">
+                      {pkg.title}
                     </Link>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {config.urlPatterns.join(", ")}
+                      {pkg.urlPatterns.join(", ")}
                     </span>
                     {/* Install count is the trust signal — a green badge at zero would
                         make an uninstalled package look endorsed. */}
-                    {(config.installCount ?? 0) > 0 ? (
+                    {(pkg.installCount ?? 0) > 0 ? (
                       <Badge variant="success">
-                        {config.installCount} install{config.installCount === 1 ? "" : "s"}
+                        {pkg.installCount} install{pkg.installCount === 1 ? "" : "s"}
                       </Badge>
                     ) : (
                       <span className="text-xs whitespace-nowrap text-muted-foreground">
@@ -54,10 +54,10 @@ export default async function ConfigsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{config.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{pkg.description}</p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {config.tools.length} tool{config.tools.length === 1 ? "" : "s"} · by{" "}
-                    {config.contributor} · v{config.version}
+                    {pkg.tools.length} tool{pkg.tools.length === 1 ? "" : "s"} · by{" "}
+                    {pkg.contributor} · v{pkg.version}
                   </p>
                 </CardContent>
               </Card>
