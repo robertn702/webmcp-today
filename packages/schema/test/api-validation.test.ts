@@ -12,9 +12,10 @@ const base = {
   api: {
     baseUrl: "https://www.reddit.com",
     auth: {
+      // No ttlSeconds: omitted means "re-fetch every request", the safe default.
       csrf: {
-        source: { endpoint: "me", extract: "data.modhash" },
-        sendAs: { header: "X-Modhash" },
+        source: { endpoint: "me", extract: ["data", "modhash"] },
+        sendAs: { in: "header", name: "X-Modhash" },
       },
     },
     endpoints: {
@@ -23,20 +24,20 @@ const base = {
         method: "GET",
         path: "/r/{{subreddit}}/hot.json",
         query: { limit: "{{limit}}" },
-        returns: "data.children[].data.{title,author,score}",
+        returns: "data.children[].data.{title: title, author: author, score: score}",
       },
       comment: {
         method: "POST",
         path: "/api/comment",
         form: { thing_id: "{{thingId}}", text: "{{text}}", api_type: "json" },
         auth: ["csrf"],
-        errorPath: "json.errors",
+        errorPath: ["json", "errors"],
       },
       searchGraphql: {
         method: "POST",
         path: "/svc/shreddit/graphql",
         graphql: { document: "@documents/search", variables: { query: "{{query}}", first: 10 } },
-        errorPath: "errors",
+        errorPath: ["errors"],
         persistedQuery: true,
         returns: "data.search",
       },
@@ -172,6 +173,62 @@ describe("api block cross-validation", () => {
   it("rejects an auth source that fetches from an undefined endpoint", () => {
     const c = structuredClone(base);
     c.api.auth.csrf.source.endpoint = "ghost";
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
+  });
+
+  it("rejects an endpoint declaring more than one request body kind", () => {
+    // The executor resolves graphql > form > body by precedence, so an
+    // ambiguous endpoint would publish clean and then send the wrong thing.
+    const withBodies = (extra: Record<string, unknown>) => {
+      const c = structuredClone(base);
+      Object.assign(c.api.endpoints.comment, extra);
+      return createPackageSchema.safeParse(c).success;
+    };
+    // `comment` already declares `form`; exactly one is fine (the base fixture
+    // and the body-template test below both cover the single-kind cases).
+    expect(withBodies({ body: { text: "{{text}}" } })).toBe(false);
+    expect(withBodies({ graphql: { document: "query { a }" } })).toBe(false);
+  });
+
+  it("rejects a `returns` that is not a valid JMESPath expression", () => {
+    const c = structuredClone(base);
+    c.api.endpoints.subredditHot.returns = "data.{unterminated";
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
+  });
+
+  it("accepts JMESPath the old picker grammar could not express", () => {
+    const c = structuredClone(base);
+    c.api.endpoints.subredditHot.returns =
+      "data.children[?data.score > `50`].data.{title: title, score: score}";
+    expect(createPackageSchema.safeParse(c).success).toBe(true);
+  });
+
+  it("rejects an empty locator array for errorPath / extract", () => {
+    const noErrorPath = structuredClone(base);
+    noErrorPath.api.endpoints.comment.errorPath = [];
+    expect(createPackageSchema.safeParse(noErrorPath).success).toBe(false);
+
+    const noExtract = structuredClone(base);
+    noExtract.api.auth.csrf.source.extract = [];
+    expect(createPackageSchema.safeParse(noExtract).success).toBe(false);
+  });
+
+  it("accepts a positive integer ttlSeconds, rejects zero/negative/fractional", () => {
+    // Omission is covered by the base fixture, which declares no ttlSeconds.
+    const withTtl = (ttlSeconds: unknown) => {
+      const c = structuredClone(base);
+      Object.assign(c.api.auth.csrf, { ttlSeconds });
+      return createPackageSchema.safeParse(c).success;
+    };
+    expect(withTtl(300)).toBe(true);
+    expect(withTtl(0)).toBe(false);
+    expect(withTtl(-60)).toBe(false);
+    expect(withTtl(1.5)).toBe(false);
+  });
+
+  it("rejects a sendAs location other than header", () => {
+    const c = structuredClone(base);
+    Object.assign(c.api.auth.csrf.sendAs, { in: "query" });
     expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 

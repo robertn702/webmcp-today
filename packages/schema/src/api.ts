@@ -1,3 +1,4 @@
+import { compile } from "@jmespath-community/jmespath";
 import { z } from "zod";
 import type { ToolDescriptor } from "./tool.js";
 import { unknownPlaceholders } from "./templates.js";
@@ -11,11 +12,26 @@ import { hostCoversHostname, parseUrlPattern } from "./url-matching.js";
 // package-level superRefine, because they need the sibling tools[]/urlPatterns).
 
 const NAME_MAX = 64;
-const PATH_MAX = 500;
+/** One key (or numeric array index) in a locator path. */
+const PATH_SEGMENT_MAX = 200;
+/** Segments in a locator path — deep enough for any real payload. */
+const PATH_SEGMENTS_MAX = 20;
+/** `returns` is JMESPath, whose multi-select hash spells out both sides of
+ * every field (`{id: id, title: title}`), so it needs a larger ceiling than a
+ * locator path. */
+const PROJECTION_MAX = 1000;
 /** Captured GraphQL queries run hundreds of lines; keep the ceiling generous. */
 const DOCUMENT_MAX = 100_000;
 
 const endpointName = z.string().min(1).max(NAME_MAX);
+
+/** A **locator**: the object keys / array indices naming ONE place in a JSON
+ * document, e.g. `["data", "modhash"]`. An array rather than a dot string so a
+ * key that itself contains a dot is unambiguous, and so the two
+ * security-adjacent reads (token extraction, error detection) need no
+ * expression evaluator at all. Reshaping is `returns`, which is a different
+ * job and a different type. */
+const locatorPath = z.array(z.string().min(1).max(PATH_SEGMENT_MAX)).min(1).max(PATH_SEGMENTS_MAX);
 
 /** A named credential-acquisition flow, e.g. Reddit's modhash dance: fetch an
  * endpoint, extract a token from its JSON, resend it as a header. */
@@ -23,12 +39,24 @@ export const apiAuthSourceSchema = z.object({
   source: z.object({
     // Endpoint (by name) to fetch the token from.
     endpoint: endpointName,
-    // Dot path into the JSON response, e.g. "data.modhash".
-    extract: z.string().min(1).max(PATH_MAX),
+    // Locator into the JSON response, e.g. ["data", "modhash"].
+    extract: locatorPath,
   }),
   sendAs: z.object({
-    header: z.string().min(1).max(200),
+    // Where the token is injected. A single-member enum on purpose: it
+    // reserves the {in, name} axis four independent teams converged on
+    // (OpenAPI `in`, Airbyte `inject_into`, Higress `position`, FastMCP
+    // `location`) without shipping a query/cookie branch nothing needs.
+    // Adding one is an executor change plus an engine bump.
+    in: z.enum(["header"]),
+    name: z.string().min(1).max(200),
   }),
+  /** How long a fetched token stays usable, in seconds. OMITTED = re-fetch on
+   * every request, which is Airbyte's default and the safe one. Seconds rather
+   * than an ISO-8601 duration ("PT1H"): a duration string needs a hand-written
+   * parser plus a regex refine that has to agree with it, and its only payoff
+   * is familiarity in a format nothing but our executor reads. */
+  ttlSeconds: z.int().positive().optional(),
 });
 
 /** A GraphQL operation. `document` is opaque — either an inline query or a
@@ -39,25 +67,59 @@ export const apiGraphqlSchema = z.object({
   variables: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const apiEndpointSchema = z.object({
-  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
-  path: z.string().min(1).max(2048),
-  query: z.record(z.string(), z.string()).optional(),
-  // Opaque body template; string leaves may carry {{param}} placeholders.
-  body: z.unknown().optional(),
-  form: z.record(z.string(), z.string()).optional(),
-  // Response projection toward the tool-output budget. Validated as a non-empty
-  // string ONLY — the projection grammar is owned by the executor, not the
-  // schema (see docs open question "Output projection language").
-  returns: z.string().min(1).max(PATH_MAX).optional(),
-  // Dot path to an error payload in a 200 body (GraphQL `errors`, Reddit
-  // `json.errors`); a non-empty value there = tool failure.
-  errorPath: z.string().min(1).max(PATH_MAX).optional(),
-  persistedQuery: z.boolean().optional(),
-  graphql: apiGraphqlSchema.optional(),
-  // Names of auth token sources to attach to this call.
-  auth: z.array(endpointName).max(10).optional(),
-});
+/** Request body kinds an endpoint may declare. Exactly one carries the body,
+ * so declaring two is always an authoring mistake (see the superRefine). */
+const BODY_KINDS = ["graphql", "form", "body"] as const;
+
+export const apiEndpointSchema = z
+  .object({
+    method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+    path: z.string().min(1).max(2048),
+    query: z.record(z.string(), z.string()).optional(),
+    // Opaque body template; string leaves may carry {{param}} placeholders.
+    body: z.unknown().optional(),
+    form: z.record(z.string(), z.string()).optional(),
+    // Response projection (JMESPath — https://jmespath.site). Compiled here so
+    // a malformed expression is rejected at publish time rather than failing
+    // in every user's browser, one call at a time.
+    returns: z
+      .string()
+      .min(1)
+      .max(PROJECTION_MAX)
+      .superRefine((expression, ctx) => {
+        try {
+          compile(expression);
+        } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          ctx.addIssue({
+            code: "custom",
+            message: `returns must be a valid JMESPath expression: ${detail}`,
+          });
+        }
+      })
+      .optional(),
+    // Locator for an error payload in a 200 body (GraphQL ["errors"], Reddit
+    // ["json", "errors"]); a non-empty value there = tool failure.
+    errorPath: locatorPath.optional(),
+    persistedQuery: z.boolean().optional(),
+    graphql: apiGraphqlSchema.optional(),
+    // Names of auth token sources to attach to this call.
+    auth: z.array(endpointName).max(10).optional(),
+  })
+  .superRefine((endpoint, ctx) => {
+    // At most one body kind. The executor resolves graphql > form > body by
+    // precedence, so an endpoint declaring two publishes clean and then sends
+    // something its author never asked for — a silent wrong answer, which is
+    // the one failure mode this format exists to avoid.
+    const declared = BODY_KINDS.filter((kind) => endpoint[kind] !== undefined);
+    if (declared.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Endpoint declares more than one request body (${declared.join(", ")}); declare at most one.`,
+        path: [declared[1] ?? "body"],
+      });
+    }
+  });
 
 export const apiBlockSchema = z.object({
   baseUrl: z
