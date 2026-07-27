@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig } from "wxt";
+import { REGISTRY_MATCH_PATTERNS } from "./src/lib/registry-origins.js";
 
 export default defineConfig({
   srcDir: "src",
@@ -29,12 +30,20 @@ export default defineConfig({
   manifest: {
     name: "WebMCP Cafe",
     description: "Injects community WebMCP tool configs into sites you visit.",
+    // Spread conditionally: an undefined `key` serialized into the manifest
+    // is a load error. The key pins the dev extension ID (see AGENTS.md).
+    ...(process.env.WXT_EXTENSION_KEY ? { key: process.env.WXT_EXTENSION_KEY } : {}),
     permissions: ["storage", "alarms"],
     // Registry origins the background script fetches configs from. Fixed at
     // build time (manifest permissions can't read the runtime env var), so
     // both the dev default and the production domain are listed. Match
     // patterns have no port component — `http://localhost/*` (not `:3000`)
-    // matches any localhost port.
-    host_permissions: ["http://localhost/*", "https://webmcp.cafe/*"],
+    // matches any localhost port. REGISTRY_MATCH_PATTERNS is the same
+    // constant the background's origin allowlist checks against.
+    host_permissions: [...REGISTRY_MATCH_PATTERNS],
+    // Only the registry site may message the extension (the install bridge).
+    // Declaring this without "ids" also stops OTHER extensions connecting —
+    // intended.
+    externally_connectable: { matches: [...REGISTRY_MATCH_PATTERNS] },
   },
 });

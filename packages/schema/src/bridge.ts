@@ -12,6 +12,10 @@ const installFailureSchema = z.enum([
   "not-found",
   "invalid-body",
   "id-mismatch",
+  // The served apiContentHash didn't match a recomputation over the served
+  // api block — the body isn't what its identifier claims, so the install is
+  // refused rather than stored.
+  "hash-mismatch",
   "revoked",
   "revocation-unavailable",
   "engine-too-old",
@@ -88,7 +92,10 @@ export const bridgeInstallResponseSchema = z.union([
 
 export const bridgeUninstallResponseSchema = z.union([
   z.object({ ok: z.literal(true) }),
-  z.object({ ok: z.literal(false), reason: z.literal("not-installed") }),
+  z.object({
+    ok: z.literal(false),
+    reason: z.enum(["not-installed", "storage-unreadable"]),
+  }),
 ]);
 
 export const bridgeListInstallsResponseSchema = z.object({

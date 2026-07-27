@@ -41,11 +41,11 @@ export default async function PackagePage({ params }: { params: Promise<{ id: st
         </p>
       )}
       <div className="mt-4">
-        <InstallButton packageId={pkg.id} />
+        <InstallButton packageId={pkg.id} versionId={pkg.versionId} version={pkg.version} />
         <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-          Installing adds this package to your account at v{pkg.version}. The extension registers
-          its tools whenever you&apos;re on a matching page. You stay on v{pkg.version} until you
-          update.
+          Installing saves v{pkg.version} in your browser — nothing is tied to your account. The
+          extension registers its tools whenever you&apos;re on a matching page, and you stay on v
+          {pkg.version} until you update.
         </p>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
           Needs the extension on Chrome 149+ with the WebMCP testing flag.{" "}

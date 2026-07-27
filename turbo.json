@@ -9,7 +9,8 @@
     "GITHUB_CLIENT_SECRET",
     "WEBMCP_CAFE_API_URL",
     "WEBMCP_CAFE_API_KEY",
-    "WXT_REGISTRY_API_URL"
+    "WXT_REGISTRY_API_URL",
+    "WXT_EXTENSION_KEY"
   ],
   "tasks": {
     "build": {

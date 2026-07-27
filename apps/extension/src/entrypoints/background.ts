@@ -1,6 +1,6 @@
 import { defineBackground } from "wxt/utils/define-background";
 import { browser } from "wxt/browser";
-import { supportsPackageEngine } from "../lib/engine-gate.js";
+import { handleBridgeRequest, resolveInstallState } from "../lib/install-bridge.js";
 import { createInstallsStore, type SchemaVersionState } from "../lib/installs-store.js";
 import { resolveLocalLookup, type LocalLookupResult } from "../lib/local-lookup.js";
 import { lookupMessageSchema } from "../lib/lookup-client.js";
@@ -100,6 +100,20 @@ export default defineBackground(() => {
   browser.tabs.onRemoved.addListener((tabId) => {
     tabStatus.delete(tabId);
   });
+
+  // The registry site's install bridge. Separate from onMessage: this is the
+  // only listener external pages can reach (externally_connectable), and
+  // handleBridgeRequest re-validates the sender origin + message regardless.
+  browser.runtime.onMessageExternal.addListener((message: unknown, sender, sendResponse) => {
+    void handleBridgeRequest(message, sender.origin, {
+      store,
+      area: localStorageArea,
+      fetchFn: (url) => fetch(url),
+      extensionVersion: browser.runtime.getManifest().version,
+      ensureInitialized,
+    }).then(sendResponse);
+    return true;
+  });
 });
 
 async function bootstrap(): Promise<void> {
@@ -173,14 +187,7 @@ async function buildPopupState(): Promise<PopupState> {
     const revocation =
       revokedDoc === undefined ? undefined : findRevocation(revokedDoc.entries, entry);
     const loaded = await store.loadPackage(entry.packageId);
-    const state =
-      revocation !== undefined
-        ? "revoked"
-        : loaded.status !== "ok"
-          ? "broken"
-          : !supportsPackageEngine(entry)
-            ? "engine-too-old"
-            : "ok";
+    const state = resolveInstallState(entry, revocation, loaded);
     installs.push({
       packageId: entry.packageId,
       title: entry.title,
