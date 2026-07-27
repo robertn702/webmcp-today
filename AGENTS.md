@@ -39,8 +39,11 @@ packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 ## Deploy, domain & DNS
 
 - Hosting: Vercel project `webmcp-cafe`, team `robert-1554` (orgId
-  `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. Prod deploy:
-  `vercel --prod` from the repo root.
+  `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. The GitHub
+  integration auto-deploys — Production on every push to `main`, a Preview per PR;
+  `vercel --prod` from the repo root is the manual override, not the normal path.
+  Consequence: merging a schema-breaking change deploys the new code before any
+  migration runs — migrate Neon first, or accept a window of 500s.
 - Required env vars must exist in the Vercel project (Production) or the build
   fails at "Collecting page data" (t3-env validates on import). Set with
   `vercel env add <NAME> production`; local source of truth is `apps/web/.env`
