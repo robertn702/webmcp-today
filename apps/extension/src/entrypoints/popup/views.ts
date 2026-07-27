@@ -1,10 +1,11 @@
 import { WEBMCP_FLAG_URL, type PopupInstall, type PopupState } from "../../lib/status.js";
 
 // Pure-ish view builders for the popup (vanilla DOM — no React in the
-// extension). main.ts wires the data and the uninstall callback.
+// extension). main.ts wires the data and the uninstall/install callbacks.
 
 export interface ViewCallbacks {
   onUninstall: (packageId: string) => void;
+  onInstallSuggestion: (packageId: string, versionId: string) => void;
 }
 
 export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
@@ -53,6 +54,7 @@ export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
   }
 
   nodes.push(...installsNodes(state, callbacks));
+  nodes.push(...suggestionsNodes(state, callbacks));
   nodes.push(footerNote());
   return nodes;
 }
@@ -164,6 +166,39 @@ function installList(installs: PopupInstall[], callbacks: ViewCallbacks): HTMLEl
     list.append(item);
   }
   return list;
+}
+
+/** Registry suggestions — shown only when nothing installed already matches
+ * this tab (background only sends `suggestions`/`suggestionsUnavailable` in
+ * that case). Distinguishes "couldn't reach the registry" from "the registry
+ * genuinely has nothing to suggest right now". */
+function suggestionsNodes(state: PopupState, callbacks: ViewCallbacks): Node[] {
+  if (state.suggestionsUnavailable) {
+    return [
+      el("h2", "Discover packages"),
+      el("p", "Couldn't reach the registry for suggestions — try again later."),
+    ];
+  }
+  if (state.suggestions === undefined || state.suggestions.length === 0) return [];
+
+  const list = document.createElement("ul");
+  list.className = "suggestions";
+  for (const suggestion of state.suggestions) {
+    const item = document.createElement("li");
+    item.append(el("strong", suggestion.title), ` — ${suggestion.domain} `);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Install";
+    button.addEventListener("click", () => {
+      button.disabled = true;
+      callbacks.onInstallSuggestion(suggestion.packageId, suggestion.versionId);
+    });
+    item.append(button);
+
+    list.append(item);
+  }
+  return [el("h2", "Discover packages"), list];
 }
 
 function stateBadge(install: PopupInstall): HTMLElement {

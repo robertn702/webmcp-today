@@ -1,5 +1,10 @@
+import {
+  bridgeInstallResponseSchema,
+  type BridgeInstallResponse,
+} from "@robertn702/webmcp-cafe-schema";
 import { browser } from "wxt/browser";
 import {
+  INSTALL_SUGGESTION_MESSAGE_TYPE,
   POPUP_STATE_QUERY_TYPE,
   UNINSTALL_MESSAGE_TYPE,
   popupStateSchema,
@@ -23,6 +28,8 @@ async function render(root: HTMLElement): Promise<void> {
   root.replaceChildren(
     ...popupView(state, {
       onUninstall: (packageId) => void uninstallAndRerender(root, packageId),
+      onInstallSuggestion: (packageId, versionId) =>
+        installSuggestionAndRerender(root, packageId, versionId),
     }),
   );
 }
@@ -47,4 +54,30 @@ async function uninstallAndRerender(root: HTMLElement, packageId: string): Promi
     // Fall through to the re-render: the fresh state is the truth.
   }
   await render(root);
+}
+
+/** Installs a suggested package through the same background install-bridge
+ * path as a page-driven install, then re-renders (a success moves it from
+ * suggestions into the install list; a failure just leaves it suggested). */
+async function installSuggestionAndRerender(
+  root: HTMLElement,
+  packageId: string,
+  versionId: string,
+): Promise<void> {
+  try {
+    const response = await browser.runtime.sendMessage({
+      type: INSTALL_SUGGESTION_MESSAGE_TYPE,
+      packageId,
+      versionId,
+    });
+    const parsed = bridgeInstallResponseSchema.safeParse(response);
+    if (parsed.success) reportInstallResult(parsed.data);
+  } catch {
+    // Fall through to the re-render: the fresh state is the truth.
+  }
+  await render(root);
+}
+
+function reportInstallResult(result: BridgeInstallResponse): void {
+  if (!result.ok) console.warn(`[webmcp-cafe] Suggestion install failed: ${result.reason}`);
 }

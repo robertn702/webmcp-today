@@ -12,6 +12,7 @@ export const STORAGE_SCHEMA_VERSION = 1;
 export const SCHEMA_VERSION_KEY = "schemaVersion";
 export const INDEX_KEY = "index";
 export const REVOKED_KEY = "revoked";
+export const DOMAINS_KEY = "domains";
 export const PKG_KEY_PREFIX = "pkg:";
 
 /** Key of a stored package body: the served `WebMcpPackage` document verbatim —
@@ -64,6 +65,17 @@ export const revokedDocSchema = z.object({
   entries: z.array(revocationEntrySchema),
 });
 
+/** The domain-match list: every domain with a published package, for the
+ * discovery badge. Its absence just means "never polled yet" — unlike
+ * `revoked`, there is no fail-closed gate behind it. */
+export const domainsDocSchema = z.object({
+  version: z.number().int().min(0),
+  generatedAt: z.iso.datetime(),
+  fetchedAt: z.iso.datetime(),
+  domains: z.array(z.string()),
+});
+
 export type IndexEntry = z.infer<typeof indexEntrySchema>;
 export type InstallIndex = z.infer<typeof indexSchema>;
 export type RevokedDoc = z.infer<typeof revokedDocSchema>;
+export type DomainsDoc = z.infer<typeof domainsDocSchema>;
