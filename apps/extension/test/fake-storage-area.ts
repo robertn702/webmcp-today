@@ -14,6 +14,13 @@ export interface FakeStorageArea extends StorageArea {
   failNextSet(): void;
   /** Rejects the next remove() with the keys left in place (interrupted uninstall). */
   failNextRemove(): void;
+  /** Rejects the Nth set() call (1-indexed) with NO key applied, independent
+   * of failNextSet() — lets a test target a specific call in a sequence
+   * instead of only "the next one". */
+  failSetOnCall(n: number): void;
+  /** Keys passed to each set() call so far, in call order (failed calls
+   * included). Count invocations via `.length`. */
+  setCalls(): string[][];
   /** Raw decoded contents, for assertions. */
   snapshot(): Record<string, unknown>;
 }
@@ -23,6 +30,8 @@ export function createFakeStorageArea(seed: Record<string, unknown> = {}): FakeS
   for (const [key, value] of Object.entries(seed)) data.set(key, JSON.stringify(value));
   let failSet = false;
   let failRemove = false;
+  let failSetOnCallN: number | undefined;
+  const setCallLog: string[][] = [];
 
   function decode(keys: Iterable<string>): Record<string, unknown> {
     const out: Record<string, unknown> = {};
@@ -41,7 +50,8 @@ export function createFakeStorageArea(seed: Record<string, unknown> = {}): FakeS
     },
     async set(items) {
       await Promise.resolve();
-      if (failSet) {
+      setCallLog.push(Object.keys(items));
+      if (failSet || setCallLog.length === failSetOnCallN) {
         failSet = false;
         throw new Error("fake storage: set failed (injected)");
       }
@@ -62,6 +72,12 @@ export function createFakeStorageArea(seed: Record<string, unknown> = {}): FakeS
     },
     failNextRemove() {
       failRemove = true;
+    },
+    failSetOnCall(n) {
+      failSetOnCallN = n;
+    },
+    setCalls() {
+      return setCallLog.map((keys) => [...keys]);
     },
     snapshot() {
       return decode(data.keys());

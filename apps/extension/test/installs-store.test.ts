@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
-import { createInstallsStore, type InstallOptions } from "../src/lib/installs-store.js";
+import {
+  createInstallsStore,
+  type InstallOptions,
+  type InstallResult,
+} from "../src/lib/installs-store.js";
 import { INDEX_KEY, SCHEMA_VERSION_KEY, pkgKey } from "../src/lib/store-schema.js";
 import { createFakeStorageArea } from "./fake-storage-area.js";
 
@@ -141,6 +145,51 @@ describe("installs-store", () => {
       // And the write queue survives the rejection.
       const retry = await store.install(servedPackage(), OPTS);
       expect(retry.ok).toBe(true);
+    });
+
+    it("performs exactly one set() call for install — body, index, and schemaVersion together", async () => {
+      const area = createFakeStorageArea();
+      const store = createInstallsStore(area);
+
+      const result = await store.install(servedPackage(), OPTS);
+
+      expect(result.ok).toBe(true);
+      expect(area.setCalls()).toHaveLength(1);
+      expect(area.setCalls()[0]?.sort()).toEqual(
+        [SCHEMA_VERSION_KEY, pkgKey("pkg-wiki"), INDEX_KEY].sort(),
+      );
+    });
+
+    it("pins the crash window a split write would open: failing set() call #2 must never orphan a body", async () => {
+      const area = createFakeStorageArea();
+      const store = createInstallsStore(area);
+      // Targets the SECOND set() call specifically — failNextSet() only ever
+      // fails the first call, so it can't distinguish "one atomic set" from a
+      // regressed "set(body) then set(index)", where the first call would
+      // land before the second one fails.
+      area.failSetOnCall(2);
+
+      let result: InstallResult | undefined;
+      let rejected = false;
+      try {
+        result = await store.install(servedPackage(), OPTS);
+      } catch {
+        rejected = true;
+      }
+
+      if (rejected) {
+        // Only reachable if install were split into two ordered set() calls:
+        // the body's call landed, the index's call didn't. That orphan must
+        // never be observable.
+        expect(area.snapshot()[pkgKey("pkg-wiki")]).toBeUndefined();
+        expect(await store.readIndex()).toEqual({});
+      } else {
+        // Today's contract: one set() call, so a failure on call #2 never
+        // fires and the install fully succeeds.
+        expect(result?.ok).toBe(true);
+        expect(area.snapshot()[pkgKey("pkg-wiki")]).toBeDefined();
+        expect((await store.readIndex())["pkg-wiki"]).toBeDefined();
+      }
     });
   });
 
