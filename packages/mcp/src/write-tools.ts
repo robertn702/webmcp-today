@@ -10,6 +10,12 @@ import { jsonResult } from "./result.js";
 
 // Write tools require WEBMCP_CAFE_API_KEY (created at webmcp.cafe/settings).
 
+const installResultSchema = z.object({
+  ok: z.literal(true),
+  versionId: z.string(),
+  version: z.number(),
+});
+
 export function registerWriteTools(server: McpServer, client: CafeClient): void {
   server.registerTool(
     "publish_package",
@@ -51,19 +57,26 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
     "install_package",
     {
       description:
-        "Set the caller's install pin for a package to its latest version, or a given versionId — creates the pin if absent, moves it if present. Also how rollback works: pass an older versionId. Requires an API key.",
+        "Pin a package to its latest version, or a given versionId, on your webmcp.cafe account — creates the pin if absent, moves it if present (also how rollback works: pass an older versionId). This does not install into your browser; the extension's installs are local to the browser. Returns a link that installs this exact version there. Requires an API key.",
       inputSchema: {
         id: z.string().describe("Package id"),
         versionId: z.string().optional().describe("Pin to this version instead of latest"),
       },
     },
-    async ({ id, versionId }) => jsonResult(await client.install(id, versionId)),
+    async ({ id, versionId }) => {
+      const result = installResultSchema.parse(await client.install(id, versionId));
+      return jsonResult({
+        ...result,
+        installUrl: `${client.baseUrl}/packages/${id}?install=${result.versionId}`,
+      });
+    },
   );
 
   server.registerTool(
     "uninstall_package",
     {
-      description: "Uninstall a previously installed package. Requires an API key.",
+      description:
+        "Remove the caller's install pin on your webmcp.cafe account. This does not affect the extension's local install in your browser. Requires an API key.",
       inputSchema: { id: z.string().describe("Package id") },
     },
     async ({ id }) => jsonResult(await client.uninstall(id)),

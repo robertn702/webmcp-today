@@ -8,7 +8,7 @@ type VersionRow = typeof packageVersions.$inferSelect;
 export function serializePackage(
   pkg: PackageRow,
   version: VersionRow,
-  opts: { contributorName?: string; installCount?: number },
+  opts: { contributorName?: string },
 ): WebMcpPackage {
   return {
     id: pkg.id,
@@ -25,7 +25,6 @@ export function serializePackage(
     ...(version.changelog ? { changelog: version.changelog } : {}),
     contributor: opts.contributorName ?? pkg.contributorId,
     version: version.version,
-    ...(opts.installCount !== undefined ? { installCount: opts.installCount } : {}),
     createdAt: pkg.createdAt.toISOString(),
     updatedAt: pkg.updatedAt.toISOString(),
   };

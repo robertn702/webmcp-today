@@ -52,7 +52,7 @@ export function registerReadTools(server: McpServer, client: CafeClient): void {
   server.registerTool(
     "get_stats",
     {
-      description: "Registry stats: total packages, total installs, top domains.",
+      description: "Registry stats: total packages, domains covered, top domains.",
       inputSchema: {},
     },
     async () => jsonResult(await client.stats()),
