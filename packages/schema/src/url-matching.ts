@@ -44,12 +44,12 @@ export function hostCoversHostname(patternHost: string, hostname: string): boole
 }
 
 /**
- * Is a config's `domain` lookup key reachable through its own urlPatterns? True
+ * Is a package's `domain` lookup key reachable through its own urlPatterns? True
  * when at least one pattern's host covers `domain` (Chrome match semantics:
  * `*.example.com` covers the apex `example.com` too — see hostCoversHostname).
  *
- * A config whose `domain` no pattern covers is unreachable by lookup: on a page
- * that keys on `domain` no pattern matches (dropped by rankConfigsByUrl), and on
+ * A package whose `domain` no pattern covers is unreachable by lookup: on a page
+ * that keys on `domain` no pattern matches (dropped by rankPackagesByUrl), and on
  * a page the patterns do cover, `domain` is never a candidate lookup key. Mirrors
  * the baseUrl same-origin check in api.ts. `domain` is expected already
  * normalized (lowercased, www-stripped, as domainSchema emits).
@@ -62,14 +62,14 @@ export function domainCoveredByPatterns(domain: string, urlPatterns: string[]): 
 }
 
 /**
- * Expand a hostname into the candidate `domain` lookup keys a stored config
+ * Expand a hostname into the candidate `domain` lookup keys a stored package
  * might use: the full hostname plus each parent domain down to the registrable
  * domain (naively the last two labels — no public-suffix list). Leading `www.`
  * is stripped and the host is lowercased first.
  *
  * `domain` is only a lookup index; urlPatterns are the matching authority
- * (`rankConfigsByUrl`), so over-generating a key at worst misses (no row keyed
- * to it) — it can never mis-serve a config whose patterns don't cover the URL.
+ * (`rankPackagesByUrl`), so over-generating a key at worst misses (no row keyed
+ * to it) — it can never mis-serve a package whose patterns don't cover the URL.
  *
  * e.g. "old.reddit.com" → ["old.reddit.com", "reddit.com"].
  */
@@ -134,7 +134,7 @@ export function matchUrlPattern(pattern: string, url: string): MatchResult {
  * item's best-matching pattern. Non-matching items are dropped; matches sort
  * most-specific-first.
  */
-export function rankConfigsByUrl<T extends { urlPatterns: string[] }>(
+export function rankPackagesByUrl<T extends { urlPatterns: string[] }>(
   items: T[],
   url: string,
 ): T[] {

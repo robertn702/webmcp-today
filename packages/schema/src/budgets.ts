@@ -8,6 +8,6 @@ export const TOOL_NAME_MAX = 30;
 export const TOOL_DESCRIPTION_MAX = 500;
 export const PARAM_DESCRIPTION_MAX = 150;
 
-/** Current config format engine version. Bump when the format changes shape.
+/** Current package format engine version. Bump when the format changes shape.
  *  History: 1 = DOM execution; 2 = tier-1 `api` block (docs/api-execution-model.md). */
 export const ENGINE_VERSION = 2;

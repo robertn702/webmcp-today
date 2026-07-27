@@ -5,7 +5,7 @@ import { actionStepSchema } from "./steps.js";
 // Execution descriptor — a discriminated union keyed by `mode`.
 //   - "dom": simple mode (fields/autosubmit/result*) or multi-step mode (steps[]).
 //   - "api": binds the tool to an api.endpoints entry by name (tier-1 execution).
-// Reference integrity + {{param}} checks for the "api" mode are config-level
+// Reference integrity + {{param}} checks for the "api" mode are package-level
 // (they need the sibling `api` block) — see collectApiIssues in api.ts.
 
 export const domExecutionSchema = z.object({

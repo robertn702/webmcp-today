@@ -11,7 +11,7 @@ export const TEMPLATE_RE = /\{\{(\w+)\}\}/g;
  * NOTE: a literal "{{" that should reach the server verbatim (e.g. a
  * Handlebars-style body) is a KNOWN DEFERRED case — there is no escape hatch
  * yet, so every {{name}} is treated as a tool-input placeholder. Documented,
- * not solved; revisit if a real config needs literal double braces.
+ * not solved; revisit if a real package needs literal double braces.
  */
 export function unknownPlaceholders(value: string, props: string[]): string[] {
   const missing: string[] = [];

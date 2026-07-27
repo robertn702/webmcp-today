@@ -22,7 +22,7 @@ export const toolDescriptorObjectSchema = z.object({
   inputSchema: inputSchemaSchema,
   annotations: toolAnnotationsSchema.optional(),
   // How the tool executes: a discriminated union keyed by `mode` ("dom" | "api").
-  // API-endpoint reference + placeholder checks are config-level (they need the
+  // API-endpoint reference + placeholder checks are package-level (they need the
   // sibling `api` block) — see collectApiIssues in api.ts.
   execution: executionDescriptorSchema.optional(),
 });

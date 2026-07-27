@@ -3,12 +3,12 @@ import type { ToolDescriptor } from "./tool.js";
 import { unknownPlaceholders } from "./templates.js";
 import { hostCoversHostname, parseUrlPattern } from "./url-matching.js";
 
-// Tier-1 API execution model — a config declares a site's HTTP surface as data
+// Tier-1 API execution model — a package declares a site's HTTP surface as data
 // and the executor derives the request. See docs/api-execution-model.md.
-// This block is config-level (next to tools[]); tools bind to an endpoint by
+// This block is package-level (next to tools[]); tools bind to an endpoint by
 // name via the tool's `endpoint` field. Reference integrity + same-origin
 // baseUrl + {{param}} placeholder checks live in collectApiIssues (run from the
-// config-level superRefine, because they need the sibling tools[]/urlPatterns).
+// package-level superRefine, because they need the sibling tools[]/urlPatterns).
 
 const NAME_MAX = 64;
 const PATH_MAX = 500;
@@ -32,7 +32,7 @@ export const apiAuthSourceSchema = z.object({
 });
 
 /** A GraphQL operation. `document` is opaque — either an inline query or a
- * "@documents/name" reference into the config-level `documents` block. It is
+ * "@documents/name" reference into the package-level `documents` block. It is
  * NEVER template-scanned; only `variables` bind {{param}} from tool input. */
 export const apiGraphqlSchema = z.object({
   document: z.string().min(1).max(DOCUMENT_MAX),
@@ -89,9 +89,9 @@ export interface ApiValidationIssue {
   path: (string | number)[];
 }
 
-/** What collectApiIssues needs from a config: the api block plus the sibling
+/** What collectApiIssues needs from a package: the api block plus the sibling
  * fields its references are checked against. Structurally satisfied by both the
- * full create-config shape and the publish-version subset. */
+ * full create-package shape and the publish-version subset. */
 export interface ApiValidationTarget {
   urlPatterns: string[];
   tools: ToolDescriptor[];
@@ -122,8 +122,8 @@ function scanTemplateValue(
   }
 }
 
-/** Cross-validate an `api` block against the config's tools and urlPatterns.
- * Pure: returns issues instead of pushing to a zod ctx, so config.ts can wire
+/** Cross-validate an `api` block against the package's tools and urlPatterns.
+ * Pure: returns issues instead of pushing to a zod ctx, so package.ts can wire
  * it into a superRefine without ctx-typing gymnastics. */
 export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssue[] {
   const issues: ApiValidationIssue[] = [];

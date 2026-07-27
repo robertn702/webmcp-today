@@ -1,14 +1,14 @@
 import { z } from "zod";
-import { createConfigObjectSchema } from "./config.js";
+import { createPackageObjectSchema } from "./package.js";
 
 // Shapes served by the registry API (superset of the submission format).
 
 /**
- * A definition + one of its versions, as served by the registry. `id` is the
- * definition id (stable identity); `versionId` + `version` identify which
+ * A package + one of its versions, as served by the registry. `id` is the
+ * package id (stable identity); `versionId` + `version` identify which
  * version this document is. Install counts are derived, not denormalized.
  */
-export const webMcpConfigSchema = createConfigObjectSchema.extend({
+export const webMcpPackageSchema = createPackageObjectSchema.extend({
   id: z.string(),
   versionId: z.string(),
   version: z.number().int().min(1),
@@ -25,21 +25,21 @@ export const webMcpConfigSchema = createConfigObjectSchema.extend({
   updatedAt: z.iso.datetime(),
 });
 
-export const configListResponseSchema = z.object({
-  configs: z.array(webMcpConfigSchema),
+export const packageListResponseSchema = z.object({
+  packages: z.array(webMcpPackageSchema),
   total: z.number().int().min(0),
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),
 });
 
 export const statsResponseSchema = z.object({
-  totalConfigs: z.number().int().min(0),
+  totalPackages: z.number().int().min(0),
   totalInstalls: z.number().int().min(0),
   topDomains: z.array(z.object({ domain: z.string(), count: z.number().int().min(0) })),
 });
 
 /**
- * One entry in the revocation feed. Once installed config bodies live on the
+ * One entry in the revocation feed. Once installed package bodies live on the
  * client's disk the registry is off the read path, so this feed is the only
  * lever it keeps after install: a package pulled for malware otherwise runs
  * forever on every machine that has it.
@@ -49,7 +49,7 @@ export const statsResponseSchema = z.object({
  */
 export const revocationEntrySchema = z.object({
   id: z.number().int().positive(),
-  definitionId: z.string(),
+  packageId: z.string(),
   /** Null revokes the whole package; otherwise only this one version. */
   versionId: z.string().nullable(),
   reason: z.string(),
@@ -65,8 +65,8 @@ export const revocationsResponseSchema = z.object({
   entries: z.array(revocationEntrySchema),
 });
 
-export type WebMcpConfig = z.infer<typeof webMcpConfigSchema>;
-export type ConfigListResponse = z.infer<typeof configListResponseSchema>;
+export type WebMcpPackage = z.infer<typeof webMcpPackageSchema>;
+export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
 export type StatsResponse = z.infer<typeof statsResponseSchema>;
 export type RevocationEntry = z.infer<typeof revocationEntrySchema>;
 export type RevocationsResponse = z.infer<typeof revocationsResponseSchema>;
