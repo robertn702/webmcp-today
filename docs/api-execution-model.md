@@ -1,8 +1,10 @@
-# API-Backed Tools — Execution Model Proposal
+# API-Backed Tools — Execution Model
 
-> Design proposal for review. No code changes yet. Status: **proposed**.
+> Status: **tier 1 is built and shipping** (`packages/schema/src/api.ts`,
+> `apps/extension/src/lib/api-executor.ts`, `packages/definitions/configs/reddit.com.json`);
+> tiers 2–3 remain proposals. Where this doc and the code disagree, the code wins.
 > Related: `SPEC.md` (package format v1), `docs/erd.md` (installs/version pinning),
-> `packages/schema/src/` (current DOM-centric execution descriptor).
+> `packages/schema/src/` (execution descriptors).
 
 ## Motivation
 
@@ -62,39 +64,41 @@ Sketch of the schema additions (zod to come in `packages/schema`; JSON here for 
     "auth": {
       "csrf": {
         // fetch this, extract the token, attach it to subsequent calls
-        "source": { "endpoint": "me", "extract": "data.modhash" },
-        "sendAs": { "header": "X-Modhash" },
+        "source": { "endpoint": "me", "extract": ["data", "modhash"] },
+        "sendAs": { "in": "header", "name": "X-Modhash" },
+        // omit to re-fetch the token on every request (the safe default)
+        "ttlSeconds": 300,
       },
     },
     "endpoints": {
       "me": { "method": "GET", "path": "/api/me.json" },
       "subredditHot": {
         "method": "GET",
-        "path": "/r/{subreddit}/hot.json",
-        "query": { "limit": "{limit}" },
-        "returns": "data.children[].data.{title,author,score,num_comments,permalink}",
+        "path": "/r/{{subreddit}}/hot.json",
+        "query": { "limit": "{{limit}}" },
+        "returns": "data.children[].data.{title: title, author: author, score: score}",
       },
       "comment": {
         "method": "POST",
         "path": "/api/comment",
         "form": {
-          "thing_id": "{thingId}",
-          "text": "{text}",
+          "thing_id": "{{thingId}}",
+          "text": "{{text}}",
           "api_type": "json",
         },
         "auth": ["csrf"],
-        "errorPath": "json.errors",
+        "errorPath": ["json", "errors"],
       },
       "searchGraphql": {
         "method": "POST",
         "path": "/svc/shreddit/graphql",
         "graphql": {
           "document": "@documents/search",
-          "variables": { "query": "{query}", "first": 10 },
+          "variables": { "query": "{{query}}", "first": "{{first}}" },
         },
-        "errorPath": "errors",
+        "errorPath": ["errors"],
         "persistedQuery": true,
-        "returns": "data.search.{...}",
+        "returns": "data.search.posts[].{id: id, title: title}",
       },
     },
     "documents": {
@@ -130,20 +134,32 @@ Field semantics:
 - **`baseUrl`** — hard-enforced same-origin. Must match one of the hosts implied by the
   package's `urlPatterns`; the executor refuses any derived URL whose origin differs.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
-  GET `/api/me.json`, extract `data.modhash` from the JSON, send as the `X-Modhash`
-  header on endpoints listing `auth: ["csrf"]`. Cookies ride along automatically (the
-  executor runs in the page's origin, so the user's existing session authenticates).
-- **`path` / `query` / `body` / `form`** — `{placeholder}` templates bound from the
-  validated tool input (same cross-validation the schema already does for `{{param}}`
-  in DOM steps; placeholders may only name `inputSchema` properties).
-- **`returns`** — a projection applied to the JSON response to trim output for density
-  and relevance. There is no hard output cap in v1 (the 1.5K `TOOL_OUTPUT_MAX` was
-  removed — model-dependent; the budget question is deferred, see docs/DECISIONS.md
-  2026-07-24), so projection is about signal-to-noise, not fitting a fixed budget.
-  Missing from a tool's output? Add or widen the projection.
-- **`errorPath`** — where errors live in a 200 response body (e.g. `"errors"` for
-  GraphQL's 200-with-errors convention, `"json.errors"` for Reddit's REST API). A
-  non-empty value at that path = tool failure, surfaced as an error to the agent.
+  GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
+  `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along
+  automatically (the executor runs in the page's origin, so the user's existing session
+  authenticates). `sendAs` is `{in, name}` — `in` has one member (`"header"`) today and
+  exists to reserve the axis. **`ttlSeconds`** caches a fetched token across tool calls;
+  omitting it re-fetches on every request, which is the safe default and was the only
+  behaviour before the field existed.
+- **`path` / `query` / `body` / `form`** — `{{param}}` templates bound from the
+  validated tool input (the same cross-validation the schema already does for DOM steps;
+  placeholders may only name `inputSchema` properties). In a `body` or in
+  `graphql.variables`, a string that is **exactly** one placeholder emits the raw typed
+  value — `"{{n}}"` sends `10`, not `"10"` — while `"page {{n}}"` concatenates. `query`
+  and `form` are always strings on the wire, so the distinction doesn't arise there.
+- **`returns`** — a **JMESPath** expression applied to the JSON response to trim output
+  for density and relevance. There is no hard output cap in v1 (the 1.5K
+  `TOOL_OUTPUT_MAX` was removed — model-dependent; the budget question is deferred, see
+  docs/DECISIONS.md 2026-07-24), so projection is about signal-to-noise, not fitting a
+  fixed budget. Missing from a tool's output? Add or widen the projection. A projection
+  that matches nothing **fails the call** rather than quietly returning the whole
+  response — that is the API-shape-changed signal, and the whole point of preferring API
+  execution over DOM execution.
+- **`errorPath`** — where errors live in a 200 response body, as a locator array (e.g.
+  `["errors"]` for GraphQL's 200-with-errors convention, `["json", "errors"]` for
+  Reddit's REST API). A non-empty value at that path = tool failure, surfaced as an
+  error to the agent. An array rather than a dot string so a key containing a dot is
+  unambiguous; `extract` takes the same shape for the same reason.
 - **`persistedQuery`** — enables APQ retry (see GraphQL section).
 - **`documents`** — package-level named static GraphQL documents; endpoints reference
   them as `@documents/name`. Keeps megabyte-adjacent captured queries out of the
@@ -238,7 +254,8 @@ rather than merely possible:
 2. **`documents` block** — captured real-world queries (Reddit's shreddit, GitHub's
    app queries) run hundreds of lines. Named static documents referenced as
    `@documents/name` keep packages readable. Variables bind from tool input via the
-   same `{placeholder}` templates.
+   same `{{param}}` templates — and because a variable whose whole value is one
+   placeholder keeps its type, a `first: Int` binds as an Int rather than a string.
 
 Third, **APQ (Automatic Persisted Queries)** behind `persistedQuery: true`, implemented
 _once_ in the executor so no package author ever thinks about it:
@@ -324,25 +341,26 @@ data — so it is buildable today and is not blocked on the spike.
 
 ## Build order
 
-1. **`packages/schema`: zod for the `api` block + tests.** Endpoint/auth/document/
-   projection schemas, placeholder↔inputSchema cross-validation (mirroring the existing
+1. ~~**`packages/schema`: zod for the `api` block + tests.**~~ **Done.** Endpoint/auth/
+   document/projection schemas, placeholder↔inputSchema cross-validation (mirroring the
    `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔`urlPatterns` check.
-2. **Executor derived-call engine** (extension): request construction, token sources,
-   `returns` projection, `errorPath` failure, APQ retry, output budgeting.
-3. **Reddit flagship package on tier 1 alone** — REST read (`subredditHot`) + write
-   (`comment` with the modhash token source) + one GraphQL endpoint exercising
-   `errorPath` and `persistedQuery`. This is the proof of the whole model.
+2. ~~**Executor derived-call engine** (extension).~~ **Done**, except APQ: request
+   construction, token sources (with TTL), `returns` projection, `errorPath` failure.
+   `persistedQuery: true` still throws rather than silently sending a full query, and
+   output budgeting was dropped with `TOOL_OUTPUT_MAX`.
+3. ~~**Reddit flagship package on tier 1 alone.**~~ **Done for REST** — reads plus
+   `comment`/`vote` writes on the modhash token source. The planned GraphQL endpoint was
+   **not** shipped: it needs APQ, which is step 2's remaining half.
 4. **MV3 spike → scoped script slots** (tier 2), with publish-time lint in apps/web.
 5. **Full `evaluate`** (tier 3) last — UI flagging, elevated curation flow.
 
 ## Open questions
 
-- **Approval-before-publish vs open-publish + moderation?** Greasyfork is open-publish:
-  anything goes live immediately, moderation reacts to reports, and install counts +
-  code display do the work. Approval-before-publish raises quality but doesn't scale
-  and contradicts the "agents teaching agents" velocity. Current leaning: open-publish
-  for tier 1, human review queue for anything containing tier-2/3 code — but this is
-  undecided and shapes apps/web work.
+- **Approval-before-publish vs open-publish + moderation — settled for tier 1.**
+  Open-publish, per docs/DECISIONS.md 2026-07-24 (the package-install model): the unit
+  of trust is a package a user chose to install, and a reviewer gate on individual tools
+  stalls publishing as the corpus grows. What is still open is only the tier-2/3 review
+  queue (`docs/BACKLOG.md`), which no code needs yet.
 - **Chrome Web Store "no remote code execution" policy risk.** The registry delivers JS
   (tiers 2–3) into an extension context at runtime, which reads squarely like the
   policy's definition of remotely hosted code. Tampermonkey precedent: user-script
@@ -355,10 +373,15 @@ data — so it is buildable today and is not blocked on the spike.
   realm boundary for tier-2/3 code (no shared prototypes, explicit callable membrane).
   It's the right long-term home for slot execution; browser support and MV3/CSP
   interaction are unverified — fold into the spike if time permits, otherwise track.
-- **Output projection language.** `returns` above is a placeholder syntax
-  (path-with-pickers). Options: a minimal path grammar (invented, small), JSONPath
-  (standard, heavier than we need), or defer shaping to tier-2 `response` slots and
-  give tier 1 only path arrays. Decide with the schema PR.
+- **Output projection language — resolved: JMESPath.** `returns` was briefly a
+  hand-rolled path-with-pickers grammar, replaced by
+  `@jmespath-community/jmespath`. It buys filters and multi-select hashes we could not
+  express, it is a written spec rather than our own invention, and — decisively — it
+  compiles to an AST with no `eval` anywhere, which MV3's CSP requires. The two reads
+  that are _locators_ rather than projections (`extract`, `errorPath`) deliberately did
+  **not** move to JMESPath: they name one place in a document, an array says that
+  exactly, and it keeps an expression evaluator out of the security-adjacent paths.
+  Rejected alternatives and the `jsonpath-plus` exclusion: docs/DECISIONS.md 2026-07-27.
 - **How does `ctx` compose?** What tier-2 slots and tier-3 scripts receive (tokens from
   `auth` sources, prior step outputs, endpoint metadata) is under-specified; pin down
   when the executor is built.
@@ -369,9 +392,12 @@ data — so it is buildable today and is not blocked on the spike.
   The canary (out of scope per SPEC but reserved-for in the schema) should replay
   tier-1 calls against live sites; what runs it, and how do auth'd writes get canaried
   safely (a write canary posts real comments)?
-- **`minEngine` bump policy — resolved.** Packages using `api` set `minEngine` to the
-  engine level that introduced it (`ENGINE_VERSION` is 2; the Reddit package sets
-  `minEngine: 2`). The extension refuses a too-new package _whole_ rather than
+- **`minEngine` bump policy — resolved.** Packages set `minEngine` to the engine level
+  whose shape they rely on. **Pre-release, `ENGINE_VERSION` is pegged at 1 and format
+  changes do not bump it** — there are no older extension builds and no published
+  packages, so a bump protects nobody and only strands the configs that must move with
+  it (`packages/schema/src/budgets.ts`). The extension refuses a too-new package _whole_
+  rather than
   registering tools it cannot run — `supportsPackageEngine`
   (`apps/extension/src/lib/engine-gate.ts`), applied per package in `register-tools.ts`.
   What remains is UX, not correctness: the gate fires at registration, so a user can
