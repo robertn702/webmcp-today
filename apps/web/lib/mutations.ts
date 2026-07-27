@@ -53,10 +53,7 @@ export async function updatePackageMeta(
   meta: UpdatePackageMetaInput,
 ): Promise<void> {
   if (Object.keys(meta).length === 0) return;
-  await db
-    .update(packages)
-    .set({ ...meta, updatedAt: new Date() })
-    .where(eq(packages.id, packageId));
+  await db.update(packages).set(meta).where(eq(packages.id, packageId));
 }
 
 /** Append-only: insert the next version for an existing package.
@@ -103,6 +100,10 @@ export async function publishVersion(
     }
     if (!version) throw new Error("Version insert returned no row");
 
+    // Deliberate touch (not a redundant write): bumps the parent row so browse
+    // ordering (orderBy(desc(packages.updatedAt)) in packages-repo.ts) surfaces
+    // newly-versioned packages. The mdt_packages trigger overwrites this value
+    // with now() anyway; an empty SET would be invalid SQL, so this stays.
     await db.update(packages).set({ updatedAt: new Date() }).where(eq(packages.id, packageId));
 
     return { versionId: version.id, version: nextVersion };
@@ -125,7 +126,7 @@ export async function installPackage(
     .values({ userId, packageId, versionId })
     .onConflictDoUpdate({
       target: [installs.userId, installs.packageId],
-      set: { versionId, updatedAt: new Date() },
+      set: { versionId },
     });
 }
 
