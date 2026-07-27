@@ -1,4 +1,4 @@
-import { createConfigSchema, type CreateConfigInput } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
 
 import rawMdn from "../configs/developer.mozilla.org.json";
 import rawWikipedia from "../configs/en.wikipedia.org.json";
@@ -11,16 +11,16 @@ import rawReddit from "../configs/reddit.com.json";
 // the registry's seed source. Validated once at import; an invalid curated
 // file is a build-time bug, so this throws instead of skipping.
 
-function parse(raw: unknown, file: string): CreateConfigInput {
-  const parsed = createConfigSchema.safeParse(raw);
+function parse(raw: unknown, file: string): CreatePackageInput {
+  const parsed = createPackageSchema.safeParse(raw);
   if (!parsed.success) {
     throw new Error(`[webmcp-cafe] Invalid curated config ${file}: ${parsed.error.message}`);
   }
   return parsed.data;
 }
 
-/** All curated configs, validated against `createConfigSchema`. */
-export const definitions: CreateConfigInput[] = [
+/** All curated configs, validated against `createPackageSchema`. */
+export const definitions: CreatePackageInput[] = [
   parse(rawGithub, "github.com.json"),
   parse(rawHackerNews, "news.ycombinator.com.json"),
   parse(rawWikipedia, "en.wikipedia.org.json"),
