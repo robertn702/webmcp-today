@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { InstallButton } from "@/components/install-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPackageById } from "@/lib/packages-repo";
+import { getPackageById, getVersionById } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +21,23 @@ export async function generateMetadata({
   return { title: pkg.title, description: pkg.description };
 }
 
-export default async function PackagePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PackagePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ install?: string }>;
+}) {
   const { id } = await params;
+  const { install } = await searchParams;
   const pkg = await getPackageById(id);
   if (!pkg) notFound();
+
+  // ?install=<versionId> is the MCP handoff link (install_package's installUrl) —
+  // pre-arm the button at that exact version instead of the page's latest.
+  const installTarget = install ? await getVersionById(id, install) : null;
+  const targetVersionId = installTarget?.id ?? pkg.versionId;
+  const targetVersion = installTarget?.version ?? pkg.version;
 
   return (
     <div>
@@ -32,7 +45,7 @@ export default async function PackagePage({ params }: { params: Promise<{ id: st
       <p className="mt-1 font-mono text-sm text-muted-foreground">{pkg.urlPatterns.join(", ")}</p>
       <p className="mt-3 text-sm text-muted-foreground">{pkg.description}</p>
       <p className="mt-2 text-xs text-muted-foreground">
-        by {pkg.contributor} · v{pkg.version} · {pkg.installCount ?? 0} installs · updated{" "}
+        by {pkg.contributor} · v{pkg.version} · updated{" "}
         {new Date(pkg.updatedAt).toLocaleDateString()}
       </p>
       {pkg.changelog && (
@@ -41,7 +54,12 @@ export default async function PackagePage({ params }: { params: Promise<{ id: st
         </p>
       )}
       <div className="mt-4">
-        <InstallButton packageId={pkg.id} versionId={pkg.versionId} version={pkg.version} />
+        <InstallButton
+          packageId={pkg.id}
+          versionId={targetVersionId}
+          version={targetVersion}
+          autoFocus={installTarget !== null}
+        />
         <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted-foreground">
           Installing saves v{pkg.version} in your browser — nothing is tied to your account. The
           extension registers its tools whenever you&apos;re on a matching page, and you stay on v

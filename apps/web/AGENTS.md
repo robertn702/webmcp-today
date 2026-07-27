@@ -53,8 +53,11 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   the caller's pin — idempotent: creates it if absent, moves it if present (also how
   rollback works — pass an older `versionId`; defaults to latest). `DELETE` removes it.
   `GET /api/installs` (authenticated) returns the caller's pinned packages at their
-  pinned versions. Install count (the trust signal) is derived via
-  `COUNT(*) ... GROUP BY package_id` on `installs`, not a denormalized counter.
+  pinned versions. This account pin is separate from the extension's local, in-browser
+  install (the MCP server's install path vs. the install button's). **Install counts are
+  not a trust signal** — `webMcpPackageSchema.installCount` is deprecated and no longer
+  populated; trust is derived from readable data and explicit consent instead
+  (`docs/local-first-installs.md`).
 
 ## Env & dev
 

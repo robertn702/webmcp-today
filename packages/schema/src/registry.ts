@@ -39,7 +39,8 @@ export const packageListResponseSchema = z.object({
 
 export const statsResponseSchema = z.object({
   totalPackages: z.number().int().min(0),
-  totalInstalls: z.number().int().min(0),
+  /** Domain coverage, not adoption — trust is derived, not counted (see installCount). */
+  totalDomains: z.number().int().min(0),
   topDomains: z.array(z.object({ domain: z.string(), count: z.number().int().min(0) })),
 });
 

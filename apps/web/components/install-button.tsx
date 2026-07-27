@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { InstallFailure, InstallState } from "@robertn702/webmcp-cafe-schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   pingExtension,
   uninstallPackage,
 } from "@/lib/extension-bridge";
+import { cn } from "@/lib/utils";
 
 // Client island for the extension install bridge. One correct action per
 // state; the bridge (lib/extension-bridge.ts) owns probing + protocol
@@ -49,12 +50,20 @@ export function InstallButton({
   packageId,
   versionId,
   version,
+  autoFocus = false,
 }: {
   packageId: string;
   versionId: string;
   version: number;
+  /** Surface this button for a handoff link (e.g. `?install=<versionId>`). */
+  autoFocus?: boolean;
 }) {
   const [status, setStatus] = useState<ButtonState>({ kind: "checking" });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [autoFocus]);
 
   const refresh = useCallback(async () => {
     const ping = await pingExtension();
@@ -115,7 +124,13 @@ export function InstallButton({
   const badge = (state: InstallState): string | null => STATE_BADGE[state];
 
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div
+      ref={containerRef}
+      className={cn(
+        "flex items-center gap-2 rounded-lg text-sm",
+        autoFocus && "ring-2 ring-brand ring-offset-2 ring-offset-background",
+      )}
+    >
       {status.kind === "checking" && (
         <span className="text-xs text-muted-foreground">Checking for the extension…</span>
       )}

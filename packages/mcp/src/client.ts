@@ -6,7 +6,11 @@ export interface CafeClientOptions {
 }
 
 export class CafeClient {
-  constructor(private readonly opts: CafeClientOptions) {}
+  readonly baseUrl: string;
+
+  constructor(private readonly opts: CafeClientOptions) {
+    this.baseUrl = opts.baseUrl;
+  }
 
   private async request(path: string, init?: RequestInit): Promise<unknown> {
     const headers = new Headers(init?.headers);

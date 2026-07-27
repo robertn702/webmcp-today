@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 // source — nothing on this site works without the extension installed.
 const EXTENSION_HREF = "/extension";
 
-type Stats = { packages: number; tools: number; installs: number };
+type Stats = { packages: number; tools: number; domains: number };
 
 /**
  * Registry counters for the hero. One page fetch, wide enough to cover the
@@ -29,11 +29,11 @@ type Stats = { packages: number; tools: number; installs: number };
 async function loadStats(): Promise<Stats | null> {
   try {
     const { packages, total } = await listPackages({ page: 1, pageSize: 100 });
-    if (packages.length < total) return { packages: total, tools: 0, installs: 0 };
+    if (packages.length < total) return { packages: total, tools: 0, domains: 0 };
     return {
       packages: total,
       tools: packages.reduce((sum, pkg) => sum + pkg.tools.length, 0),
-      installs: packages.reduce((sum, pkg) => sum + (pkg.installCount ?? 0), 0),
+      domains: new Set(packages.map((pkg) => pkg.domain)).size,
     };
   } catch {
     return null;
@@ -95,7 +95,7 @@ export default async function LandingPage() {
               <dl className="cafe-rise mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t pt-6 [animation-delay:340ms]">
                 <Stat label="packages published" value={stats.packages} />
                 {stats.tools > 0 ? <Stat label="tools available" value={stats.tools} /> : null}
-                {stats.installs > 0 ? <Stat label="installs" value={stats.installs} /> : null}
+                {stats.domains > 0 ? <Stat label="domains covered" value={stats.domains} /> : null}
               </dl>
             ) : null}
           </div>

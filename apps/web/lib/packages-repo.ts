@@ -26,36 +26,17 @@ async function fetchContributorNames(contributorIds: string[]): Promise<Map<stri
   return new Map(rows.map((u) => [u.id, u.name]));
 }
 
-async function fetchInstallCounts(packageIds: string[]): Promise<Map<string, number>> {
-  if (packageIds.length === 0) return new Map();
-  const rows = await db
-    .select({ packageId: installs.packageId, value: count() })
-    .from(installs)
-    .where(inArray(installs.packageId, packageIds))
-    .groupBy(installs.packageId);
-  return new Map(rows.map((r) => [r.packageId, r.value]));
-}
-
 /** Hydrate packages with a caller-supplied version per packageId (latest, or pinned). */
 async function hydrate(
   packageRows: PackageRow[],
   versionByPackage: Map<string, VersionRow>,
 ): Promise<WebMcpPackage[]> {
   if (packageRows.length === 0) return [];
-  const ids = packageRows.map((p) => p.id);
-  const [names, installCounts] = await Promise.all([
-    fetchContributorNames(packageRows.map((p) => p.contributorId)),
-    fetchInstallCounts(ids),
-  ]);
+  const names = await fetchContributorNames(packageRows.map((p) => p.contributorId));
   return packageRows.flatMap((pkg) => {
     const version = versionByPackage.get(pkg.id);
     if (!version) return [];
-    return [
-      serializePackage(pkg, version, {
-        contributorName: names.get(pkg.contributorId),
-        installCount: installCounts.get(pkg.id) ?? 0,
-      }),
-    ];
+    return [serializePackage(pkg, version, { contributorName: names.get(pkg.contributorId) })];
   });
 }
 

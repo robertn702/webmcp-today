@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { listPackages } from "@/lib/packages-repo";
 
@@ -42,17 +41,6 @@ export default async function PackagesPage() {
                     <span className="font-mono text-xs text-muted-foreground">
                       {pkg.urlPatterns.join(", ")}
                     </span>
-                    {/* Install count is the trust signal — a green badge at zero would
-                        make an uninstalled package look endorsed. */}
-                    {(pkg.installCount ?? 0) > 0 ? (
-                      <Badge variant="success">
-                        {pkg.installCount} install{pkg.installCount === 1 ? "" : "s"}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs whitespace-nowrap text-muted-foreground">
-                        no installs yet
-                      </span>
-                    )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{pkg.description}</p>
                   <p className="mt-2 text-xs text-muted-foreground">
