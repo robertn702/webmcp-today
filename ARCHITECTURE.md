@@ -15,7 +15,7 @@ map of how the pieces fit together. Companion docs:
 
 ## System overview
 
-Three deployables and two libraries, all revolving around one shared package format:
+Three deployables and three libraries, all revolving around one shared package format:
 
 ```mermaid
 flowchart LR
@@ -60,6 +60,9 @@ flowchart LR
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
   against; published as `@robertn702/webmcp-cafe-schema`.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
+- **`packages/definitions`** — the curated first-party corpus
+  (`@webmcp-cafe/definitions`): the extension's bundled fallback and the
+  registry's seed source.
 
 ## Package dependency graph
 
@@ -67,14 +70,18 @@ flowchart LR
 flowchart TD
     schema["packages/schema<br/>(published)"]
     db["packages/db"]
+    defs["packages/definitions"]
     web["apps/web"]
     ext["apps/extension"]
     mcp["packages/mcp<br/>(published)"]
 
     web --> schema
     web --> db
+    web --> defs
     ext --> schema
+    ext --> defs
     mcp --> schema
+    defs --> schema
 ```
 
 `packages/schema` has no inbound dependencies and is resolved via its built `dist/` —
@@ -134,7 +141,7 @@ sequenceDiagram
     alt execution.mode === "dom"
         EX->>S: navigate / click / fill / select / wait / extract / scroll
         S-->>EX: DOM state
-        EX->>EX: extract resultSelector, enforce output budget
+        EX->>EX: extract resultSelector
     else execution.mode === "api" (tier 1)
         EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
         EX->>S: same-origin fetch (user's cookies ride along)
@@ -228,6 +235,7 @@ webmcp-cafe/
 ├── packages/
 │   ├── schema/         # @robertn702/webmcp-cafe-schema — zod package format (published)
 │   ├── db/             # Drizzle + Neon — schema + client
+│   ├── definitions/    # @webmcp-cafe/definitions — curated first-party packages (fallback + seed)
 │   └── mcp/            # @robertn702/webmcp-cafe-mcp — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
 ```
