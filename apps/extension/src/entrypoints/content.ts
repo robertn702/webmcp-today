@@ -1,6 +1,6 @@
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { browser } from "wxt/browser";
-import { getConfigsForUrl } from "../lib/configs.js";
+import { getPackagesForUrl } from "../lib/packages.js";
 import { getModelContext } from "../lib/model-context.js";
 import { startNavigationWatcher } from "../lib/navigation.js";
 import { runRegistrationPass, type RegistrationDeps } from "../lib/register-tools.js";
@@ -19,7 +19,7 @@ export default defineContentScript({
 });
 
 const deps: RegistrationDeps = {
-  loadConfigs: getConfigsForUrl,
+  loadPackages: getPackagesForUrl,
   getModelContext,
   siteDeclaredToolNames,
   reportStatus,

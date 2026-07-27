@@ -61,7 +61,7 @@ function isLookupMessage(value: unknown): value is LookupMessage {
 async function fetchLookup(url: string): Promise<LookupResponse> {
   const base = import.meta.env.WXT_REGISTRY_API_URL ?? "http://localhost:3000";
   try {
-    const response = await fetch(`${base}/api/configs/lookup?url=${encodeURIComponent(url)}`);
+    const response = await fetch(`${base}/api/packages/lookup?url=${encodeURIComponent(url)}`);
     if (!response.ok) return { ok: false };
     return { ok: true, body: await response.json() };
   } catch {

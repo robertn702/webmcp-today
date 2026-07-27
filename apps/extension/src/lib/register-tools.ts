@@ -1,6 +1,6 @@
-import { ENGINE_VERSION, type CreateConfigInput } from "@robertn702/webmcp-cafe-schema";
+import { ENGINE_VERSION, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
 import { executeApiTool } from "./api-executor.js";
-import { requiredEngineLevel, supportsConfigEngine } from "./engine-gate.js";
+import { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
 import { executeTool } from "./executor.js";
 import type { McpResult, ModelContextLike } from "./model-context.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "./status.js";
@@ -9,8 +9,8 @@ type ToolExecute = (params: Record<string, unknown>) => Promise<McpResult>;
 
 /** Seams the content script fills in; tests pass fakes. */
 export interface RegistrationDeps {
-  /** Configs matching the URL — registry first, bundled fallback. */
-  loadConfigs: (url: string) => Promise<CreateConfigInput[]>;
+  /** Packages matching the URL — registry first, bundled fallback. */
+  loadPackages: (url: string) => Promise<CreatePackageInput[]>;
   /** Chrome's WebMCP entry point, or undefined when the API is unavailable. */
   getModelContext: () => ModelContextLike | undefined;
   /** Tool names the site declared itself (`form[toolname]`) — ours yield to them. */
@@ -23,7 +23,7 @@ export interface RegistrationDeps {
  * One registration pass for `url`. Every tool is registered with `signal`, so
  * aborting it (on the next navigation) unregisters everything this pass added.
  *
- * Configs are looked up *before* WebMCP is probed on purpose: a missing
+ * Packages are looked up *before* WebMCP is probed on purpose: a missing
  * `document.modelContext` is only worth telling the user about on a page we
  * actually have tools for — probing first would warn on every page on the
  * internet.
@@ -33,23 +33,23 @@ export async function runRegistrationPass(
   signal: AbortSignal,
   deps: RegistrationDeps,
 ): Promise<void> {
-  const configs = await deps.loadConfigs(url);
+  const packages = await deps.loadPackages(url);
   // Navigated away while the lookup was in flight — the newer pass owns the
   // status, so say nothing.
   if (signal.aborted) return;
 
-  if (configs.length === 0) {
-    deps.reportStatus({ kind: "no-configs" });
+  if (packages.length === 0) {
+    deps.reportStatus({ kind: "no-packages" });
     return;
   }
 
   const mc = deps.getModelContext();
   if (!mc) {
     console.warn(
-      `[webmcp-cafe] ${configs.length} config(s) match this page, but Chrome's WebMCP API is unavailable, so no tools were registered.\n` +
+      `[webmcp-cafe] ${packages.length} package(s) match this page, but Chrome's WebMCP API is unavailable, so no tools were registered.\n` +
         `Enable it: open ${WEBMCP_FLAG_URL}, set "WebMCP for testing" to Enabled, then relaunch Chrome. Needs Chrome 149+.`,
     );
-    deps.reportStatus({ kind: "webmcp-unavailable", configCount: configs.length });
+    deps.reportStatus({ kind: "webmcp-unavailable", packageCount: packages.length });
     return;
   }
 
@@ -57,17 +57,17 @@ export async function runRegistrationPass(
   const registered: string[] = [];
   const seen = new Set<string>();
 
-  for (const config of configs) {
-    // Refuse the whole config when it needs an engine newer than this build — a
-    // too-new config must not silently register inert/mis-executed tools.
-    if (!supportsConfigEngine(config)) {
+  for (const pkg of packages) {
+    // Refuse the whole package when it needs an engine newer than this build — a
+    // too-new package must not silently register inert/mis-executed tools.
+    if (!supportsPackageEngine(pkg)) {
       console.warn(
-        `[webmcp-cafe] Skipping config "${config.title}" — needs engine level ${requiredEngineLevel(config)}, but this extension is level ${ENGINE_VERSION}. Update the extension.`,
+        `[webmcp-cafe] Skipping package "${pkg.title}" — needs engine level ${requiredEngineLevel(pkg)}, but this extension is level ${ENGINE_VERSION}. Update the extension.`,
       );
       continue;
     }
 
-    for (const tool of config.tools) {
+    for (const tool of pkg.tools) {
       const execution = tool.execution;
       if (!execution) continue;
 
@@ -77,11 +77,11 @@ export async function runRegistrationPass(
       if (execution.mode === "dom") {
         execute = (params) => executeTool(tool.name, execution, params, tool.annotations);
       } else if (execution.mode === "api") {
-        const api = config.api;
+        const api = pkg.api;
         const endpoint = api?.endpoints[execution.endpoint];
         if (!api || !endpoint) {
           console.warn(
-            `[webmcp-cafe] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the config's api block.`,
+            `[webmcp-cafe] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the package's api block.`,
           );
           continue;
         }

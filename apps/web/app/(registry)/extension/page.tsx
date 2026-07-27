@@ -67,11 +67,11 @@ export default function ExtensionPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Open a page one of your packages matches and look at the page console.{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              [webmcp-cafe] Using N config(s) from the registry
+              [webmcp-cafe] Using N package(s) from the registry
             </code>{" "}
             means the registry is live. A{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              bundled config(s)
+              bundled package(s)
             </code>{" "}
             line means step 2 didn&apos;t take.
           </p>

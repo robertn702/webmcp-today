@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createConfigSchema, type CreateConfigInput } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
 import type { ModelContextLike } from "../src/lib/model-context.js";
 import { runRegistrationPass, type RegistrationDeps } from "../src/lib/register-tools.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "../src/lib/status.js";
 
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";
 
-function config(...toolNames: string[]): CreateConfigInput {
-  return createConfigSchema.parse({
+function pkg(...toolNames: string[]): CreatePackageInput {
+  return createPackageSchema.parse({
     domain: "en.wikipedia.org",
     urlPatterns: ["*://en.wikipedia.org/wiki/*"],
     title: "Wikipedia article",
-    description: "Fixture config",
+    description: "Fixture package",
     tools: toolNames.map((name) => ({
       name,
       description: `${name} fixture tool`,
@@ -47,14 +47,14 @@ function recordingContext(reject: string[] = []): {
 }
 
 function harness(
-  configs: CreateConfigInput[],
+  packages: CreatePackageInput[],
   mc: ModelContextLike | undefined,
   declared: string[] = [],
 ): { deps: RegistrationDeps; statuses: PageStatus[]; getModelContext: () => unknown } {
   const statuses: PageStatus[] = [];
   const getModelContext = vi.fn(() => mc);
   const deps: RegistrationDeps = {
-    loadConfigs: vi.fn(async () => configs),
+    loadPackages: vi.fn(async () => packages),
     getModelContext,
     siteDeclaredToolNames: () => new Set(declared),
     reportStatus: (status) => {
@@ -76,23 +76,23 @@ describe("runRegistrationPass", () => {
     vi.restoreAllMocks();
   });
 
-  it("stays silent on a page with no matching configs, without probing WebMCP", async () => {
+  it("stays silent on a page with no matching packages, without probing WebMCP", async () => {
     const { deps, statuses, getModelContext } = harness([], undefined);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
-    expect(statuses).toEqual([{ kind: "no-configs" }]);
+    expect(statuses).toEqual([{ kind: "no-packages" }]);
     // Order matters: probing first would warn about the flag on every page.
     expect(getModelContext).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("warns with enablement steps when configs match but WebMCP is absent", async () => {
-    const { deps, statuses } = harness([config("wiki_summary")], undefined);
+  it("warns with enablement steps when packages match but WebMCP is absent", async () => {
+    const { deps, statuses } = harness([pkg("wiki_summary")], undefined);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
-    expect(statuses).toEqual([{ kind: "webmcp-unavailable", configCount: 1 }]);
+    expect(statuses).toEqual([{ kind: "webmcp-unavailable", packageCount: 1 }]);
     expect(warn).toHaveBeenCalledTimes(1);
     const message = String(warn.mock.calls[0]?.[0]);
     expect(message).toContain(WEBMCP_FLAG_URL);
@@ -102,7 +102,7 @@ describe("runRegistrationPass", () => {
 
   it("registers matching tools and reports their names", async () => {
     const { mc, registered } = recordingContext();
-    const { deps, statuses } = harness([config("wiki_summary", "wiki_search")], mc);
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
@@ -112,9 +112,7 @@ describe("runRegistrationPass", () => {
 
   it("skips tools that collide with a site-declared tool", async () => {
     const { mc, registered } = recordingContext();
-    const { deps, statuses } = harness([config("wiki_summary", "wiki_search")], mc, [
-      "wiki_search",
-    ]);
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc, ["wiki_search"]);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
@@ -124,7 +122,7 @@ describe("runRegistrationPass", () => {
 
   it("registers every tool with the pass signal, so navigation can drop them", async () => {
     const { mc, signals } = recordingContext();
-    const { deps } = harness([config("wiki_summary", "wiki_search")], mc);
+    const { deps } = harness([pkg("wiki_summary", "wiki_search")], mc);
     const controller = new AbortController();
 
     await runRegistrationPass(PAGE_URL, controller.signal, deps);
@@ -137,9 +135,9 @@ describe("runRegistrationPass", () => {
     const controller = new AbortController();
     const statuses: PageStatus[] = [];
     const deps: RegistrationDeps = {
-      loadConfigs: async () => {
+      loadPackages: async () => {
         controller.abort();
-        return [config("wiki_summary")];
+        return [pkg("wiki_summary")];
       },
       getModelContext: () => mc,
       siteDeclaredToolNames: () => new Set(),
@@ -162,7 +160,7 @@ describe("runRegistrationPass", () => {
         controller.abort();
       },
     };
-    const { deps, statuses } = harness([config("wiki_summary", "wiki_search")], mc);
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc);
 
     await runRegistrationPass(PAGE_URL, controller.signal, deps);
 
@@ -172,7 +170,7 @@ describe("runRegistrationPass", () => {
 
   it("keeps going when registerTool rejects, and leaves the tool out of the status", async () => {
     const { mc, registered } = recordingContext(["wiki_summary"]);
-    const { deps, statuses } = harness([config("wiki_summary", "wiki_search")], mc);
+    const { deps, statuses } = harness([pkg("wiki_summary", "wiki_search")], mc);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
