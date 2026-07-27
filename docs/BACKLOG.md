@@ -61,11 +61,20 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 
 - **Vercel preview deploys fail on every PR** — t3-env "Invalid environment
   variables" at page-data collection; the Vercel project lacks the required
-  env vars for preview builds (pre-existing, seen on PRs 19–21; main itself
-  has no Vercel check). Add the env vars in Vercel (needs Robert's creds) or
-  relax build-time validation for previews. Do not point Preview at the prod
-  `DATABASE_URL`/auth secrets — every PR branch gets an ungated preview URL.
+  env vars for preview builds. Still failing as of PR 42, including a docs-only
+  PR, which rules out a code cause; main's production deploys pass, so it is
+  Preview scope specifically that is missing the vars. Every PR therefore merges
+  over a red check, and preview URLs are useless for review. Add the env vars in
+  Vercel (needs Robert's creds) or relax build-time validation for previews. Do
+  not point Preview at the prod `DATABASE_URL`/auth secrets — every PR branch
+  gets an ungated preview URL.
   (apps/web/env.ts; AGENTS.md notes builds need real env vars)
+- **`DATABASE_URL_UNPOOLED` is absent from local `.env`** — `drizzle.config.ts`
+  prefers it and falls back to the pooled `DATABASE_URL`, so schema migrations
+  still run through PgBouncer, silently defeating the point of 7912b61. Absent
+  from both the main worktree and fresh workspaces, so `.env.example` should
+  list it too. Fix: `neon env pull` (writes both).
+  (packages/db/drizzle.config.ts; apps/web/.env.example)
 - **Approval-before-publish vs open-publish + moderation** — downgraded by
   local-first installs: once nothing auto-registers, an unreviewed package
   reaches only users who explicitly installed it, so open-publish for tier 1 is
