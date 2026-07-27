@@ -5,8 +5,9 @@ export default defineConfig({
   srcDir: "src",
   imports: false,
   dev: {
-    // Keep WXT's dev server off port 3000 — that's the registry web app's
-    // port, and the extension's default WXT_REGISTRY_API_URL points there.
+    // Keep WXT's dev server off port 3000 — that's the registry web app's port.
+    // Background polls default to https://webmcp.cafe; set
+    // WXT_REGISTRY_API_URL=http://localhost:3000 to poll a dev registry.
     server: { port: 5173 },
   },
   webExt: {

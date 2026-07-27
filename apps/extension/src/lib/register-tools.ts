@@ -1,7 +1,8 @@
-import { ENGINE_VERSION, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
+import { ENGINE_VERSION } from "@robertn702/webmcp-cafe-schema";
 import { executeApiTool } from "./api-executor.js";
 import { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
 import { executeTool } from "./executor.js";
+import type { PageLoadPackages } from "./local-lookup.js";
 import type { McpResult, ModelContextLike } from "./model-context.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "./status.js";
 
@@ -9,8 +10,8 @@ type ToolExecute = (params: Record<string, unknown>) => Promise<McpResult>;
 
 /** Seams the content script fills in; tests pass fakes. */
 export interface RegistrationDeps {
-  /** Packages matching the URL — registry first, bundled fallback. */
-  loadPackages: (url: string) => Promise<CreatePackageInput[]>;
+  /** Installed packages matching the URL, or the reason nothing may register. */
+  loadPackages: (url: string) => Promise<PageLoadPackages>;
   /** Chrome's WebMCP entry point, or undefined when the API is unavailable. */
   getModelContext: () => ModelContextLike | undefined;
   /** Tool names the site declared itself (`form[toolname]`) — ours yield to them. */
@@ -33,10 +34,17 @@ export async function runRegistrationPass(
   signal: AbortSignal,
   deps: RegistrationDeps,
 ): Promise<void> {
-  const packages = await deps.loadPackages(url);
+  const { packages, blocked } = await deps.loadPackages(url);
   // Navigated away while the lookup was in flight — the newer pass owns the
   // status, so say nothing.
   if (signal.aborted) return;
+
+  if (blocked !== undefined) {
+    deps.reportStatus({
+      kind: blocked === "no-revocation-list" ? "safety-list-missing" : "storage-unreadable",
+    });
+    return;
+  }
 
   if (packages.length === 0) {
     deps.reportStatus({ kind: "no-packages" });
@@ -123,6 +131,16 @@ export async function runRegistrationPass(
         registered.push(tool.name);
         console.info(`[webmcp-cafe] Registered tool "${tool.name}"`);
       } catch (err) {
+        // `Permissions-Policy: tools=()` throws SecurityError — the SITE
+        // blocks WebMCP, so retrying the remaining tools is pointless and the
+        // status must not read as "package broken".
+        if (err instanceof DOMException && err.name === "SecurityError") {
+          console.warn(
+            `[webmcp-cafe] This site blocks WebMCP (Permissions-Policy: tools=()) — no tools can be registered here.`,
+          );
+          deps.reportStatus({ kind: "site-blocked", packageCount: packages.length });
+          return;
+        }
         console.warn(
           `[webmcp-cafe] Skipping tool "${tool.name}" — registerTool rejected (name collision with a site-registered tool?):`,
           err,

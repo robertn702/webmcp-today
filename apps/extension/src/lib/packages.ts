@@ -1,64 +1,39 @@
-import {
-  domainLookupKeys,
-  rankPackagesByUrl,
-  type CreatePackageInput,
-} from "@robertn702/webmcp-cafe-schema";
-import { definitions } from "@webmcp-cafe/definitions";
-import { fetchRegistryPackages } from "./registry-client.js";
+import { requestLocalLookup } from "./lookup-client.js";
+import type { PageLoadPackages } from "./local-lookup.js";
 
-// Curated packages bundled into the extension — used when the registry is
-// unreachable or has nothing for the current domain. reddit.com is
-// deliberately excluded: on reddit, no log line + no registered tools is the
-// signal that the registry lookup failed (see AGENTS.md).
-const BUNDLED_DOMAINS = new Set([
-  "news.ycombinator.com",
-  "github.com",
-  "en.wikipedia.org",
-  "developer.mozilla.org",
-  "npmjs.com",
-]);
+// Packages for the current page come from LOCAL storage only — the background
+// matches the install index against the URL. The bundled fallback is gone
+// from this path; an empty store means every page logs 0 matches and
+// registers nothing, which is the expected state, not a failure.
 
-const bundledPackages: CreatePackageInput[] = definitions.filter((p) =>
-  BUNDLED_DOMAINS.has(p.domain),
-);
-
-function hostnameOf(url: string): string | undefined {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return undefined;
+export async function getPackagesForUrl(url: string): Promise<PageLoadPackages> {
+  const result = await requestLocalLookup(url);
+  if (result === undefined) {
+    // Background unreachable or invalid answer — exceptional, but must not be
+    // a silent zero: the warn line is the page-console signal.
+    console.warn(
+      "[webmcp-cafe] Lookup failed — the extension background did not answer; no tools were registered.",
+    );
+    return { packages: [] };
   }
-}
 
-/**
- * Bundled packages whose domain + urlPatterns match the URL, most specific
- * first. Prefilters on the hostname's candidate `domain` keys (registrable
- * domain included) so a `*.host` urlPattern still matches on subdomains;
- * urlPatterns remain the matching authority.
- */
-function findBundledPackagesForUrl(url: string): CreatePackageInput[] {
-  const hostname = hostnameOf(url);
-  if (!hostname) return [];
-  const keys = domainLookupKeys(hostname);
-  const domainPackages = bundledPackages.filter((p) => keys.includes(p.domain));
-  return rankPackagesByUrl(domainPackages, url);
-}
+  const { packages, diagnostics } = result;
+  if (diagnostics.blocked === undefined) {
+    console.info(`[webmcp-cafe] ${packages.length} installed package(s) matched this URL`);
+  }
+  if (diagnostics.revoked > 0) {
+    console.warn(
+      `[webmcp-cafe] ${diagnostics.revoked} matching install(s) suppressed — revoked by the registry (details in the extension popup)`,
+    );
+  }
+  if (diagnostics.broken > 0) {
+    console.warn(
+      `[webmcp-cafe] ${diagnostics.broken} matching install(s) skipped — stored package body is missing or unreadable (details in the extension popup)`,
+    );
+  }
 
-/**
- * Packages for the current page: prefer the registry (verified packages for
- * this URL, already ranked server-side), falling back to the bundled curated
- * packages when the fetch fails or the registry has nothing for this
- * domain.
- */
-export async function getPackagesForUrl(url: string): Promise<CreatePackageInput[]> {
-  const registryPackages = await fetchRegistryPackages(url);
-  if (registryPackages && registryPackages.length > 0) {
-    console.info(`[webmcp-cafe] Using ${registryPackages.length} package(s) from the registry`);
-    return registryPackages;
-  }
-  const bundled = findBundledPackagesForUrl(url);
-  if (bundled.length > 0) {
-    console.info(`[webmcp-cafe] Using ${bundled.length} bundled package(s) (registry had none)`);
-  }
-  return bundled;
+  return {
+    packages,
+    ...(diagnostics.blocked !== undefined ? { blocked: diagnostics.blocked } : {}),
+  };
 }
