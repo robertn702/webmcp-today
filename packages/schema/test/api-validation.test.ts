@@ -213,7 +213,7 @@ describe("api block cross-validation", () => {
     expect(createPackageSchema.safeParse(noExtract).success).toBe(false);
   });
 
-  it("accepts a positive integer ttlSeconds, rejects zero/negative/fractional", () => {
+  it("accepts a positive integer ttlSeconds, rejects zero/negative/fractional/over-max", () => {
     // Omission is covered by the base fixture, which declares no ttlSeconds.
     const withTtl = (ttlSeconds: unknown) => {
       const c = structuredClone(base);
@@ -221,9 +221,11 @@ describe("api block cross-validation", () => {
       return createPackageSchema.safeParse(c).success;
     };
     expect(withTtl(300)).toBe(true);
+    expect(withTtl(86400)).toBe(true);
     expect(withTtl(0)).toBe(false);
     expect(withTtl(-60)).toBe(false);
     expect(withTtl(1.5)).toBe(false);
+    expect(withTtl(86401)).toBe(false);
   });
 
   it("rejects a sendAs location other than header", () => {

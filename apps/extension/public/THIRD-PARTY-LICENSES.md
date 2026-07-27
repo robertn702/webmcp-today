@@ -11,10 +11,10 @@ someone browsing the repository.
 
 ## Bundled
 
-| Package                        | Version | Licence | Source                                                    |
-| ------------------------------ | ------- | ------- | --------------------------------------------------------- |
-| `zod`                          | 4.4.3   | MIT     | https://github.com/colinhacks/zod                         |
-| `@jmespath-community/jmespath` | 1.3.0   | MPL-2.0 | https://github.com/jmespath-community/typescript-jmespath |
+| Package                        | Version                                | Licence | Source                                                    |
+| ------------------------------ | -------------------------------------- | ------- | --------------------------------------------------------- |
+| `zod`                          | `^4.0.0` (see `bun.lock` for resolved) | MIT     | https://github.com/colinhacks/zod                         |
+| `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0 | https://github.com/jmespath-community/typescript-jmespath |
 
 ### MPL-2.0 notice
 

@@ -473,4 +473,33 @@ describe("auth token TTL cache", () => {
     expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
     expect(result.content[0]?.text).toMatch(/yielded no token at "data.other"/);
   });
+
+  it("does not share a cached token across two endpoints of the same name but different path/method", async () => {
+    // Both sources are named "csrf" and fetch an endpoint named "me" — but the
+    // two api blocks give "me" different actual paths, so the cache key must
+    // include the resolved method/path, not just the symbolic endpoint name.
+    const a = withTtl(300);
+    const b = apiBlockSchema.parse({
+      ...a,
+      endpoints: { ...a.endpoints, me: { method: "GET", path: "/api/other-me.json" } },
+    });
+    const mock = vi.fn((url: string) => {
+      if (url.endsWith("/api/me.json")) {
+        return Promise.resolve(jsonResponse({ data: { modhash: "TOKEN_A" } }));
+      }
+      if (url.endsWith("/api/other-me.json")) {
+        return Promise.resolve(jsonResponse({ data: { modhash: "TOKEN_B" } }));
+      }
+      return Promise.resolve(jsonResponse({ ok: true }));
+    });
+    vi.stubGlobal("fetch", mock);
+
+    await executeApiTool("c", a, "comment", { thingId: "t3_a" });
+    await executeApiTool("c", b, "comment", { thingId: "t3_b" });
+
+    // Distinct cache entries: each api block's own "me" is fetched once, not
+    // reused from the other's cache.
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(1);
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/other-me.json"))).toHaveLength(1);
+  });
 });
