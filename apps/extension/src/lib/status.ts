@@ -12,6 +12,7 @@ export const WEBMCP_FLAG_URL = "chrome://flags/#enable-webmcp-testing";
 export const STATUS_MESSAGE_TYPE = "webmcp-cafe:page-status";
 export const POPUP_STATE_QUERY_TYPE = "webmcp-cafe:get-popup-state";
 export const UNINSTALL_MESSAGE_TYPE = "webmcp-cafe:uninstall";
+export const INSTALL_SUGGESTION_MESSAGE_TYPE = "webmcp-cafe:install-suggestion";
 
 export const pageStatusSchema = z.discriminatedUnion("kind", [
   /** No installed package matches this URL — nothing to say, no badge. */
@@ -58,6 +59,18 @@ export const popupInstallSchema = z.object({
 });
 export type PopupInstall = z.infer<typeof popupInstallSchema>;
 
+/** A registry package offered as a discovery suggestion — real id/versionId,
+ * installable through the same bridge path as any other package (no
+ * synthetic ids from a bundled fallback). */
+export const popupSuggestionSchema = z.object({
+  packageId: z.string(),
+  versionId: z.string(),
+  version: z.number().int().min(1),
+  title: z.string(),
+  domain: z.string(),
+});
+export type PopupSuggestion = z.infer<typeof popupSuggestionSchema>;
+
 export const popupStateSchema = z.object({
   /** `null` when the background has no status for the tab (e.g. the service
    * worker restarted since the page loaded). */
@@ -71,6 +84,13 @@ export const popupStateSchema = z.object({
    * "installs-vanished": the index is empty though this worker saw installs —
    * eviction/corruption. v1 recovery is manual reinstall from the registry. */
   recovery: z.enum(["index-corrupt", "installs-vanished"]).optional(),
+  /** Present only when no installed package matches the current tab — the
+   * registry's own `GET /api/packages?pageSize=6`, not a bundled fallback. */
+  suggestions: z.array(popupSuggestionSchema).optional(),
+  /** True when fetching suggestions failed (offline, registry down) —
+   * distinct from an empty `suggestions` array, which means the registry was
+   * reached and genuinely has nothing to suggest. */
+  suggestionsUnavailable: z.boolean().optional(),
 });
 export type PopupState = z.infer<typeof popupStateSchema>;
 
@@ -83,3 +103,13 @@ export type UninstallMessage = z.infer<typeof uninstallMessageSchema>;
 /** `removed` reflects a re-read of the index, not the uninstall call's own
  * outcome — a thrown uninstall may still have committed its index removal. */
 export const uninstallResponseSchema = z.object({ removed: z.boolean() });
+
+/** Popup → background: install one of the suggested packages. The response
+ * is `BridgeInstallResponse` (packages/schema/src/bridge.ts) — the popup goes
+ * through the identical install-bridge.ts logic as a page-driven install. */
+export const installSuggestionMessageSchema = z.object({
+  type: z.literal(INSTALL_SUGGESTION_MESSAGE_TYPE),
+  packageId: z.string(),
+  versionId: z.string(),
+});
+export type InstallSuggestionMessage = z.infer<typeof installSuggestionMessageSchema>;

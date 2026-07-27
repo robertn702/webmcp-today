@@ -19,6 +19,11 @@ import { isAllowedRegistryOrigin } from "./registry-origins.js";
 import { pollRevocations, readRevokedDoc } from "./revocations.js";
 import type { IndexEntry, StorageArea } from "./store-schema.js";
 
+// installPackage is exported (not just used by the switch below) so the
+// popup's suggestion installs (background.ts) go through the identical
+// fetch/hash/revocation/atomic-write path as a page-driven bridge install —
+// only the origin and the resulting `source` tag differ.
+
 // Page→extension bridge (docs/local-first-installs.md §4). The registry site
 // talks to the background over runtime.onMessageExternal; this module is the
 // trust boundary. The origin allowlist is checked first, every message is
@@ -69,7 +74,7 @@ export async function handleBridgeRequest(
     case "ping":
       return handlePing(deps);
     case "install":
-      return handleInstall(parsed.data, origin, deps);
+      return installPackage(parsed.data, origin, deps, "registry");
     case "uninstall":
       return handleUninstall(parsed.data.packageId, deps);
     case "list-installs":
@@ -88,10 +93,11 @@ async function handlePing(deps: BridgeDeps): Promise<BridgePingResponse> {
   };
 }
 
-async function handleInstall(
+export async function installPackage(
   request: BridgeInstallRequest,
   origin: string,
   deps: BridgeDeps,
+  source: IndexEntry["source"],
 ): Promise<BridgeInstallResponse> {
   const schemaState = await deps.ensureInitialized();
   if (schemaState !== "ok") return { ok: false, reason: "storage-unreadable" };
@@ -136,7 +142,7 @@ async function handleInstall(
   }
 
   try {
-    const result = await deps.store.install(raw, { source: "registry", origin });
+    const result = await deps.store.install(raw, { source, origin });
     if (!result.ok) {
       if (result.reason === "schema-unreadable") {
         return { ok: false, reason: "storage-unreadable" };

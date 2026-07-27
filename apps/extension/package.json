@@ -14,7 +14,6 @@
   "dependencies": {
     "@jmespath-community/jmespath": "1.3.0",
     "@robertn702/webmcp-cafe-schema": "workspace:*",
-    "@webmcp-cafe/definitions": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

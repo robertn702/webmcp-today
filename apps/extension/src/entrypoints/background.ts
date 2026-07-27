@@ -1,6 +1,14 @@
+import { BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-cafe-schema";
 import { defineBackground } from "wxt/utils/define-background";
 import { browser } from "wxt/browser";
-import { handleBridgeRequest, resolveInstallState } from "../lib/install-bridge.js";
+import {
+  DOMAINS_ALARM,
+  DOMAINS_POLL_MINUTES,
+  isDomainAvailable,
+  pollDomains,
+  readDomainsDoc,
+} from "../lib/domains.js";
+import { handleBridgeRequest, installPackage, resolveInstallState } from "../lib/install-bridge.js";
 import { createInstallsStore, type SchemaVersionState } from "../lib/installs-store.js";
 import { resolveLocalLookup, type LocalLookupResult } from "../lib/local-lookup.js";
 import { lookupMessageSchema } from "../lib/lookup-client.js";
@@ -12,6 +20,7 @@ import {
   readRevokedDoc,
 } from "../lib/revocations.js";
 import {
+  installSuggestionMessageSchema,
   popupStateQuerySchema,
   statusMessageSchema,
   uninstallMessageSchema,
@@ -20,6 +29,7 @@ import {
   type PopupState,
 } from "../lib/status.js";
 import { localStorageArea } from "../lib/storage.js";
+import { fetchSuggestions } from "../lib/suggestions.js";
 import { INDEX_KEY, indexSchema, type InstallIndex } from "../lib/store-schema.js";
 
 // Page loads resolve against LOCAL storage only (local-lookup.ts); the env-var
@@ -58,6 +68,7 @@ export default defineBackground(() => {
 
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === REVOCATIONS_ALARM) void pollNow();
+    if (alarm.name === DOMAINS_ALARM) void pollDomainsNow();
   });
 
   browser.storage.onChanged.addListener((changes, areaName) => {
@@ -78,7 +89,7 @@ export default defineBackground(() => {
       const tabId = sender.tab?.id;
       if (tabId !== undefined) {
         tabStatus.set(tabId, status.data.status);
-        void applyBadge(tabId, status.data.status);
+        void applyBadge(tabId, status.data.status, status.data.hostname);
       }
       return;
     }
@@ -91,6 +102,12 @@ export default defineBackground(() => {
     const uninstall = uninstallMessageSchema.safeParse(message);
     if (uninstall.success) {
       void handleUninstall(uninstall.data.packageId).then(sendResponse);
+      return true;
+    }
+
+    const installSuggestion = installSuggestionMessageSchema.safeParse(message);
+    if (installSuggestion.success) {
+      void handleInstallSuggestion(installSuggestion.data).then(sendResponse);
       return true;
     }
 
@@ -122,11 +139,23 @@ async function bootstrap(): Promise<void> {
   if (!existing) {
     browser.alarms.create(REVOCATIONS_ALARM, { periodInMinutes: REVOCATION_POLL_MINUTES });
   }
-  await pollNow();
+  const existingDomains = await browser.alarms.get(DOMAINS_ALARM);
+  if (!existingDomains) {
+    browser.alarms.create(DOMAINS_ALARM, { periodInMinutes: DOMAINS_POLL_MINUTES });
+  }
+  await Promise.all([pollNow(), pollDomainsNow()]);
 }
 
 async function pollNow(): Promise<void> {
   await pollRevocations({
+    area: localStorageArea,
+    fetchFn: (url) => fetch(url),
+    origin: REGISTRY_ORIGIN,
+  });
+}
+
+async function pollDomainsNow(): Promise<void> {
+  await pollDomains({
     area: localStorageArea,
     fetchFn: (url) => fetch(url),
     origin: REGISTRY_ORIGIN,
@@ -201,6 +230,19 @@ async function buildPopupState(): Promise<PopupState> {
   }
   installs.sort((a, b) => Number(b.matchesTab) - Number(a.matchesTab));
 
+  // Discovery suggestions replace the old bundled fallback: only fetched (and
+  // only ever shown) once nothing installed already covers this tab.
+  let suggestions: PopupState["suggestions"];
+  let suggestionsUnavailable: PopupState["suggestionsUnavailable"];
+  if (matchedIds.size === 0) {
+    const result = await fetchSuggestions({
+      fetchFn: (url) => fetch(url),
+      origin: REGISTRY_ORIGIN,
+    });
+    if (result.ok) suggestions = result.packages;
+    else suggestionsUnavailable = true;
+  }
+
   return {
     status,
     hostname,
@@ -209,7 +251,29 @@ async function buildPopupState(): Promise<PopupState> {
     ...(revokedDoc !== undefined ? { safetyListFetchedAt: revokedDoc.fetchedAt } : {}),
     installs,
     ...(recovery !== undefined ? { recovery } : {}),
+    ...(suggestions !== undefined ? { suggestions } : {}),
+    ...(suggestionsUnavailable !== undefined ? { suggestionsUnavailable } : {}),
   };
+}
+
+async function handleInstallSuggestion(request: { packageId: string; versionId: string }) {
+  return installPackage(
+    {
+      v: BRIDGE_PROTOCOL_VERSION,
+      type: "install",
+      packageId: request.packageId,
+      versionId: request.versionId,
+    },
+    REGISTRY_ORIGIN,
+    {
+      store,
+      area: localStorageArea,
+      fetchFn: (url) => fetch(url),
+      extensionVersion: browser.runtime.getManifest().version,
+      ensureInitialized,
+    },
+    "suggested",
+  );
 }
 
 async function handleUninstall(packageId: string): Promise<{ removed: boolean }> {
@@ -230,19 +294,34 @@ async function handleUninstall(packageId: string): Promise<{ removed: boolean }>
 
 /** "!" for every state that needs the user's attention (flag off, safety list
  * missing, storage unreadable, site blocks WebMCP), the tool count when
- * registration worked, nothing otherwise. */
-async function applyBadge(tabId: number, status: PageStatus): Promise<void> {
+ * registration worked, a "•" discovery hint when nothing is installed here
+ * but the registry has packages for this domain, nothing otherwise. */
+async function applyBadge(tabId: number, status: PageStatus, hostname: string): Promise<void> {
   const attention =
     status.kind === "webmcp-unavailable" ||
     status.kind === "safety-list-missing" ||
     status.kind === "storage-unreadable" ||
     status.kind === "site-blocked";
-  const text = attention
-    ? "!"
-    : status.kind === "registered" && status.toolNames.length > 0
-      ? String(status.toolNames.length)
-      : "";
-  const color = attention ? "#b45309" : "#3f6212";
+
+  let text: string;
+  let color: string;
+  if (attention) {
+    text = "!";
+    color = "#b45309";
+  } else if (status.kind === "registered" && status.toolNames.length > 0) {
+    text = String(status.toolNames.length);
+    color = "#3f6212";
+  } else if (
+    status.kind === "no-packages" &&
+    isDomainAvailable(await readDomainsDoc(localStorageArea), hostname)
+  ) {
+    text = "\u2022";
+    color = "#1d4ed8";
+  } else {
+    text = "";
+    color = "#3f6212";
+  }
+
   try {
     await browser.action.setBadgeText({ tabId, text });
     if (text) await browser.action.setBadgeBackgroundColor({ tabId, color });
