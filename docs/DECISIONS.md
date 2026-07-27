@@ -23,7 +23,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
 - 2026-07-24 — **Per-tool verification was replaced by the package-install model.**
   Dropped `configs` / `tools` / `verification_snapshots` / `votes` and the `yolo` param
-  in favour of `webmcp_definitions` / `definition_versions` (append-only) / `installs`.
+  in favour of `packages` / `package_versions` (append-only) / `installs`.
   A reviewer gate on individual tools scales with the corpus and stalls publishing; the
   unit of trust is a package a user chose to install. Open-publish for tier 1 follows
   from this — a review queue is a tier-2/3 problem (`docs/BACKLOG.md`).
@@ -38,7 +38,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   `organization-api-keys.tsx` is deliberately not vendored (no org plugin server-side).
 
 - 2026-07-24 — **`minEngine` is a positive-integer capability level, and it lives on
-  `definition_versions`, not `webmcp_definitions`.** The format has no patch releases,
+  `package_versions`, not `packages`.** The format has no patch releases,
   so semver's extra dimensions were meaningless — it's compared with plain `>=` against
   `ENGINE_VERSION` (`packages/schema/src/budgets.ts`). Version-scoped because an engine
   requirement is a property of a version's _content_ (a version adding an `api` block
@@ -140,7 +140,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   OCSP's flaw wasn't the concept but failing open under a network condition the
   attacker controls. **Recorded now, implemented at step 4.**
 
-- 2026-07-26 — **`webmcp_definitions.tags` dropped.** Nothing read it: no query
+- 2026-07-26 — **`packages.tags` dropped.** Nothing read it: no query
   filtered, sorted or searched on it, no UI rendered it, the extension never looked at
   it. Discovery is domain + urlPattern matching; ranking is install count + pattern
   specificity. Re-addable later if a browse facet needs one — a nullable jsonb column

@@ -71,3 +71,7 @@ Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
 - Bundled fallback packages come from `@webmcp-cafe/definitions`
   (`packages/definitions`), which is also the seed source for the registry
   (`apps/web/scripts/seed.ts`).
+- `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and
+  lists the deps the build inlines (currently zod + the MPL-2.0 jmespath).
+  Update it whenever bundled dependencies change — including if a tree-shaken
+  dep (e.g. `@noble/hashes`) ever starts reaching `.output/`.

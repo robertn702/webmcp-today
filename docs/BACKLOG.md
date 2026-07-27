@@ -128,12 +128,6 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   shreddit search). (apps/extension/src/lib/api-executor.ts TODO;
   docs/api-execution-model.md → "GraphQL support")
 
-### Schema
-
-- **Output-projection language** — `returns` grammar is dot-paths + `[]` +
-  `{a,b}` pickers; anything richer is a deferred decision.
-  (docs/api-execution-model.md → Open questions)
-
 ### Design questions (need a decision before building)
 
 - **Per-user/per-model output budget** — hard 1.5K truncation removed for v1;
