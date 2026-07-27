@@ -80,7 +80,7 @@ export default function ExtensionPage() {
 
       <p className="mt-10 text-sm text-muted-foreground">
         In the meantime,{" "}
-        <Link href="/configs" className="text-foreground underline underline-offset-4">
+        <Link href="/packages" className="text-foreground underline underline-offset-4">
           browse the registry
         </Link>{" "}
         to see what packages exist, or{" "}

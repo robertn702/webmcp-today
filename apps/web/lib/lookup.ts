@@ -1,12 +1,12 @@
 import {
   domainLookupKeys,
-  rankConfigsByUrl,
-  type WebMcpConfig,
+  rankPackagesByUrl,
+  type WebMcpPackage,
 } from "@robertn702/webmcp-cafe-schema";
-import { webmcpDefinitions } from "@webmcp-cafe/db";
+import { packages } from "@webmcp-cafe/db";
 import { inArray } from "drizzle-orm";
-import { getInstalledConfigs, hydrateConfigs } from "./configs-repo";
 import { db } from "./db";
+import { hydratePackages } from "./packages-repo";
 
 function hostnameOf(url: string): string | null {
   try {
@@ -17,24 +17,18 @@ function hostnameOf(url: string): string | null {
 }
 
 /**
- * Definitions matching a page URL at their latest version, most specific first.
+ * Packages matching a page URL at their latest version, most specific first.
  * Prefilters on `domain` (a lookup index) across the hostname's candidate keys
- * so a config keyed to a registrable domain still serves its own `*.host`
+ * so a package keyed to a registrable domain still serves its own `*.host`
  * urlPattern on subdomains; urlPatterns remain the matching authority.
  */
-export async function lookupConfigs(url: string): Promise<WebMcpConfig[]> {
+export async function lookupPackages(url: string): Promise<WebMcpPackage[]> {
   const hostname = hostnameOf(url);
   if (!hostname) return [];
   const rows = await db
     .select()
-    .from(webmcpDefinitions)
-    .where(inArray(webmcpDefinitions.domain, domainLookupKeys(hostname)));
-  const hydrated = await hydrateConfigs(rows);
-  return rankConfigsByUrl(hydrated, url);
-}
-
-/** A signed-in user's installed configs (pinned versions) matching a page URL. */
-export async function lookupInstalledConfigs(userId: string, url: string): Promise<WebMcpConfig[]> {
-  const installed = await getInstalledConfigs(userId);
-  return rankConfigsByUrl(installed, url);
+    .from(packages)
+    .where(inArray(packages.domain, domainLookupKeys(hostname)));
+  const hydrated = await hydratePackages(rows);
+  return rankPackagesByUrl(hydrated, url);
 }

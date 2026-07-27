@@ -1,32 +1,32 @@
-import type { WebMcpConfig } from "@robertn702/webmcp-cafe-schema";
-import type { definitionVersions, webmcpDefinitions } from "@webmcp-cafe/db";
+import type { WebMcpPackage } from "@robertn702/webmcp-cafe-schema";
+import type { packages, packageVersions } from "@webmcp-cafe/db";
 
-type DefinitionRow = typeof webmcpDefinitions.$inferSelect;
-type VersionRow = typeof definitionVersions.$inferSelect;
+type PackageRow = typeof packages.$inferSelect;
+type VersionRow = typeof packageVersions.$inferSelect;
 
-/** Serialize a definition + one of its versions to the public WebMcpConfig shape. */
-export function serializeConfig(
-  definition: DefinitionRow,
+/** Serialize a package + one of its versions to the public WebMcpPackage shape. */
+export function serializePackage(
+  pkg: PackageRow,
   version: VersionRow,
   opts: { contributorName?: string; installCount?: number },
-): WebMcpConfig {
+): WebMcpPackage {
   return {
-    id: definition.id,
+    id: pkg.id,
     versionId: version.id,
-    domain: definition.domain,
+    domain: pkg.domain,
     urlPatterns: version.urlPatterns,
-    ...(definition.pageType ? { pageType: definition.pageType } : {}),
-    title: definition.title,
-    description: definition.description,
+    ...(pkg.pageType ? { pageType: pkg.pageType } : {}),
+    title: pkg.title,
+    description: pkg.description,
     tools: version.tools,
     ...(version.api ? { api: version.api } : {}),
     ...(version.apiContentHash ? { apiContentHash: version.apiContentHash } : {}),
     ...(version.minEngine ? { minEngine: version.minEngine } : {}),
     ...(version.changelog ? { changelog: version.changelog } : {}),
-    contributor: opts.contributorName ?? definition.contributorId,
+    contributor: opts.contributorName ?? pkg.contributorId,
     version: version.version,
     ...(opts.installCount !== undefined ? { installCount: opts.installCount } : {}),
-    createdAt: definition.createdAt.toISOString(),
-    updatedAt: definition.updatedAt.toISOString(),
+    createdAt: pkg.createdAt.toISOString(),
+    updatedAt: pkg.updatedAt.toISOString(),
   };
 }

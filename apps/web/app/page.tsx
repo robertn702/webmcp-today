@@ -10,7 +10,7 @@ import {
 } from "@/components/landing/mode-flows";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
-import { listConfigs } from "@/lib/configs-repo";
+import { listPackages } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 // source — nothing on this site works without the extension installed.
 const EXTENSION_HREF = "/extension";
 
-type Stats = { configs: number; tools: number; installs: number };
+type Stats = { packages: number; tools: number; installs: number };
 
 /**
  * Registry counters for the hero. One page fetch, wide enough to cover the
@@ -28,12 +28,12 @@ type Stats = { configs: number; tools: number; installs: number };
  */
 async function loadStats(): Promise<Stats | null> {
   try {
-    const { configs, total } = await listConfigs({ page: 1, pageSize: 100 });
-    if (configs.length < total) return { configs: total, tools: 0, installs: 0 };
+    const { packages, total } = await listPackages({ page: 1, pageSize: 100 });
+    if (packages.length < total) return { packages: total, tools: 0, installs: 0 };
     return {
-      configs: total,
-      tools: configs.reduce((sum, config) => sum + config.tools.length, 0),
-      installs: configs.reduce((sum, config) => sum + (config.installCount ?? 0), 0),
+      packages: total,
+      tools: packages.reduce((sum, pkg) => sum + pkg.tools.length, 0),
+      installs: packages.reduce((sum, pkg) => sum + (pkg.installCount ?? 0), 0),
     };
   } catch {
     return null;
@@ -80,7 +80,7 @@ export default async function LandingPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
-                <Link href="/configs">
+                <Link href="/packages">
                   Browse the registry
                   <ArrowRight className="size-4" />
                 </Link>
@@ -93,7 +93,7 @@ export default async function LandingPage() {
 
             {stats ? (
               <dl className="cafe-rise mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t pt-6 [animation-delay:340ms]">
-                <Stat label="packages published" value={stats.configs} />
+                <Stat label="packages published" value={stats.packages} />
                 {stats.tools > 0 ? <Stat label="tools available" value={stats.tools} /> : null}
                 {stats.installs > 0 ? <Stat label="installs" value={stats.installs} /> : null}
               </dl>

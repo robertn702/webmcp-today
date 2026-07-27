@@ -9,17 +9,17 @@ import { Button } from "@/components/ui/button";
 // current install state, so the labels can't reflect reality — it needs the
 // caller to pass install state (or fetch it) to render the correct single action.
 
-/** POST /api/configs/:id/install response — see app/api/configs/[id]/install/route.ts. */
+/** PUT /api/packages/:id/install response — see app/api/packages/[id]/install/route.ts. */
 const installResponseSchema = z.object({ version: z.number() });
 
 type Status = { text: string; href?: string };
 
-export function InstallButton({ configId }: { configId: string }) {
+export function InstallButton({ packageId }: { packageId: string }) {
   const [status, setStatus] = useState<Status | null>(null);
 
   async function install() {
-    const res = await fetch(`/api/configs/${configId}/install`, {
-      method: "POST",
+    const res = await fetch(`/api/packages/${packageId}/install`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
@@ -37,7 +37,7 @@ export function InstallButton({ configId }: { configId: string }) {
   }
 
   async function uninstall() {
-    const res = await fetch(`/api/configs/${configId}/install`, { method: "DELETE" });
+    const res = await fetch(`/api/packages/${packageId}/install`, { method: "DELETE" });
     if (res.ok) setStatus({ text: "Uninstalled" });
     else if (res.status === 401) setStatus({ text: "Sign in to manage installs", href: "/auth" });
     else if (res.status === 404) setStatus({ text: "Not installed" });

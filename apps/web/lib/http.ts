@@ -30,19 +30,27 @@ export async function parseBody<T>(
 }
 
 /**
- * The terms a submission was accepted under. API publishers never see the
- * `/submit` page, so every accepted submission points back at them: a `terms`
- * field for agents that read the body, a `Link` header for the ones that don't.
- * Derived from the request so previews and localhost link to themselves.
+ * The terms a submission was accepted under, plus a `Location` header pointing
+ * at the created resource. API publishers never see the `/submit` page, so
+ * every accepted submission points back at the terms: a `terms` field for
+ * agents that read the body, a `Link` header for the ones that don't. Both are
+ * derived from the request so previews and localhost link to themselves.
  */
 export function acceptedSubmission(
   request: Request,
   body: Record<string, string | number>,
+  location: string,
 ): NextResponse {
   const terms = new URL("/terms", request.url).toString();
   return NextResponse.json(
     { ...body, terms },
-    { status: 201, headers: { Link: `<${terms}>; rel="terms-of-service"` } },
+    {
+      status: 201,
+      headers: {
+        Link: `<${terms}>; rel="terms-of-service"`,
+        Location: new URL(location, request.url).toString(),
+      },
+    },
   );
 }
 

@@ -4,7 +4,7 @@ import { db } from "./db";
 
 export type RevocationRow = {
   id: number;
-  definitionId: string;
+  packageId: string;
   versionId: string | null;
   reason: string;
   revokedAt: Date;
@@ -25,7 +25,7 @@ export function listRevocationsSince(
   return db
     .select({
       id: revocations.id,
-      definitionId: revocations.definitionId,
+      packageId: revocations.packageId,
       versionId: revocations.versionId,
       reason: revocations.reason,
       revokedAt: revocations.revokedAt,

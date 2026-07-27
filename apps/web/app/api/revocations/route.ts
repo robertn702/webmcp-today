@@ -7,7 +7,7 @@ import { listRevocationsSince } from "@/lib/revocations-repo";
  * first, plus the cursor to send next time.
  *
  * Public and unauthenticated by design: the request carries a cursor and
- * nothing else, so polling it reveals no identity and no URL. Once config
+ * nothing else, so polling it reveals no identity and no URL. Once package
  * bodies live on the client's disk this feed is the registry's only remaining
  * lever, so every client has to be able to read it — one shipped without it can
  * never be reached later.
@@ -28,7 +28,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const rows = await listRevocationsSince(cursor);
   const entries: RevocationEntry[] = rows.map((row) => ({
     id: row.id,
-    definitionId: row.definitionId,
+    packageId: row.packageId,
     versionId: row.versionId,
     reason: row.reason,
     revokedAt: row.revokedAt.toISOString(),

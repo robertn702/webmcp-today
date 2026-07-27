@@ -1,7 +1,7 @@
 import { definitions } from "@webmcp-cafe/definitions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { POST as postVersion } from "@/app/api/configs/[id]/versions/route";
-import { POST as postConfig } from "@/app/api/configs/route";
+import { POST as postVersion } from "@/app/api/packages/[id]/versions/route";
+import { POST as postPackage } from "@/app/api/packages/route";
 
 // Publishing is where the submission grant attaches, and an agent POSTing to
 // the API never sees the notice on /submit. So both publish routes have to hand
@@ -18,19 +18,19 @@ vi.mock("@/lib/db", () => ({
   db: {
     select: () => ({
       from: () => ({
-        where: () => ({ limit: () => Promise.resolve([{ id: "def-1", contributorId: "user-1" }]) }),
+        where: () => ({ limit: () => Promise.resolve([{ id: "pkg-1", contributorId: "user-1" }]) }),
       }),
     }),
   },
 }));
 
 vi.mock("@/lib/mutations", () => ({
-  insertDefinition: () => Promise.resolve({ definitionId: "def-1" }),
+  insertPackage: () => Promise.resolve({ packageId: "pkg-1" }),
   publishVersion: () => Promise.resolve({ versionId: "ver-2", version: 2 }),
 }));
 
-const config = definitions[0];
-if (!config) throw new Error("expected at least one curated definition to publish in this test");
+const pkg = definitions[0];
+if (!pkg) throw new Error("expected at least one curated definition to publish in this test");
 
 function post(url: string, body: unknown): Request {
   return new Request(url, {
@@ -45,30 +45,34 @@ describe("publish routes — submission terms", () => {
     state.userId = "user-1";
   });
 
-  it("returns the terms alongside a new definition", async () => {
-    const response = await postConfig(post("https://webmcp.cafe/api/configs", config));
+  it("returns the terms alongside a new package", async () => {
+    const response = await postPackage(post("https://webmcp.cafe/api/packages", pkg));
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
       '<https://webmcp.cafe/terms>; rel="terms-of-service"',
     );
+    expect(response.headers.get("Location")).toBe("https://webmcp.cafe/api/packages/pkg-1");
     await expect(response.json()).resolves.toEqual({
-      id: "def-1",
+      id: "pkg-1",
       terms: "https://webmcp.cafe/terms",
     });
   });
 
   it("returns the terms alongside a new version", async () => {
     const response = await postVersion(
-      post("https://webmcp.cafe/api/configs/def-1/versions", {
-        urlPatterns: config.urlPatterns,
-        tools: config.tools,
-        api: config.api,
+      post("https://webmcp.cafe/api/packages/pkg-1/versions", {
+        urlPatterns: pkg.urlPatterns,
+        tools: pkg.tools,
+        api: pkg.api,
       }),
-      { params: Promise.resolve({ id: "def-1" }) },
+      { params: Promise.resolve({ id: "pkg-1" }) },
     );
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
       '<https://webmcp.cafe/terms>; rel="terms-of-service"',
+    );
+    expect(response.headers.get("Location")).toBe(
+      "https://webmcp.cafe/api/packages/pkg-1/versions/ver-2",
     );
     await expect(response.json()).resolves.toEqual({
       versionId: "ver-2",
@@ -78,7 +82,7 @@ describe("publish routes — submission terms", () => {
   });
 
   it("links the terms of the host that accepted the submission", async () => {
-    const response = await postConfig(post("http://localhost:3000/api/configs", config));
+    const response = await postPackage(post("http://localhost:3000/api/packages", pkg));
     expect(response.headers.get("Link")).toBe(
       '<http://localhost:3000/terms>; rel="terms-of-service"',
     );
