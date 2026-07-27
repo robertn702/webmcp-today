@@ -53,10 +53,7 @@ export async function updateDefinitionMeta(
   meta: UpdateDefinitionMetaInput,
 ): Promise<void> {
   if (Object.keys(meta).length === 0) return;
-  await db
-    .update(webmcpDefinitions)
-    .set({ ...meta, updatedAt: new Date() })
-    .where(eq(webmcpDefinitions.id, definitionId));
+  await db.update(webmcpDefinitions).set(meta).where(eq(webmcpDefinitions.id, definitionId));
 }
 
 /** Append-only: insert the next version for an existing definition.
@@ -125,7 +122,7 @@ export async function installDefinition(
     .values({ userId, definitionId, versionId })
     .onConflictDoUpdate({
       target: [installs.userId, installs.definitionId],
-      set: { versionId, updatedAt: new Date() },
+      set: { versionId },
     });
 }
 
@@ -145,7 +142,7 @@ export async function updateInstallVersion(
 ): Promise<boolean> {
   const updated = await db
     .update(installs)
-    .set({ versionId, updatedAt: new Date() })
+    .set({ versionId })
     .where(and(eq(installs.userId, userId), eq(installs.definitionId, definitionId)))
     .returning({ userId: installs.userId });
   return updated.length > 0;

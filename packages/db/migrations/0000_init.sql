@@ -1,5 +1,7 @@
 CREATE SCHEMA "auth";
 --> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS "moddatetime";
+--> statement-breakpoint
 CREATE TABLE "auth"."api_keys" (
 	"id" text PRIMARY KEY NOT NULL,
 	"config_id" text DEFAULT 'default' NOT NULL,
@@ -128,4 +130,11 @@ ALTER TABLE "revocations" ADD CONSTRAINT "revocations_version_id_definition_vers
 ALTER TABLE "revocations" ADD CONSTRAINT "revocations_revoked_by_users_id_fk" FOREIGN KEY ("revoked_by") REFERENCES "auth"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "webmcp_definitions" ADD CONSTRAINT "webmcp_definitions_contributor_id_users_id_fk" FOREIGN KEY ("contributor_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "idx_definition_versions_definition_id" ON "definition_versions" USING btree ("definition_id");--> statement-breakpoint
-CREATE INDEX "idx_webmcp_definitions_domain" ON "webmcp_definitions" USING btree ("domain");
+CREATE INDEX "idx_webmcp_definitions_domain" ON "webmcp_definitions" USING btree ("domain");--> statement-breakpoint
+CREATE TRIGGER "mdt_api_keys" BEFORE UPDATE ON "auth"."api_keys" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_accounts" BEFORE UPDATE ON "auth"."accounts" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_sessions" BEFORE UPDATE ON "auth"."sessions" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_users" BEFORE UPDATE ON "auth"."users" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_verifications" BEFORE UPDATE ON "auth"."verifications" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_installs" BEFORE UPDATE ON "installs" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
+CREATE TRIGGER "mdt_webmcp_definitions" BEFORE UPDATE ON "webmcp_definitions" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");
