@@ -6,23 +6,23 @@ schema changes.
 ## Registry tables (app-owned)
 
 Package-install model: trust is install count, not per-tool verification. There is no
-snapshot table — `definition_versions` rows are themselves the served truth.
+snapshot table — `package_versions` rows are themselves the served truth.
 
 These tables are in `public`; `users` below is the cross-schema `auth.users` (see the
 next section). Mermaid entity names can't carry the qualifier, so the FK notes do.
 
 ```mermaid
 erDiagram
-    users ||--o{ webmcp_definitions : "contributes (contributor_id)"
+    users ||--o{ packages : "contributes (contributor_id)"
     users ||--o{ installs : installs
-    webmcp_definitions ||--o{ definition_versions : "publishes (append-only, cascade)"
-    webmcp_definitions ||--o{ installs : "has (cascade)"
-    definition_versions ||--o{ installs : "pinned to (version_id)"
-    webmcp_definitions ||--o{ revocations : "revoked by (cascade)"
-    definition_versions ||--o{ revocations : "revoked at (version_id, nullable)"
+    packages ||--o{ package_versions : "publishes (append-only, cascade)"
+    packages ||--o{ installs : "has (cascade)"
+    package_versions ||--o{ installs : "pinned to (version_id)"
+    packages ||--o{ revocations : "revoked by (cascade)"
+    package_versions ||--o{ revocations : "revoked at (version_id, nullable)"
     users ||--o{ revocations : "revokes (revoked_by)"
 
-    webmcp_definitions {
+    packages {
         uuid id PK
         text domain "site key: registrable domain or specific host, idx"
         text page_type
@@ -33,10 +33,10 @@ erDiagram
         timestamptz updated_at
     }
 
-    definition_versions {
+    package_versions {
         uuid id PK
-        uuid definition_id FK "-> webmcp_definitions.id, idx"
-        int version "uq: definition_id+version"
+        uuid package_id FK "-> packages.id, idx"
+        int version "uq: package_id+version"
         jsonb url_patterns "string[] — Chrome @match style, e.g. *://*.wikipedia.org/wiki/*"
         jsonb tools "ToolDescriptor[] — matches zod schema"
         jsonb api "ApiBlock, nullable — tier-1 API execution surface (docs/api-execution-model.md)"
@@ -47,16 +47,16 @@ erDiagram
 
     installs {
         text user_id PK,FK "-> auth.users.id"
-        uuid definition_id PK,FK "-> webmcp_definitions.id"
-        uuid version_id FK "-> definition_versions.id, version the user is pinned to"
+        uuid package_id PK,FK "-> packages.id"
+        uuid version_id FK "-> package_versions.id, version the user is pinned to"
         timestamptz created_at
         timestamptz updated_at
     }
 
     revocations {
         bigserial id PK "monotonic — doubles as the client's poll cursor"
-        uuid definition_id FK "-> webmcp_definitions.id (cascade)"
-        uuid version_id FK "-> definition_versions.id, NULL = the whole package"
+        uuid package_id FK "-> packages.id (cascade)"
+        uuid version_id FK "-> package_versions.id, NULL = the whole package"
         text reason "short, shown to the user"
         timestamptz revoked_at
         text revoked_by FK "-> auth.users.id"
@@ -147,28 +147,28 @@ erDiagram
 
 ## Reading notes
 
-- **Served truth:** `definition_versions` rows directly — no separate snapshot table.
-  Browse/fresh lookup serves `max(version)` per definition. Installed users stay pinned
-  to `installs.version_id` until they explicitly call the update endpoint (npm-style, no
+- **Served truth:** `package_versions` rows directly — no separate snapshot table.
+  Browse/fresh lookup serves `max(version)` per package. Installed users stay pinned
+  to `installs.version_id` until they explicitly move the pin (npm-style, no
   auto-update); rollback is just setting `version_id` back to an older version.
 - **Append-only versions:** publishing a new version never mutates or deletes an old one.
-  `webmcp_definitions` (title/description/domain) is the one mutable row per
+  `packages` (title/description/domain) is the one mutable row per
   package and is edited independently of publishing a version. `minEngine` lives on
-  `definition_versions`, not the definition, since it's a property of a version's
+  `package_versions`, not the package, since it's a property of a version's
   content.
 - **No `(domain, url_pattern)` uniqueness — by design.** Packages are opinions, not
   registrations: rival packages may target the same site. Install counts + pattern
-  specificity rank them at lookup time (`rankConfigsByUrl` in `@robertn702/webmcp-cafe-schema`);
+  specificity rank them at lookup time (`rankPackagesByUrl` in `@robertn702/webmcp-cafe-schema`);
   an abandoned package never blocks a fresh replacement.
-- **Derived trust:** install count is `COUNT(*) ... GROUP BY definition_id` on `installs`,
+- **Derived trust:** install count is `COUNT(*) ... GROUP BY package_id` on `installs`,
   computed at query time — no denormalized counter in v1.
 - **`installs` does double duty:** `WHERE user_id = ?` drives what the extension should
   fetch for a signed-in user (with `version_id` saying which version); `GROUP BY
-definition_id` drives the trust signal.
+package_id` drives the trust signal.
 - **`revocations` is append-only and read-only over HTTP.** Served by
   `GET /api/revocations?since=<cursor>` (public, `WHERE id > cursor ORDER BY id`); writes
   are hand-run SQL in v1 — there is no admin role and no write endpoint. `id` is a
   `bigserial` rather than a random uuid precisely because it is that cursor. It exists
-  for the local-install model (`docs/local-first-installs.md` §5): once config bodies
+  for the local-install model (`docs/local-first-installs.md` §5): once package bodies
   live on the client's disk, this feed is the only lever the registry keeps after
   install.

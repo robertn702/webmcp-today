@@ -1,8 +1,8 @@
 # ☕ WebMCP Cafe
 
-Community registry of **WebMCP tool configs** injected into sites that haven't
+Community registry of **WebMCP tool packages** injected into sites that haven't
 implemented WebMCP themselves — Greasyfork for the agentic web. Humans and agents
-author declarative configs that teach AI agents how to operate a site; an
+author declarative packages that teach AI agents how to operate a site; an
 extension (or MCP server) delivers them. **Agents teaching agents.**
 
 Live at `webmcp.cafe` (deployed; domain goes live once the Namecheap nameservers
@@ -14,11 +14,11 @@ and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
 
 | Path              | What                                                                     |
 | ----------------- | ------------------------------------------------------------------------ |
-| `packages/schema` | `@robertn702/webmcp-cafe-schema` — zod config format (published)         |
+| `packages/schema` | `@robertn702/webmcp-cafe-schema` — zod package format (published)        |
 | `packages/db`     | Drizzle + Neon schema and client                                         |
 | `packages/mcp`    | `@robertn702/webmcp-cafe-mcp` — MCP server over the REST API (published) |
 | `apps/web`        | Next.js registry UI + public REST API                                    |
-| `apps/extension`  | WXT extension: config lookup + WebMCP tool injection                     |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                    |
 
 ## Quickstart
 
@@ -29,7 +29,7 @@ bun run typecheck && bun run lint && bun run test
 # web (needs apps/web/.env — see .env.example)
 cd packages/db && bun run db:migrate   # apply migrations to Neon
 cd apps/web && bun run dev             # http://localhost:3000
-bun run scripts/seed.ts                # optional: seed the 5 starter configs
+bun run scripts/seed.ts                # optional: seed the 5 starter packages
 
 # extension (Chrome 149+ with chrome://flags/#enable-webmcp-testing)
 cd apps/extension && bun run dev
@@ -37,21 +37,20 @@ cd apps/extension && bun run dev
 
 ## REST API
 
-- `GET /api/configs/lookup?url=…[&installed=true]` — configs for a page URL,
-  most-specific first, at each definition's latest version; `installed=true`
-  (auth required) instead serves the caller's installed configs pinned to
-  their installed versions
-- `GET/POST /api/configs`, `GET/PATCH /api/configs/:id` — browse, submit
+- `GET /api/packages/lookup?url=…` — packages for a page URL, most-specific
+  first, at each package's latest version
+- `GET/POST /api/packages`, `GET/PATCH /api/packages/:id` — browse, submit
   (session or `Authorization: Bearer <api key>`), edit metadata (owner)
-- `POST /api/configs/:id/versions` — publish a new version (owner; versions
-  are append-only)
+- `GET /api/packages/:id/versions`, `POST /api/packages/:id/versions` — list
+  versions, publish a new one (owner; versions are append-only)
 - Both publish routes carry the submission grant in
   [the terms](https://webmcp.cafe/terms) and echo it back on `201` as a `terms`
-  field plus a `Link: …; rel="terms-of-service"` header
-- `POST/DELETE /api/configs/:id/install`, `POST /api/configs/:id/update` —
-  install/uninstall (pinned to a version) and move the pin (update or
-  rollback); install count is the trust signal
-- `GET /api/stats`
+  field, a `Link: …; rel="terms-of-service"` header, and a `Location` header
+- `PUT/DELETE /api/packages/:id/install` — set the caller's install pin
+  (idempotent: creates it if absent, moves it if present — also how rollback
+  works) and remove it; install count is the trust signal
+- `GET /api/installs` — the caller's pinned packages (auth required)
+- `GET /api/stats`, `GET /api/revocations?since=…`
 
 ## Development
 
@@ -70,7 +69,7 @@ cp apps/web/.env.example apps/web/.env   # then fill real values
 bun run --filter @webmcp-cafe/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon
 # schema changes: bun run --filter @webmcp-cafe/db db:generate && db:migrate (db:push for quick prototyping)
 
-bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter configs (0 installs)
+bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter packages (0 installs)
 ```
 
 **Running locally:**
@@ -88,8 +87,8 @@ bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:see
 Split, so the pieces worth adopting stay permissive:
 
 - **AGPL-3.0-only** — the server: `apps/web` and `packages/db` (root `LICENSE`). Run a modified copy as a network service and you owe your users the source.
-- **MIT** — everything built to be adopted freely: `packages/schema` (config format), `packages/mcp` (MCP server), `packages/definitions` (curated configs), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
+- **MIT** — everything built to be adopted freely: `packages/schema` (package format), `packages/mcp` (MCP server), `packages/definitions` (curated packages), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
 
-Community-submitted configs are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.cafe/terms) (`apps/web/app/(registry)/terms`). `packages/definitions` is the first-party exception: it ships as MIT source.
+Community-submitted packages are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.cafe/terms) (`apps/web/app/(registry)/terms`). `packages/definitions` is the first-party exception: it ships as MIT source.
 
-Executor and config format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).
+Executor and package format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).

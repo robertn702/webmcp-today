@@ -29,10 +29,10 @@ removes the structured path.
 
 Realistic tail risk: provenance marking at stable — agents rank or filter
 injected tools below first-party. That degrades rather than kills; official
-tools win ties, community configs become second-class. Worth designing for
+tools win ties, community packages become second-class. Worth designing for
 regardless (e.g. don't build UI that assumes parity with site-registered tools).
 
-Fallback if registration does break: the config format's DOM executor doesn't
+Fallback if registration does break: the package format's DOM executor doesn't
 need WebMCP as transport — an extension can still drive the page for an agent
 through its own surface (side panel, or the WebMCP CDP domain via
 `chrome.debugger`, already exposed in Chromium — see end of #74). Agents stop
@@ -58,7 +58,7 @@ An extension could strip the header via `declarativeNetRequest`. **Decision
 2026-07-24: we don't**. It lowers the site's security posture
 for all scripts, not just ours; it's the pattern CWS review exists to catch;
 and the platform sides with the site if it escalates. Instead: catch the
-`SecurityError`, mark the config site-blocked in the UI, treat those domains as
+`SecurityError`, mark the package site-blocked in the UI, treat those domains as
 first-party-outreach candidates (feeds the "show official webmcps" item).
 Note `tools=()` only blocks the WebMCP transport — classic content-script
 automation still works on those pages.

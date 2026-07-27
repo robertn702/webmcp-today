@@ -1,21 +1,21 @@
 # WebMCP Cafe — Architecture
 
-Community registry of third-party **WebMCP tool configs** injected into sites that
+Community registry of third-party **WebMCP tool packages** injected into sites that
 haven't implemented WebMCP — "Greasyfork for the agentic web". This document is the
 map of how the pieces fit together. Companion docs:
 
-| Need                    | File                                                             |
-| ----------------------- | ---------------------------------------------------------------- |
-| Stack + conventions     | `AGENTS.md`                                                      |
-| Data model (ERD)        | `docs/erd.md`                                                    |
-| API execution model     | `docs/api-execution-model.md`                                    |
-| Config format (history) | `SPEC.md` (historical — code + `AGENTS.md` win on disagreements) |
-| Web app specifics       | `apps/web/AGENTS.md`                                             |
-| Extension specifics     | `apps/extension/AGENTS.md`                                       |
+| Need                     | File                                                             |
+| ------------------------ | ---------------------------------------------------------------- |
+| Stack + conventions      | `AGENTS.md`                                                      |
+| Data model (ERD)         | `docs/erd.md`                                                    |
+| API execution model      | `docs/api-execution-model.md`                                    |
+| Package format (history) | `SPEC.md` (historical — code + `AGENTS.md` win on disagreements) |
+| Web app specifics        | `apps/web/AGENTS.md`                                             |
+| Extension specifics      | `apps/extension/AGENTS.md`                                       |
 
 ## System overview
 
-Three deployables and two libraries, all revolving around one shared config format:
+Three deployables and two libraries, all revolving around one shared package format:
 
 ```mermaid
 flowchart LR
@@ -41,7 +41,7 @@ flowchart LR
     DB[("Neon Postgres<br/>(packages/db — Drizzle)")]
     MCP["packages/mcp<br/>MCP server (stdio)"]
 
-    EXT -- "GET /api/configs/lookup?url=…" --> API
+    EXT -- "GET /api/packages/lookup?url=…" --> API
     MCP -- "REST (+ Bearer API key)" --> API
     TA --> MCP
     UI --> API
@@ -52,12 +52,12 @@ flowchart LR
 - **`apps/web`** — the registry. Next.js UI for humans + public REST API for
   everything else. Owns auth (better-auth) and all persistence.
 - **`apps/extension`** — the delivery mechanism. A content script on every page asks
-  the background worker for configs matching the URL, then registers their tools via
+  the background worker for packages matching the URL, then registers their tools via
   `document.modelContext.registerTool()` so in-page agents can call them. Falls back
-  to bundled configs when the registry is unreachable.
+  to bundled packages when the registry is unreachable.
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
-  install configs without a browser. Thin client over the same REST API.
-- **`packages/schema`** — the keystone. The zod config format every consumer validates
+  install packages without a browser. Thin client over the same REST API.
+- **`packages/schema`** — the keystone. The zod package format every consumer validates
   against; published as `@robertn702/webmcp-cafe-schema`.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
 
@@ -93,16 +93,16 @@ sequenceDiagram
     participant MC as document.modelContext
 
     P->>CS: document_idle
-    CS->>BG: sendMessage(getConfigsForUrl)
-    BG->>R: GET /api/configs/lookup?url=…
-    R-->>BG: configs (zod-validated at boundary)
+    CS->>BG: sendMessage(getPackagesForUrl)
+    BG->>R: GET /api/packages/lookup?url=…
+    R-->>BG: packages (zod-validated at boundary)
     alt registry unreachable / no match / schema mismatch
         BG-->>CS: bundled fallback from @webmcp-cafe/definitions (silent — watch page console)
     else
-        BG-->>CS: matched configs, most-specific first
+        BG-->>CS: matched packages, most-specific first
     end
-    loop each config
-        CS->>CS: skip config if minEngine > ENGINE_VERSION
+    loop each package
+        CS->>CS: skip package if minEngine > ENGINE_VERSION
         loop each tool
             CS->>CS: skip on name collision with site tools (form[toolname] or already seen)
             CS->>MC: registerTool({ name, description, inputSchema, execute })
@@ -114,11 +114,11 @@ Key behaviors:
 
 - The fetch happens in the **background worker** (page CSP would block it from the
   content script), but all logging lands in the **page console**.
-- **Silent-fallback trap:** any failure falls back to bundled configs, so a "working"
+- **Silent-fallback trap:** any failure falls back to bundled packages, so a "working"
   test may never touch the registry. The ground-truth log line is
-  `[webmcp-cafe] Using N config(s) from the registry`.
-- **Engine gate:** a config whose `minEngine` exceeds the extension's level is skipped
-  wholesale — a too-new config must never register inert or mis-executed tools.
+  `[webmcp-cafe] Using N package(s) from the registry`.
+- **Engine gate:** a package whose `minEngine` exceeds the extension's level is skipped
+  wholesale — a too-new package must never register inert or mis-executed tools.
 
 ## Runtime flow — tool invocation
 
@@ -149,10 +149,10 @@ Two execution modes, selected per tool:
   webmcp-extension (native value setters to defeat React overrides, synthetic paste
   events for Lexical/Draft, shadow-DOM traversal, trusted `el.click()`). No `evaluate`
   step — no arbitrary code in the user's logged-in page.
-- **API mode (tier 1)** — the config declares the site's own HTTP API as data
+- **API mode (tier 1)** — the package declares the site's own HTTP API as data
   (`api.endpoints`, `auth` token sources, `returns` projections); the executor derives
   and performs the call. Ships zero code. The load-bearing invariant: **all network
-  access is same-origin with the config's `urlPatterns`**, enforced at publish and
+  access is same-origin with the package's `urlPatterns`**, enforced at publish and
   again at execution. Tiers 2–3 (scoped script slots, full `evaluate`) are designed
   but not shipped — see `docs/api-execution-model.md`.
 
@@ -167,40 +167,41 @@ sequenceDiagram
     participant D as Neon (packages/db)
     participant E as Extension / MCP consumers
 
-    C->>W: POST /api/configs (session cookie or Bearer API key)
+    C->>W: POST /api/packages (session cookie or Bearer API key)
     W->>W: zod-validate against @robertn702/webmcp-cafe-schema
-    W->>D: insert webmcp_definitions + definition_versions v1
-    C->>W: POST /api/configs/:id/versions (owner only)
+    W->>D: insert packages + package_versions v1
+    C->>W: POST /api/packages/:id/versions (owner only)
     W->>D: append version N+1 (never mutates N)
 
-    E->>W: POST /api/configs/:id/install
-    W->>D: insert installs row pinned to version_id
+    E->>W: PUT /api/packages/:id/install
+    W->>D: insert/move installs row pinned to version_id
 
-    E->>W: GET /api/configs/lookup?url=…
-    W->>D: latest version per definition, ranked by pattern specificity + installs
-    E->>W: GET /api/configs/lookup?url=…&installed=true (auth)
+    E->>W: GET /api/packages/lookup?url=…
+    W->>D: latest version per package, ranked by pattern specificity + installs
+    E->>W: GET /api/installs (auth)
     W->>D: caller's pinned versions
 ```
 
-The model in one breath: `webmcp_definitions` is the one mutable row per package
-(title/description/domain); `definition_versions` is append-only and **is** the
+The model in one breath: `packages` is the one mutable row per package
+(title/description/domain); `package_versions` is append-only and **is** the
 served truth (no snapshot table); `installs` pins user→version and doubles as the
-trust signal (`COUNT(*) GROUP BY definition_id`, computed at query time). Installed
-users never auto-update — moving the pin is an explicit `POST …/update`, and rollback
-is pinning to an older version. Full schema: `docs/erd.md`.
+trust signal (`COUNT(*) GROUP BY package_id`, computed at query time). Installed
+users never auto-update — moving the pin is the same idempotent `PUT …/install` with
+a different `versionId`, and rollback is that same call pinning to an older version.
+Full schema: `docs/erd.md`.
 
-## Config format
+## Package format
 
-A config is pure data — `{ domain, urlPatterns[], title, description, tools[], api?, changelog? }`,
+A package is pure data — `{ domain, urlPatterns[], title, description, tools[], api?, changelog? }`,
 validated by zod in `packages/schema`:
 
 - `urlPatterns` — Chrome `@match`-style; used for lookup, ranking
-  (`rankConfigsByUrl`), and same-origin enforcement of `api.baseUrl`.
+  (`rankPackagesByUrl`), and same-origin enforcement of `api.baseUrl`.
 - `tools[]` — `{ name, description, inputSchema, annotations?, execution? }` with
   WebMCP metadata budgets enforced (500/description, 150/param, 30/name — tool output
   is uncapped in v1; `packages/schema/src/budgets.ts`).
 - `minEngine` — positive-integer capability level per version; lets the format evolve
-  without old executors silently mis-running new configs.
+  without old executors silently mis-running new packages.
 - Placeholders (`{{param}}`, double-brace) may only name `inputSchema` properties —
   cross-validated at the schema level for both DOM steps and API endpoints.
 
@@ -223,9 +224,9 @@ validated by zod in `packages/schema`:
 webmcp-cafe/
 ├── apps/
 │   ├── web/            # Next.js — registry UI + public REST API (port 3000)
-│   └── extension/      # WXT — config lookup + tool injection (dev port 5173, CDP 9222)
+│   └── extension/      # WXT — package lookup + tool injection (dev port 5173, CDP 9222)
 ├── packages/
-│   ├── schema/         # @robertn702/webmcp-cafe-schema — zod config format (published)
+│   ├── schema/         # @robertn702/webmcp-cafe-schema — zod package format (published)
 │   ├── db/             # Drizzle + Neon — schema + client
 │   └── mcp/            # @robertn702/webmcp-cafe-mcp — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
