@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { webMcpConfigSchema, type WebMcpConfig } from "@robertn702/webmcp-cafe-schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@robertn702/webmcp-cafe-schema";
 import { browser } from "wxt/browser";
 
-export const LOOKUP_MESSAGE_TYPE = "webmcp-cafe:lookup-configs";
+export const LOOKUP_MESSAGE_TYPE = "webmcp-cafe:lookup-packages";
 
 export interface LookupMessage {
   type: typeof LOOKUP_MESSAGE_TYPE;
@@ -12,15 +12,15 @@ export interface LookupMessage {
 /** Raw fetch outcome relayed back from the background script. */
 export type LookupResponse = { ok: true; body: unknown } | { ok: false };
 
-const lookupBodySchema = z.object({ configs: z.array(webMcpConfigSchema) });
+const lookupBodySchema = z.object({ packages: z.array(webMcpPackageSchema) });
 
 /**
- * Ask the background script to fetch `GET /api/configs/lookup?url=` (it runs
+ * Ask the background script to fetch `GET /api/packages/lookup?url=` (it runs
  * the request against the registry's own origin, avoiding page CSP), then
  * validate the response at this boundary. Returns undefined on any failure
  * (network, non-2xx, or schema mismatch) so callers can fall back.
  */
-export async function fetchRegistryConfigs(url: string): Promise<WebMcpConfig[] | undefined> {
+export async function fetchRegistryPackages(url: string): Promise<WebMcpPackage[] | undefined> {
   let response: unknown;
   try {
     const message: LookupMessage = { type: LOOKUP_MESSAGE_TYPE, url };
@@ -38,5 +38,5 @@ export async function fetchRegistryConfigs(url: string): Promise<WebMcpConfig[] 
     console.warn("[webmcp-cafe] Registry lookup response failed validation:", parsed.error.message);
     return undefined;
   }
-  return parsed.data.configs;
+  return parsed.data.packages;
 }

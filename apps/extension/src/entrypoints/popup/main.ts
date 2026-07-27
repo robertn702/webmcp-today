@@ -49,17 +49,17 @@ function view(status: PageStatus | undefined): Node[] {
       el("h1", "WebMCP is turned off in Chrome"),
       el(
         "p",
-        `${status.configCount} config(s) match this page, but Chrome exposes no WebMCP API, so no tools were registered.`,
+        `${status.packageCount} package(s) match this page, but Chrome exposes no WebMCP API, so no tools were registered.`,
       ),
       steps,
       el("footer", "Needs Chrome 149 or newer."),
     ];
   }
 
-  if (status.kind === "no-configs") {
+  if (status.kind === "no-packages") {
     return [
       el("h1", "No tools for this page"),
-      el("p", "No community config matches this URL yet."),
+      el("p", "No community package matches this URL yet."),
       flagFooter(),
     ];
   }
@@ -67,7 +67,7 @@ function view(status: PageStatus | undefined): Node[] {
   if (status.toolNames.length === 0) {
     return [
       el("h1", "No tools registered"),
-      el("p", "A config matched but every tool was skipped — see the page console for why."),
+      el("p", "A package matched but every tool was skipped — see the page console for why."),
       flagFooter(),
     ];
   }

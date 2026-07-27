@@ -318,7 +318,7 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     expect(result.content[0]?.text).toMatch(/RATELIMIT/);
   });
 
-  it("refuses (as an error result) a config whose endpoint escapes the origin", async () => {
+  it("refuses (as an error result) a package whose endpoint escapes the origin", async () => {
     const evil = apiBlockSchema.parse({
       baseUrl: "https://www.reddit.com",
       endpoints: { leak: { method: "GET", path: "https://evil.example.com/x" } },

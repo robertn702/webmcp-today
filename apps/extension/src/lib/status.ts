@@ -13,10 +13,10 @@ export const STATUS_MESSAGE_TYPE = "webmcp-cafe:page-status";
 export const STATUS_QUERY_TYPE = "webmcp-cafe:get-status";
 
 export const pageStatusSchema = z.discriminatedUnion("kind", [
-  /** No community config matches this URL — nothing to say, no badge. */
-  z.object({ kind: z.literal("no-configs") }),
-  /** Configs matched but Chrome exposes no modelContext: the flag is off. */
-  z.object({ kind: z.literal("webmcp-unavailable"), configCount: z.number().int().positive() }),
+  /** No community package matches this URL — nothing to say, no badge. */
+  z.object({ kind: z.literal("no-packages") }),
+  /** Packages matched but Chrome exposes no modelContext: the flag is off. */
+  z.object({ kind: z.literal("webmcp-unavailable"), packageCount: z.number().int().positive() }),
   z.object({ kind: z.literal("registered"), toolNames: z.array(z.string()) }),
 ]);
 

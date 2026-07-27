@@ -2,10 +2,10 @@ import type { ApiBlock, ApiEndpoint } from "@robertn702/webmcp-cafe-schema";
 import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./model-context.js";
 
-// Tier-1 "derived-call engine": turns a config's declarative `api` block plus a
+// Tier-1 "derived-call engine": turns a package's declarative `api` block plus a
 // tool's `execution: { mode: "api", endpoint }` into an actual HTTP request,
-// performs it, and returns an McpResult. Ships zero config-authored code — it
-// only operates on validated config data. See docs/api-execution-model.md.
+// performs it, and returns an McpResult. Ships zero package-authored code — it
+// only operates on validated package data. See docs/api-execution-model.md.
 //
 // FETCH CONTEXT: these requests run in the CONTENT SCRIPT (page) context, NOT
 // the background service worker. That is deliberate and load-bearing:
@@ -144,7 +144,7 @@ export function applyProjection(value: unknown, returns?: string): unknown {
   return projected === undefined ? value : projected;
 }
 
-/** Resolve a GraphQL document: `@documents/name` -> the config-level document,
+/** Resolve a GraphQL document: `@documents/name` -> the package-level document,
  *  inline documents pass through as-is. */
 export function resolveDocument(api: ApiBlock, document: string): string {
   const match = DOCUMENT_REF_RE.exec(document);
@@ -196,7 +196,7 @@ export function buildRequest(
       // -> cache the hash for subsequent calls. That needs crypto.subtle
       // hashing, retry-on-error detection, and cross-call hash caching — real
       // complexity deferred per the step scope. Fail loud rather than silently
-      // sending a full query the config asked to persist.
+      // sending a full query the package asked to persist.
       throw new Error(
         "persistedQuery (Automatic Persisted Queries) is not yet supported by this executor.",
       );
