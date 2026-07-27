@@ -167,3 +167,25 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   `@robertn702/webmcp-cafe-schema` nor `@robertn702/webmcp-cafe-mcp` is on npm yet — the
   MCP tool names and wire fields are free to rename without breaking a saved agent
   prompt, which won't be true again.
+
+- 2026-07-27 — **The `api` block is our own format, not OpenAPI or Arazzo.** OpenAPI
+  describes a call _space_; the block prescribes _one call_ bound to a validated
+  `inputSchema`, and under 3.1 that binding layer is 100% `x-*` extensions — a document
+  no OpenAPI tool can execute, checked by a validator that ignores every field that
+  matters. Sharper: tier 1 calls a site's first-party frontend with the user's cookies,
+  while published specs describe the public API on another host with token auth, so the
+  two sets barely intersect — causally, not by sampling. Arazzo's semantics fit but it
+  `MUST` carry a `sourceDescriptions` entry, i.e. a synthetic OpenAPI doc per site: the
+  rejected layer, reintroduced. Consequence: OpenAPI is only ever an author-time
+  importer (`unknown -> ApiBlock`), off the runtime path.
+
+- 2026-07-27 — **`returns` is JMESPath; `extract`/`errorPath` deliberately are not.**
+  The serious alternative was **jsonata**, which is MIT where JMESPath is MPL-2.0 — so
+  it wins on licence and lost on language power: `evaluate()` is async, it has
+  `function($x){…}` lambdas, and it binds `$eval(str)` with no way to unregister it,
+  contradicting the "packages are data, not code" claim the Chrome Web Store positioning
+  rests on. **Hard exclusion: `jsonpath-plus`, `jsonpath`, and anything depending on
+  `static-eval` — all call `new Function`, which MV3's CSP rejects outright, and both
+  carry RCE CVEs (CVE-2024-21534, CVE-2025-1302).** `extract`/`errorPath` stayed locator
+  arrays because they name one place in a document: unambiguous, dot-safe, and it keeps
+  an expression evaluator out of the two security-adjacent reads.
