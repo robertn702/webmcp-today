@@ -1,3 +1,6 @@
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+import canonicalize from "canonicalize";
 import type { ApiBlock } from "./api.js";
 
 // A stable content identifier for an api block. The same logical surface is
@@ -5,70 +8,17 @@ import type { ApiBlock } from "./api.js";
 // the same site, and `documents` entries run to 100 KB — so clients key stored
 // copies on this hash (docs/local-first-installs.md §1).
 //
-// The canonical form below is therefore a FROZEN COMPATIBILITY SURFACE: any
-// change to it invalidates every copy a client already has. It is derived from
-// the value alone — never from Postgres jsonb text, and never from incidental
+// The canonical form is therefore a FROZEN COMPATIBILITY SURFACE: any change to
+// it invalidates every copy a client already has. It is derived from the value
+// alone — never from Postgres jsonb text, and never from incidental
 // JSON.stringify key order.
 //
-// It implements JSON Canonicalization Scheme (RFC 8785), so a client that is
-// not this package — a non-JS service, or a third party reimplementing the
-// dedupe — has a published spec to target instead of our source. Kept in-tree
-// rather than taken as a runtime dependency precisely because it is frozen: a
-// dependency bump that "fixed" an edge case would silently invalidate every
-// stored hash. test/api-hash.test.ts pins conformance against the reference
-// `canonicalize` implementation (a devDependency) so the two cannot drift.
-
-/** Compare by UTF-16 code unit. Deliberately not localeCompare, whose ordering
- * depends on the runtime's ICU data and so differs between consumers. */
-function compareKeys(a: string, b: string): number {
-  if (a < b) return -1;
-  return a > b ? 1 : 0;
-}
-
-function canonicalNumber(value: number): string {
-  if (!Number.isFinite(value)) {
-    // JSON.stringify would silently emit `null` for these and collide with a
-    // real null. A surface containing one is not representable — say so.
-    throw new Error(`Cannot canonicalize non-finite number: ${String(value)}`);
-  }
-  // String() is ECMAScript's shortest round-tripping representation, so 1.0
-  // and 1 agree. -0 is folded to 0: a JSON round-trip loses the sign anyway,
-  // and the two must not hash differently.
-  return value === 0 ? "0" : String(value);
-}
-
-function canonicalValue(value: unknown): string {
-  switch (typeof value) {
-    case "string":
-      return JSON.stringify(value);
-    case "number":
-      return canonicalNumber(value);
-    case "boolean":
-      return value ? "true" : "false";
-    case "object": {
-      if (value === null) return "null";
-      if (Array.isArray(value)) {
-        // Array order is meaningful in this data (endpoint.auth is an ordered
-        // list of token fetches), so it is preserved, never sorted. A hole or
-        // an explicit undefined becomes null, matching JSON.stringify.
-        const items = value.map((item: unknown) =>
-          item === undefined ? "null" : canonicalValue(item),
-        );
-        return `[${items.join(",")}]`;
-      }
-      // Recursive key sort. Keys whose value is undefined are dropped so that
-      // an absent optional field and one explicitly set to undefined — the
-      // same block before and after a JSON round-trip — canonicalize alike.
-      const entries = Object.entries(value)
-        .filter(([, v]) => v !== undefined)
-        .sort(([a], [b]) => compareKeys(a, b))
-        .map(([key, v]) => `${JSON.stringify(key)}:${canonicalValue(v)}`);
-      return `{${entries.join(",")}}`;
-    }
-    default:
-      throw new Error(`Cannot canonicalize value of type ${typeof value}`);
-  }
-}
+// It is JSON Canonicalization Scheme (RFC 8785), so a client that is not this
+// package — a non-JS service, or a third party reimplementing the dedupe — has
+// a published spec to target instead of our source. Being a frozen *spec* is
+// also what makes taking it as a runtime dependency safe: there is no edge case
+// a bump could legitimately "fix", and test/api-hash.test.ts pins known-answer
+// hashes so a bump that changed the output would fail loudly.
 
 /**
  * Canonical string form of an api block: object keys sorted recursively, array
@@ -78,19 +28,21 @@ function canonicalValue(value: unknown): string {
  * This is JSON Canonicalization Scheme (RFC 8785).
  */
 export function canonicalizeApiBlock(api: ApiBlock): string {
-  return canonicalValue(api);
+  const canonical = canonicalize(api);
+  // Only for values JSON cannot represent at all (a bare undefined, a
+  // function). An ApiBlock is an object, so this is unreachable in practice.
+  if (canonical === undefined) throw new Error("Cannot canonicalize api block");
+  return canonical;
 }
 
 /**
  * Lowercase-hex sha256 of {@link canonicalizeApiBlock}.
  *
- * Async because it uses Web Crypto rather than node:crypto: the extension
- * bundles this package for the browser, and rollup hard-fails on `node:crypto`
- * ("createHash is not exported by __vite-browser-external"). crypto.subtle is
- * available in browsers, extension service workers and Node 16+.
+ * Deliberately not node:crypto: the extension bundles this package for the
+ * browser, and rollup hard-fails on `node:crypto` ("createHash is not exported
+ * by __vite-browser-external"). @noble/hashes is pure JS, so it bundles
+ * anywhere and stays synchronous.
  */
-export async function apiContentHash(api: ApiBlock): Promise<string> {
-  const bytes = new TextEncoder().encode(canonicalizeApiBlock(api));
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+export function apiContentHash(api: ApiBlock): string {
+  return bytesToHex(sha256(new TextEncoder().encode(canonicalizeApiBlock(api))));
 }

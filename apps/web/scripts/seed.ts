@@ -42,7 +42,7 @@ for (const input of definitions) {
     urlPatterns: input.urlPatterns,
     tools: input.tools,
     api: input.api,
-    apiContentHash: input.api ? await apiContentHash(input.api) : null,
+    apiContentHash: input.api ? apiContentHash(input.api) : null,
     minEngine: input.minEngine,
     changelog: input.changelog,
   });

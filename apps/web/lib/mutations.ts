@@ -37,7 +37,7 @@ export async function insertDefinition(
       urlPatterns: input.urlPatterns,
       tools: input.tools,
       api: input.api,
-      apiContentHash: input.api ? await apiContentHash(input.api) : null,
+      apiContentHash: input.api ? apiContentHash(input.api) : null,
       minEngine: input.minEngine,
       changelog: input.changelog,
     })
@@ -72,7 +72,7 @@ export async function publishVersion(
   input: PublishVersionInput,
 ): Promise<{ versionId: string; version: number }> {
   // Depends only on the api block, so it survives a collision retry unchanged.
-  const contentHash = input.api ? await apiContentHash(input.api) : null;
+  const contentHash = input.api ? apiContentHash(input.api) : null;
 
   for (let attempt = 1; attempt <= PUBLISH_MAX_ATTEMPTS; attempt++) {
     const [row] = await db
