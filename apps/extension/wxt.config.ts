@@ -28,9 +28,12 @@ export default defineConfig({
   manifest: {
     name: "WebMCP Cafe",
     description: "Injects community WebMCP tool configs into sites you visit.",
+    permissions: ["storage", "alarms"],
     // Registry origins the background script fetches configs from. Fixed at
     // build time (manifest permissions can't read the runtime env var), so
-    // both the dev default and the production domain are listed.
-    host_permissions: ["http://localhost:3000/*", "https://webmcp.cafe/*"],
+    // both the dev default and the production domain are listed. Match
+    // patterns have no port component — `http://localhost/*` (not `:3000`)
+    // matches any localhost port.
+    host_permissions: ["http://localhost/*", "https://webmcp.cafe/*"],
   },
 });

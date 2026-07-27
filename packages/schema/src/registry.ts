@@ -20,6 +20,11 @@ export const webMcpPackageSchema = createPackageObjectSchema.extend({
    */
   apiContentHash: z.string().optional(),
   contributor: z.string(),
+  /**
+   * @deprecated Trust is derived from readable data and explicit consent, not
+   * install count (docs/local-first-installs.md). Kept optional so existing
+   * consumers don't break; no longer populated by the registry.
+   */
   installCount: z.number().int().min(0).optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -36,6 +41,18 @@ export const statsResponseSchema = z.object({
   totalPackages: z.number().int().min(0),
   totalInstalls: z.number().int().min(0),
   topDomains: z.array(z.object({ domain: z.string(), count: z.number().int().min(0) })),
+});
+
+/**
+ * `GET /api/domains` — every domain with a published package, for the
+ * extension's local domain-match list (no URL ever leaves the client to get
+ * this). `version` is the epoch ms of the corpus's latest change, used as an
+ * `ETag` input by the client's poll.
+ */
+export const domainsResponseSchema = z.object({
+  version: z.number().int().min(0),
+  generatedAt: z.iso.datetime(),
+  domains: z.array(z.string()),
 });
 
 /**
@@ -58,15 +75,20 @@ export const revocationEntrySchema = z.object({
 
 /**
  * `GET /api/revocations?since=<cursor>`. `cursor` is what the client sends next
- * time, and is echoed back unchanged when there is nothing new.
+ * time, and is echoed back unchanged when there is nothing new. `latest` is
+ * the server's current max id (0 if the table is empty) — a client whose
+ * stored cursor is ahead of it (e.g. after a DB wipe restarts the bigserial)
+ * resets to 0 rather than silently never seeing another revocation.
  */
 export const revocationsResponseSchema = z.object({
   cursor: z.number().int(),
+  latest: z.number().int().min(0),
   entries: z.array(revocationEntrySchema),
 });
 
 export type WebMcpPackage = z.infer<typeof webMcpPackageSchema>;
 export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
 export type StatsResponse = z.infer<typeof statsResponseSchema>;
+export type DomainsResponse = z.infer<typeof domainsResponseSchema>;
 export type RevocationEntry = z.infer<typeof revocationEntrySchema>;
 export type RevocationsResponse = z.infer<typeof revocationsResponseSchema>;

@@ -1,5 +1,5 @@
 import { revocations } from "@webmcp-cafe/db";
-import { asc, gt } from "drizzle-orm";
+import { asc, gt, sql } from "drizzle-orm";
 import { db } from "./db";
 
 export type RevocationRow = {
@@ -34,4 +34,17 @@ export function listRevocationsSince(
     .where(gt(revocations.id, cursor))
     .orderBy(asc(revocations.id))
     .limit(limit);
+}
+
+/**
+ * The table's current max id (0 if empty) — the server's ground truth for
+ * whether a client's stored cursor is still valid. Computed explicitly rather
+ * than reading the last row of a possibly-capped or possibly-empty page,
+ * which gives the wrong answer for both.
+ */
+export async function getLatestRevocationId(): Promise<number> {
+  const [row] = await db
+    .select({ latest: sql<number>`coalesce(max(${revocations.id}), 0)` })
+    .from(revocations);
+  return row?.latest ?? 0;
 }

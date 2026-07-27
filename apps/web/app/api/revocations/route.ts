@@ -1,6 +1,6 @@
 import type { RevocationEntry } from "@robertn702/webmcp-cafe-schema";
 import { NextResponse } from "next/server";
-import { listRevocationsSince } from "@/lib/revocations-repo";
+import { getLatestRevocationId, listRevocationsSince } from "@/lib/revocations-repo";
 
 /**
  * GET /api/revocations?since=<cursor> — the kill list after that cursor, oldest
@@ -25,7 +25,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const since = raw === null ? Number.NaN : Number(raw);
   const cursor = Number.isSafeInteger(since) && since > 0 ? since : 0;
 
-  const rows = await listRevocationsSince(cursor);
+  const [rows, latest] = await Promise.all([listRevocationsSince(cursor), getLatestRevocationId()]);
   const entries: RevocationEntry[] = rows.map((row) => ({
     id: row.id,
     packageId: row.packageId,
@@ -34,5 +34,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     revokedAt: row.revokedAt.toISOString(),
   }));
 
-  return NextResponse.json({ cursor: entries[entries.length - 1]?.id ?? cursor, entries });
+  return NextResponse.json({
+    cursor: entries[entries.length - 1]?.id ?? cursor,
+    latest,
+    entries,
+  });
 }
