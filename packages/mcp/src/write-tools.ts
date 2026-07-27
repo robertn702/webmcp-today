@@ -1,7 +1,7 @@
 import {
-  createConfigSchema,
+  createPackageSchema,
   publishVersionSchema,
-  updateDefinitionMetaSchema,
+  updatePackageMetaSchema,
 } from "@robertn702/webmcp-cafe-schema";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -12,35 +12,35 @@ import { jsonResult } from "./result.js";
 
 export function registerWriteTools(server: McpServer, client: CafeClient): void {
   server.registerTool(
-    "upload_config",
+    "publish_package",
     {
       description:
-        "Publish a new WebMCP config to the registry as a fresh definition + version 1 (validated against @robertn702/webmcp-cafe-schema). Requires an API key.",
-      inputSchema: { config: createConfigSchema.describe("The config to publish") },
+        "Publish a new WebMCP package to the registry as a fresh package + version 1 (validated against @robertn702/webmcp-cafe-schema). Requires an API key.",
+      inputSchema: { package: createPackageSchema.describe("The package to publish") },
     },
-    async ({ config }) => jsonResult(await client.create(config)),
+    async ({ package: pkg }) => jsonResult(await client.create(pkg)),
   );
 
   server.registerTool(
-    "update_config_meta",
+    "update_package_meta",
     {
       description:
-        "Update a config's metadata (domain, title, description, pageType) — owner only. Never touches urlPatterns/tools/minEngine; use publish_config_version for that. Requires an API key.",
+        "Update a package's metadata (domain, title, description, pageType) — owner only. Never touches urlPatterns/tools/minEngine; use publish_package_version for that. Requires an API key.",
       inputSchema: {
-        id: z.string().describe("Config (definition) id"),
-        meta: updateDefinitionMetaSchema.describe("Metadata fields to change"),
+        id: z.string().describe("Package id"),
+        meta: updatePackageMetaSchema.describe("Metadata fields to change"),
       },
     },
     async ({ id, meta }) => jsonResult(await client.updateMeta(id, meta)),
   );
 
   server.registerTool(
-    "publish_config_version",
+    "publish_package_version",
     {
       description:
-        "Publish the next version of a config you contributed (urlPatterns + tools + optional api, minEngine, changelog) — owner only, append-only. Installed users stay pinned until they update. Requires an API key.",
+        "Publish the next version of a package you contributed (urlPatterns + tools + optional api, minEngine, changelog) — owner only, append-only. Installed users stay pinned until they move their install pin. Requires an API key.",
       inputSchema: {
-        id: z.string().describe("Config (definition) id"),
+        id: z.string().describe("Package id"),
         version: publishVersionSchema.describe("The new version's urlPatterns, tools, changelog"),
       },
     },
@@ -48,12 +48,12 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
   );
 
   server.registerTool(
-    "install_config",
+    "install_package",
     {
       description:
-        "Install a config, pinned to its latest version (or a specific versionId). Requires an API key.",
+        "Set the caller's install pin for a package to its latest version, or a given versionId — creates the pin if absent, moves it if present. Also how rollback works: pass an older versionId. Requires an API key.",
       inputSchema: {
-        id: z.string().describe("Config (definition) id"),
+        id: z.string().describe("Package id"),
         versionId: z.string().optional().describe("Pin to this version instead of latest"),
       },
     },
@@ -61,24 +61,11 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
   );
 
   server.registerTool(
-    "uninstall_config",
+    "uninstall_package",
     {
-      description: "Uninstall a previously installed config. Requires an API key.",
-      inputSchema: { id: z.string().describe("Config (definition) id") },
+      description: "Uninstall a previously installed package. Requires an API key.",
+      inputSchema: { id: z.string().describe("Package id") },
     },
     async ({ id }) => jsonResult(await client.uninstall(id)),
-  );
-
-  server.registerTool(
-    "update_config_install",
-    {
-      description:
-        "Move an installed config's pin to a different version (defaults to latest; pass an older versionId to roll back). Requires an API key.",
-      inputSchema: {
-        id: z.string().describe("Config (definition) id"),
-        versionId: z.string().optional().describe("Move to this version instead of latest"),
-      },
-    },
-    async ({ id, versionId }) => jsonResult(await client.updateInstall(id, versionId)),
   );
 }
