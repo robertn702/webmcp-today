@@ -3,10 +3,11 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import canonicalize from "canonicalize";
 import type { ApiBlock } from "./api.js";
 
-// A stable content identifier for an api block. The same logical surface is
-// duplicated across a package's versions and across rival packages targeting
-// the same site, and `documents` entries run to 100 KB — so clients key stored
-// copies on this hash (docs/local-first-installs.md §1).
+// A stable content identifier for an api block. The same logical surface
+// recurs across a package's versions and across rival packages targeting the
+// same site, so the hash lets a client recognise a surface it already holds
+// (docs/local-first-installs.md). Bodies are stored whole — nothing on disk
+// is keyed by this hash.
 //
 // The canonical form is therefore a FROZEN COMPATIBILITY SURFACE: any change to
 // it invalidates every copy a client already has. It is derived from the value

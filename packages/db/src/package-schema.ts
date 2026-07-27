@@ -55,8 +55,9 @@ export const packageVersions = pgTable(
     /**
      * Content identifier for `api` (apiContentHash in packages/schema) — null
      * exactly when `api` is null. The same surface recurs across a package's
-     * versions and across rival packages targeting the same site, so this is
-     * the dedupe key clients store one copy under.
+     * versions and across rival packages targeting the same site, so clients
+     * use it to recognise a surface they already hold. Bodies are stored
+     * whole — it is a recognition key, not a storage key.
      */
     apiContentHash: text("api_content_hash"),
     /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). */
