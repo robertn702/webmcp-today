@@ -1,6 +1,6 @@
 # AGENTS.md — WebMCP Cafe
 
-Community registry of third-party WebMCP tool configs injected into sites that haven't
+Community registry of third-party WebMCP tool packages injected into sites that haven't
 implemented WebMCP — "Greasyfork for the agentic web".
 
 ## Status: PRE-PRODUCTION (delete this section on launch)
@@ -17,10 +17,10 @@ implemented WebMCP — "Greasyfork for the agentic web".
 
 ```
 apps/web/          Next.js — registry UI + public REST API
-apps/extension/    WXT — config lookup + tool injection
-packages/schema/        @robertn702/webmcp-cafe-schema — zod config format (published); keystone, all consumers validate against it
+apps/extension/    WXT — package lookup + tool injection
+packages/schema/        @robertn702/webmcp-cafe-schema — zod package format (published); keystone, all consumers validate against it
 packages/db/            Drizzle + Neon — schema + client
-packages/definitions/   @webmcp-cafe/definitions — curated first-party configs (extension fallback bundle + registry seed source)
+packages/definitions/   @webmcp-cafe/definitions — curated first-party packages (extension fallback bundle + registry seed source)
 packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 ```
 
@@ -91,7 +91,7 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - Platform risks (unsanctioned extension registration, `tools=()` kill switch):
   docs/platform-risks.md; track webmachinelearning/webmcp#74.
 
-## Config format
+## Package format
 
 - `{ domain, urlPatterns[], title, description, tools[], changelog? }`; `urlPatterns` is
   Chrome `@match`-style (`scheme://host/path`), versioned alongside `tools`.
@@ -103,8 +103,8 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## Registry data model
 
-- Trust = install count, not verification. `webmcp_definitions` (mutable) /
-  `definition_versions` (append-only; the served truth) / `installs` (pins
+- Trust = install count, not verification. `packages` (mutable) /
+  `package_versions` (append-only; the served truth) / `installs` (pins
   user→version). ERD: `docs/erd.md`; served-truth rules: `apps/web/AGENTS.md`.
 - No `(domain, url_pattern)` uniqueness — rival packages may target the same site;
   installs + pattern specificity rank them.

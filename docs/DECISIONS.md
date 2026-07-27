@@ -26,8 +26,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   in favour of `webmcp_definitions` / `definition_versions` (append-only) / `installs`.
   A reviewer gate on individual tools scales with the corpus and stalls publishing; the
   unit of trust is a package a user chose to install. Open-publish for tier 1 follows
-  from this — a review queue is a tier-2/3 problem (`docs/BACKLOG.md`). Public routes
-  stayed at `/api/configs/*` even though the underlying tables were renamed.
+  from this — a review queue is a tier-2/3 problem (`docs/BACKLOG.md`).
 
 - 2026-07-24 — **better-auth-ui components are vendored with ~30 upstream `as`
   assertions rewritten to narrowing** — `e.currentTarget` locals, `formString` in
@@ -152,9 +151,19 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   motive is a grant boundary around the only credential material in the database
   (`accounts.access_token`/`refresh_token`, `api_keys.key`): one
   `REVOKE ... ON SCHEMA auth` covers them, where per-table grants silently miss whatever
-  table is added next. Explicitly *not* the Supabase/Neon Auth rationale — there the
+  table is added next. Explicitly _not_ the Supabase/Neon Auth rationale — there the
   namespace is owned by another party, which doesn't apply to a library whose migrations
   we write. Deferred on purpose: the restricted role that would use the boundary doesn't
   exist yet, so this buys the option, not the protection. Non-obvious consequence:
   `drizzle.config.ts` must set `schemaFilter: ["public", "auth"]` — it defaults to
   `["public"]`, and introspect/push would otherwise propose dropping the auth set.
+
+- 2026-07-26 — **The entity is `package` everywhere — DB, API, schema, and UI copy
+  collapse to one name.** `configs` was rejected as too generic (every app has
+  "config"); `definitions` was rejected as DB jargon that shouldn't leak past
+  `packages/db`; `scripts` was rejected because it contradicts the "packages are data,
+  not code" claim the Chrome Web Store positioning rests on
+  (`docs/api-execution-model.md`). Done now, pre-publish, because neither
+  `@robertn702/webmcp-cafe-schema` nor `@robertn702/webmcp-cafe-mcp` is on npm yet — the
+  MCP tool names and wire fields are free to rename without breaking a saved agent
+  prompt, which won't be true again.

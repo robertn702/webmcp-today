@@ -1,15 +1,15 @@
 # API-Backed Tools — Execution Model Proposal
 
 > Design proposal for review. No code changes yet. Status: **proposed**.
-> Related: `SPEC.md` (config format v1), `docs/erd.md` (installs/version pinning),
+> Related: `SPEC.md` (package format v1), `docs/erd.md` (installs/version pinning),
 > `packages/schema/src/` (current DOM-centric execution descriptor).
 
 ## Motivation
 
-Config format v1 executes tools by driving the DOM: CSS selectors, form fills, clicks.
-That works, but it rots _silently_ — the Wikipedia config broke on day one when the
+Package format v1 executes tools by driving the DOM: CSS selectors, form fills, clicks.
+That works, but it rots _silently_ — the Wikipedia package broke on day one when the
 article DOM changed shape, and nothing about the failure was visible until a human
-noticed. Selector rot is the expected failure mode of every DOM-backed config, and the
+noticed. Selector rot is the expected failure mode of every DOM-backed package, and the
 current model has no way to detect it short of a health canary we haven't built.
 
 Most sites we care about already expose the operation as an HTTP call their own frontend
@@ -19,10 +19,10 @@ makes. Executing a tool as a **declared API call** instead of a DOM choreography
   no extraction heuristics, no HTML-to-text loss.
 - **Loud failures.** A 4xx/5xx, a schema mismatch, or a rotated GraphQL persisted-query
   hash fails immediately and detectably. Selector rot fails quietly; API rot fails loudly.
-- **Smaller, stabler configs.** The Reddit API surface changes far less often than
+- **Smaller, stabler packages.** The Reddit API surface changes far less often than
   Reddit's markup.
 
-Flagship target: a **read + write Reddit config** backed by its JSON API — readable
+Flagship target: a **read + write Reddit package** backed by its JSON API — readable
 threads, plus posting comments — controllable from a terminal LLM through WebMCP. That
 requires authenticated writes, which forces the token-acquisition design below.
 
@@ -31,7 +31,7 @@ tools where a known API exists; the DOM steps stay the fallback for sites withou
 
 ## Tiered execution model
 
-Three tiers, in strict order of preference. A config author reaches for the lowest tier
+Three tiers, in strict order of preference. A package author reaches for the lowest tier
 that expresses the tool; the registry's curation bar rises with the tier.
 
 | Tier | What it is                                                                    | Code shipped                         | Network                                | Curation bar           |
@@ -49,14 +49,14 @@ site_, not whether it leaks data off it.
 
 ## Tier 1 — the `api` block
 
-The config declares the site's API surface as data; the executor constructs the request,
+The package declares the site's API surface as data; the executor constructs the request,
 performs it, and projects the response. Zero code is shipped.
 
 Sketch of the schema additions (zod to come in `packages/schema`; JSON here for review):
 
 ```jsonc
 {
-  // top-level, next to tools[] — shared across the config's API tools
+  // top-level, next to tools[] — shared across the package's API tools
   "api": {
     "baseUrl": "https://www.reddit.com",
     "auth": {
@@ -128,7 +128,7 @@ And a tool binds to an endpoint:
 Field semantics:
 
 - **`baseUrl`** — hard-enforced same-origin. Must match one of the hosts implied by the
-  config's `urlPatterns`; the executor refuses any derived URL whose origin differs.
+  package's `urlPatterns`; the executor refuses any derived URL whose origin differs.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
   GET `/api/me.json`, extract `data.modhash` from the JSON, send as the `X-Modhash`
   header on endpoints listing `auth: ["csrf"]`. Cookies ride along automatically (the
@@ -145,7 +145,7 @@ Field semantics:
   GraphQL's 200-with-errors convention, `"json.errors"` for Reddit's REST API). A
   non-empty value at that path = tool failure, surfaced as an error to the agent.
 - **`persistedQuery`** — enables APQ retry (see GraphQL section).
-- **`documents`** — config-level named static GraphQL documents; endpoints reference
+- **`documents`** — package-level named static GraphQL documents; endpoints reference
   them as `@documents/name`. Keeps megabyte-adjacent captured queries out of the
   per-endpoint inline JSON and dedupes documents shared by several endpoints.
 
@@ -210,15 +210,15 @@ the `auth` declaration model.
 
 - Executor-mediated: the script receives an executor-provided `request()` that is
   same-origin-enforced — it cannot fetch arbitrary hosts even here.
-- **Flagged in the registry UI** (config card + install flow show "contains arbitrary
+- **Flagged in the registry UI** (package card + install flow show "contains arbitrary
   code" prominently) and held to the highest curation bar.
-- Registered tools from tier-3 configs should set `untrustedContentHint` where output
+- Registered tools from tier-3 packages should set `untrustedContentHint` where output
   is script-shaped.
 
 > **This reverses a prior ground rule.** `AGENTS.md` and `packages/schema/src/steps.ts`
 > both record "No `evaluate` step in v1 — arbitrary code execution in the user's
 > logged-in page." That rule was written when execution meant _unmediated_ code in the
-> page (Joakim's model). The reversal rationale: (1) DOM configs rot silently, pushing
+> page (Joakim's model). The reversal rationale: (1) DOM packages rot silently, pushing
 > us toward API execution, and some real APIs need computed requests tier 1 cannot
 > express; (2) the executor now mediates all network access behind a same-origin wall,
 > which was not part of the original design; (3) installs pin to `version_id`, so a
@@ -237,11 +237,11 @@ rather than merely possible:
    a 200 + non-empty `errors` is a tool error, surfaced to the agent.
 2. **`documents` block** — captured real-world queries (Reddit's shreddit, GitHub's
    app queries) run hundreds of lines. Named static documents referenced as
-   `@documents/name` keep configs readable. Variables bind from tool input via the
+   `@documents/name` keep packages readable. Variables bind from tool input via the
    same `{placeholder}` templates.
 
 Third, **APQ (Automatic Persisted Queries)** behind `persistedQuery: true`, implemented
-_once_ in the executor so no config author ever thinks about it:
+_once_ in the executor so no package author ever thinks about it:
 
 ```
 send { extensions: { persistedQuery: { sha256Hash } } }
@@ -261,7 +261,7 @@ a subscription has no place to stream to.
 
 The single load-bearing invariant, so it gets its own section:
 
-- `api.baseUrl` must be same-origin with a host covered by the config's `urlPatterns`.
+- `api.baseUrl` must be same-origin with a host covered by the package's `urlPatterns`.
   Validated at publish (schema-level) and again at execution (executor-level) — a
   registry-side bug must not be enough to break the invariant.
 - The executor constructs the final URL itself from `baseUrl` + `path` + `query`;
@@ -274,13 +274,13 @@ The single load-bearing invariant, so it gets its own section:
   the point: tools act as the logged-in user _on that site_, and only there.
 
 Cross-origin APIs (a site whose data lives on `api.otherhost.com`) are deliberately not
-supported in v1 — the config's `urlPatterns` would need to cover the API host and the
-tool only works while the user has a session there. Worth revisiting if real configs
+supported in v1 — the package's `urlPatterns` would need to cover the API host and the
+tool only works while the user has a session there. Worth revisiting if real packages
 demand it; the invariant gets looser, so it needs its own design.
 
 ## Trust model
 
-The model is **curated + open source** — the Greasyfork analogy applied to configs that
+The model is **curated + open source** — the Greasyfork analogy applied to packages that
 may now contain code:
 
 - **Human-readable or reject.** Publish-time lint rejects minified or obfuscated code
@@ -290,14 +290,14 @@ may now contain code:
   a "view source" link. Install = "I have seen the code" the way Greasyfork's install
   page works.
 - **Install counts as signal** (already the data model — `COUNT(*) GROUP BY
-definition_id` on `installs`).
+package_id` on `installs`).
 - **Version pinning is the containment mechanism.** Installs pin to
-  `definition_versions.id`; a malicious or broken new version never auto-propagates —
+  `package_versions.id`; a malicious or broken new version never auto-propagates —
   users pull updates explicitly after reading the changelog, and rollback is moving the
   pin back. This is what makes shipping executable content survivable: a bad actor who
-  edits a popular config reaches _zero_ installed users until each one opts in.
-- **Tier is visible in the UI.** Tier-3 configs carry a persistent flag; tier-2 shows
-  the slot code inline on the config page.
+  edits a popular package reaches _zero_ installed users until each one opts in.
+- **Tier is visible in the UI.** Tier-3 packages carry a persistent flag; tier-2 shows
+  the slot code inline on the package page.
 
 ## MV3 constraints + spike plan
 
@@ -312,14 +312,14 @@ is the canonical wall). Candidate paths:
    only path.
 2. **Packaged runner function** — ship a fixed, generic evaluator in the extension
    bundle (a tiny interpreter or a constrained function factory compiled at build time)
-   and feed it the config's strings. Whether a sufficiently capable runner survives
+   and feed it the package's strings. Whether a sufficiently capable runner survives
    MV3 review and CSP is the open technical question.
 3. **Script-tag injection** — dead on strict-CSP sites. Listed for completeness.
 
 **Spike before building tiers 2–3.** The spike's job: execute a registry-delivered
 string function in page context on GitHub (strict CSP) and on Reddit, under MV3, via
 each viable path; document permissions friction and CSP behavior. Tier 1 needs **no**
-code execution — the derived-call engine is ordinary extension code operating on config
+code execution — the derived-call engine is ordinary extension code operating on package
 data — so it is buildable today and is not blocked on the spike.
 
 ## Build order
@@ -329,7 +329,7 @@ data — so it is buildable today and is not blocked on the spike.
    `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔`urlPatterns` check.
 2. **Executor derived-call engine** (extension): request construction, token sources,
    `returns` projection, `errorPath` failure, APQ retry, output budgeting.
-3. **Reddit flagship config on tier 1 alone** — REST read (`subredditHot`) + write
+3. **Reddit flagship package on tier 1 alone** — REST read (`subredditHot`) + write
    (`comment` with the modhash token source) + one GraphQL endpoint exercising
    `errorPath` and `persistedQuery`. This is the proof of the whole model.
 4. **MV3 spike → scoped script slots** (tier 2), with publish-time lint in apps/web.
@@ -347,7 +347,7 @@ data — so it is buildable today and is not blocked on the spike.
   (tiers 2–3) into an extension context at runtime, which reads squarely like the
   policy's definition of remotely hosted code. Tampermonkey precedent: user-script
   managers survive in the store, apparently on the argument that the user explicitly
-  installs each script. Our per-config explicit install + pinned versions resembles
+  installs each script. Our per-package explicit install + pinned versions resembles
   that, but the risk of a store rejection (or a later policy enforcement wave) is real
   and could kill tier-2/3 delivery — needs an answer before those tiers ship; possibly
   a store build with code tiers disabled.
@@ -365,14 +365,14 @@ data — so it is buildable today and is not blocked on the spike.
 - **Cross-origin APIs.** v1 is same-origin-only (see above). Real candidate sites with
   split frontend/API hosts will pressure this — what's the loosest invariant we can
   live with?
-- **Health canary for API configs.** Loud failures are only useful if something listens.
+- **Health canary for API packages.** Loud failures are only useful if something listens.
   The canary (out of scope per SPEC but reserved-for in the schema) should replay
   tier-1 calls against live sites; what runs it, and how do auth'd writes get canaried
   safely (a write canary posts real comments)?
-- **`minEngine` bump policy — resolved.** Configs using `api` set `minEngine` to the
-  engine level that introduced it (`ENGINE_VERSION` is 2; the Reddit config sets
-  `minEngine: 2`). The extension refuses a too-new config _whole_ rather than
-  registering tools it cannot run — `supportsConfigEngine`
-  (`apps/extension/src/lib/engine-gate.ts`), applied per config in `register-tools.ts`.
+- **`minEngine` bump policy — resolved.** Packages using `api` set `minEngine` to the
+  engine level that introduced it (`ENGINE_VERSION` is 2; the Reddit package sets
+  `minEngine: 2`). The extension refuses a too-new package _whole_ rather than
+  registering tools it cannot run — `supportsPackageEngine`
+  (`apps/extension/src/lib/engine-gate.ts`), applied per package in `register-tools.ts`.
   What remains is UX, not correctness: the gate fires at registration, so a user can
-  install a config their build cannot run and sees only a page-console warning.
+  install a package their build cannot run and sees only a page-console warning.

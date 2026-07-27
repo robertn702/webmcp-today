@@ -1,7 +1,7 @@
 # Product Marketing Context
 
-**Document version:** v3
-**Last updated:** 2026-07-25
+**Document version:** v4
+**Last updated:** 2026-07-26
 
 Source of truth for positioning, audience, and voice. Every marketing skill
 (copywriting, cro, copy-editing, …) reads this before drafting. Product facts
@@ -15,13 +15,13 @@ live in `AGENTS.md` / `ARCHITECTURE.md`; when they disagree, the code wins.
 
 **One-liner:** MCP tools for any site.
 
-**Supporting line:** Community-written configs call the site's own API, so your
+**Supporting line:** Community-written packages call the site's own API, so your
 agent gets real tools instead of a scraping loop.
 
 **What it does:** WebMCP lets a site publish real tools for AI agents; almost no
-site has. Humans and agents author declarative configs — URL patterns plus tool
+site has. Humans and agents author declarative packages — URL patterns plus tool
 definitions backed by DOM steps or the site's own HTTP API — and publish them to
-the registry. The extension looks up configs for the page you're on and registers
+the registry. The extension looks up packages for the page you're on and registers
 their tools on `document.modelContext`, so an agent calls `reddit_comment`
 instead of guessing which div is the reply box. An MCP server exposes the same
 registry to agents outside the browser.
@@ -53,7 +53,7 @@ scraping the DOM and guessing.
 
 - Give my agent reliable tools on a site that shipped none.
 - Stop maintaining brittle selector-based automation that breaks silently.
-- Publish a tool config once and let other people's agents use it.
+- Publish a tool package once and let other people's agents use it.
 
 **Use cases:** Reddit search/comment, and by extension any site where a
 repeated agent workflow is worth naming as a tool.
@@ -65,9 +65,9 @@ without confusing the other two.
 
 | Persona                             | Cares about                                                                | Challenge                                                                         | Value we promise                                                                              |
 | ----------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Agent operator** (installs)       | Does my browser agent get more capable in the next five minutes?           | Doesn't know what WebMCP is, or that a flag is required; may have no config for their site | Install a config, get named tools on the page — nothing to write                               |
-| **Config author** (human developer) | Format legibility, validation feedback, ownership, versioning              | Writing a config blind, unsure what's valid until submit fails                     | A zod-validated format, append-only versions, and install count as the only ranking that matters |
-| **Autonomous agent** (writes)       | Machine-actionable path: schema, endpoint, auth, error shape               | Copy written for humans buries the API affordance in prose                          | One `POST /api/configs` with a Bearer key; the agent that needed the tool contributes it       |
+| **Agent operator** (installs)       | Does my browser agent get more capable in the next five minutes?           | Doesn't know what WebMCP is, or that a flag is required; may have no package for their site | Install a package, get named tools on the page — nothing to write                               |
+| **Package author** (human developer) | Format legibility, validation feedback, ownership, versioning              | Writing a package blind, unsure what's valid until submit fails                     | A zod-validated format, append-only versions, and install count as the only ranking that matters |
+| **Autonomous agent** (writes)       | Machine-actionable path: schema, endpoint, auth, error shape               | Copy written for humans buries the API affordance in prose                          | One `POST /api/packages` with a Bearer key; the agent that needed the tool contributes it       |
 
 ## Problems & Pain Points
 
@@ -92,7 +92,7 @@ page. Distrust of anything that runs inside a session you're logged into.
 
 ## Competitive Landscape
 
-**Direct:** Nothing comparable ships today — no other WebMCP config registry.
+**Direct:** Nothing comparable ships today — no other WebMCP package registry.
 The realistic rival is a site shipping WebMCP natively, which beats us where it
 happens and is vanishingly rare.
 **Secondary:** Browser-automation and computer-use agents (Playwright-driven
@@ -105,13 +105,13 @@ adjacent distribution models, neither delivering in-page tools to a browser agen
 
 **Key differentiators:**
 
-- Third-party configs for sites that never adopted WebMCP — no site cooperation needed.
+- Third-party packages for sites that never adopted WebMCP — no site cooperation needed.
 - Agents are first-class authors, not just consumers: publishing is one API call.
 - Trust from install count and the data model, not a review queue or a checkmark.
-- API-mode configs declare the site's own HTTP API, so failures are loud (a 4xx
+- API-mode packages declare the site's own HTTP API, so failures are loud (a 4xx
   you can see) instead of a div you can't find.
 
-**How we do it differently:** Configs are data, not code. No `evaluate` step, so
+**How we do it differently:** Packages are data, not code. No `evaluate` step, so
 nothing arbitrary executes in a page you're signed into. Versions are
 append-only and installs pin to a version, so a bad update reaches zero
 installed users until each one opts in.
@@ -126,10 +126,10 @@ hasn't shipped them, and the cost of trying is one install.
 
 | Objection                                              | Response                                                                                                                             |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| "Random code from strangers, running in my logged-in session?" | Configs are declarative data with no arbitrary-code step; API calls are locked to the config's own origin, checked at publish and at run time. |
-| "How do I know a config isn't malicious or broken?"    | Install count is the signal, versions are append-only, and your install is pinned — an update can't reach you until you move the pin. |
+| "Random code from strangers, running in my logged-in session?" | Packages are declarative data with no arbitrary-code step; API calls are locked to the package's own origin, checked at publish and at run time. |
+| "How do I know a package isn't malicious or broken?"    | Install count is the signal, versions are append-only, and your install is pinned — an update can't reach you until you move the pin. |
 | "This needs a Chrome flag, so it's a toy."             | True and stated up front: Chrome 149+ with `chrome://flags/#enable-webmcp-testing`. It's an origin-trial-era platform; say so plainly rather than bury it. |
-| "There's no config for the site I care about."         | Write one — it's a JSON document, validated on submit — or point your agent at the API and have it publish one.                        |
+| "There's no package for the site I care about."         | Write one — it's a JSON document, validated on submit — or point your agent at the API and have it publish one.                        |
 | "WebMCP could change under you."                       | Tracked openly: `docs/platform-risks.md`, incl. the `tools=()` kill switch and unsanctioned-registration risk.                        |
 
 **Anti-persona:** Anyone wanting a zero-setup consumer product today (the
@@ -143,7 +143,7 @@ sites with no tools.
 **Pull:** Named tools appear on a page in five minutes, with no site cooperation.
 **Habit:** Rewriting the same scraping glue per project; accepting that agents
 are bad at websites.
-**Anxiety:** Third-party configs executing in an authenticated session; Chrome
+**Anxiety:** Third-party packages executing in an authenticated session; Chrome
 flag friction; a registry that might be abandoned.
 
 ## Customer Language
@@ -155,8 +155,9 @@ fabricate verbatims. Closest honest sources: the WebMCP spec discussions and
 
 **Words to use:** install, package, tool, register, publish, version, pin,
 extension, agent, site. Concrete verbs from the product's own vocabulary.
-"Package" is the user-facing noun for a published config; keep `config` in code,
-routes, API paths and schema names.
+"Package" is the noun everywhere now — copy and code (routes, API paths, schema
+exports, DB tables, MCP tool names) all say `package`; there is no more `config`
+split to remember.
 
 **Words to avoid:**
 
@@ -165,7 +166,7 @@ routes, API paths and schema names.
   removed from the landing page (commit 6f5cba6). Keep it for README/investor/
   explainer contexts where a knowing reader is likely.
 - "Agents teaching agents" — same call: cute, and it was cut for being vague.
-- "Teach an agent to use any website" — overclaims (needs a config to exist, plus
+- "Teach an agent to use any website" — overclaims (needs a package to exist, plus
   Chrome 149+ and the flag) and misnames the user's verb, which is _install_.
 - Hype vocabulary generally: seamless, effortless, revolutionary, unlock,
   supercharge, magic, "the future of". Also no exclamation points.
@@ -176,13 +177,13 @@ routes, API paths and schema names.
 
 | Term            | Meaning                                                                             |
 | --------------- | ----------------------------------------------------------------------------------- |
-| Package         | A published definition: `{ domain, urlPatterns[], title, description, tools[] }`. The user-facing noun; the code still says `config` everywhere (routes, API, schema, DB) |
+| Package         | A published document: `{ domain, urlPatterns[], title, description, tools[] }`. The one name, in copy and code alike |
 | Tool            | One named, callable capability with an input schema and an execution block           |
-| Version         | Append-only revision of a config's tools/patterns; the served truth                  |
+| Version         | Append-only revision of a package's tools/patterns; the served truth                  |
 | Install         | A user's pin to a specific version; the trust signal when counted                    |
 | Registration    | The extension calling `registerTool` so a page's agent can see a tool                |
 | DOM mode        | Execution via declarative steps (navigate/click/fill/extract/…) — no `evaluate`      |
-| API mode        | Execution via the site's own HTTP API, locked to the config's origin                 |
+| API mode        | Execution via the site's own HTTP API, locked to the package's origin                 |
 | From your terminal | Agent outside the browser using the Cafe MCP server                              |
 | In the browser  | Browser's own agent using tools the extension injected                              |
 
@@ -211,27 +212,27 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 ## Proof Points
 
 **Metrics:** None yet (pre-launch; registry counters on the landing page are live
-but small — 6 curated configs / 18 tools from `@webmcp-cafe/definitions`).
+but small — 6 curated packages / 18 tools from `@webmcp-cafe/definitions`).
 **Customers:** None.
 **Testimonials:** None. Do not invent.
 **Value themes:**
 
 | Theme                             | Proof                                                                                          |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Tools without site cooperation    | Extension registers third-party configs on `document.modelContext`                             |
+| Tools without site cooperation    | Extension registers third-party packages on `document.modelContext`                            |
 | Bounded blast radius              | No `evaluate` step; API mode origin-checked at publish and run time                            |
-| Updates can't ambush you          | `definition_versions` append-only; installs pin; rollback is re-pinning                         |
-| Open by construction              | No approval queue; rival configs allowed; install count + pattern specificity rank them        |
-| Agents can contribute             | `POST /api/configs` with a Bearer API key; published zod schema                                 |
+| Updates can't ambush you          | `package_versions` append-only; installs pin; rollback is re-pinning                            |
+| Open by construction              | No approval queue; rival packages allowed; install count + pattern specificity rank them        |
+| Agents can contribute             | `POST /api/packages` with a Bearer API key; published zod schema                                |
 
 ## Goals
 
-**Business goal:** Seed a registry with enough real configs that the next person
+**Business goal:** Seed a registry with enough real packages that the next person
 finds one for their site — supply before demand.
 
 **Conversion action:** Install the extension (primary; currently `/extension`, a
 run-from-source stub until the Web Store listing exists). Secondary: publish a
-config.
+package.
 
 **Current metrics:** None tracked yet.
 
@@ -239,6 +240,9 @@ config.
 
 _Newest first. One line per revision: what changed and why._
 
+- v4 (2026-07-26) — The `config`/`package` split closed: code (routes, schema
+  exports, DB tables, MCP tool names) now says `package` too, so the v3 caveat
+  ("copy only") no longer applies. Glossary and "Words to use" updated to match.
 - v3 (2026-07-25) — "Package" adopted as the user-facing noun for a published
   config (copy only — routes, API paths, schema exports, MCP tool names and DB
   tables keep `config`); category phrase fixed to "WebMCP tool registry"; the

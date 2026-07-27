@@ -8,8 +8,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Its two staged diagrams are derived from `ARCHITECTURE.md`'s runtime/data flow
   sequences (`components/landing/mode-flows.ts`); if those flows change, change the copy.
 - Everything else lives in the `app/(registry)/` route group, whose layout supplies the
-  shared `max-w-5xl` container. Route groups don't affect URLs — `/configs`, `/submit`,
-  `/settings`, `/auth` are unchanged. Browse is `/configs` (it used to be `/`).
+  shared `max-w-5xl` container. Route groups don't affect URLs — `/packages`, `/submit`,
+  `/settings`, `/auth` are unchanged. Browse is `/packages` (it used to be `/`).
 - `/extension` is a stub until the extension is published; the landing CTA points at it
   and both carry a `TODO(extension)` marker for the Web Store swap.
 - `components/site-footer.tsx` renders once from the **root** layout (not the registry
@@ -39,23 +39,22 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 
 ## Registry model (the served truth)
 
-- **`definition_versions` rows are the served truth directly** — no snapshot table.
-  `GET /api/configs/lookup` and browse (`GET /api/configs`) both serve each
-  definition's _latest_ version (`max(version)`); there is no unverified/verified
-  split and no `yolo` param. Seeded configs are immediately servable (0 installs, but
+- **`package_versions` rows are the served truth directly** — no snapshot table.
+  `GET /api/packages/lookup` and browse (`GET /api/packages`) both serve each
+  package's _latest_ version (`max(version)`); there is no unverified/verified
+  split and no `yolo` param. Seeded packages are immediately servable (0 installs, but
   visible) — see `docs/erd.md`.
-- **Versions are append-only.** `POST /api/configs/:id/versions` (owner-only) inserts
-  the next version; nothing is ever mutated or deleted. `PATCH /api/configs/:id` only
-  touches `webmcp_definitions` metadata (title/description/domain) and never
+- **Versions are append-only.** `POST /api/packages/:id/versions` (owner-only) inserts
+  the next version; nothing is ever mutated or deleted. `PATCH /api/packages/:id` only
+  touches `packages` metadata (title/description/domain) and never
   touches urlPatterns/tools/minEngine (the latter is version-scoped, on
-  `definition_versions`).
-- **Installs are auth-only and pin-by-default.** `POST`/`DELETE /api/configs/:id/install`
-  install/uninstall (pinned to latest unless a `versionId` is given);
-  `POST /api/configs/:id/update` moves an existing install's pin to a different version
-  (also how rollback works — pass an older `versionId`). `GET
-/api/configs/lookup?url=&installed=true` (authenticated) returns the caller's pinned
-  versions instead of latest. Install count (the trust signal) is derived via
-  `COUNT(*) ... GROUP BY definition_id` on `installs`, not a denormalized counter.
+  `package_versions`).
+- **Installs are auth-only and pin-by-default.** `PUT /api/packages/:id/install` sets
+  the caller's pin — idempotent: creates it if absent, moves it if present (also how
+  rollback works — pass an older `versionId`; defaults to latest). `DELETE` removes it.
+  `GET /api/installs` (authenticated) returns the caller's pinned packages at their
+  pinned versions. Install count (the trust signal) is derived via
+  `COUNT(*) ... GROUP BY package_id` on `installs`, not a denormalized counter.
 
 ## Env & dev
 
@@ -64,8 +63,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   t3-env (`env.ts`) validates at build time — `next build` fails without them.
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
-- `scripts/seed.ts` seeds the curated configs from `@webmcp-cafe/definitions`
-  (6 configs / 18 tools, incl. the tier-1 Reddit config).
+- `scripts/seed.ts` seeds the curated packages from `@webmcp-cafe/definitions`
+  (6 packages / 18 tools, incl. the tier-1 Reddit package).
 
 ## Auth
 

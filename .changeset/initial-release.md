@@ -3,6 +3,7 @@
 "@robertn702/webmcp-cafe-mcp": minor
 ---
 
-Initial release: config format v1 (zod schemas, input-schema derivation, urlPatterns
-matching) and the webmcp.cafe MCP server (lookup/list/upload/update-meta/
-publish-version/install/uninstall/update-install).
+Initial release: package format v1 (zod schemas, input-schema derivation, urlPatterns
+matching) and the webmcp.cafe MCP server (lookup_package/list_packages/publish_package/
+update_package_meta/publish_package_version/install_package/uninstall_package/
+list_installs/get_stats).

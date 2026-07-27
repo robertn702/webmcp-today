@@ -8,16 +8,16 @@ same PR. Not a wishlist.
 **Launch (MVP) =** public announcement of `webmcp.cafe` to a developer audience
 — WebMCP is flag/origin-trial gated through Chrome 156, so every early user runs
 Chrome with `#enable-webmcp-testing` and drives tools from the Tool Inspector or
-their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
+their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 
 ## Before launch (MVP)
 
 ### Blocking
 
 - **Landing page** — marketing `/` ("Greasyfork for the agentic web" pitch);
-  decide what happens to the current root browse view (move to /configs?).
+  decide what happens to the current root browse view (move to /packages?).
   Needs a content/design call first. (AGENTS.md → What this is)
-- **Docs page** — config format, publishing guide, extension install guide;
+- **Docs page** — package format, publishing guide, extension install guide;
   source content exists in docs/ + apps/extension/README.md to adapt.
   (docs/api-execution-model.md, packages/schema)
 - **Local-first installs** — installed packages move into the extension's
@@ -33,7 +33,7 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   unpacked install (users already need `#enable-webmcp-testing`). Precedent:
   the reference impl (WebMCP Hub) shipped this exact category — remote-registry
   lookup + content-script registration — to CWS in Feb 2026, so reviewer risk
-  is lower than feared; position the listing as declarative configs interpreted
+  is lower than feared; position the listing as declarative packages interpreted
   by a bundled executor (no `evaluate`, no remote code). **The privacy
   declaration depends on local-first installs**: as built, every URL goes to the
   registry, so "no data collected" would be false — it becomes true (no browsing
@@ -43,7 +43,7 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   regardless: review turnaround is the constraint.
   Zero-review fallback worth a compatibility check — Hub's popup accepts a
   custom hub URL, so its store-approved build could be pointed at our
-  `GET /api/configs/lookup`. Needs Robert: $5 developer account, listing
+  `GET /api/packages/lookup`. Needs Robert: $5 developer account, listing
   identity, privacy policy page. The tiers 2–3 "no remote code" answer can
   follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
@@ -86,14 +86,14 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **Param-description budget gap** — `inputSchema` property descriptions allow
   1,000 chars vs Chrome's 150 guidance; DOM `fields[]` enforce 150, API tools
   bypass it. Align or consciously relax — tightening it after strangers publish
-  invalidates stored configs. (packages/schema/src/input-schema.ts vs fields.ts)
+  invalidates stored packages. (packages/schema/src/input-schema.ts vs fields.ts)
 - **`returns` projection for `reddit_comment`** — write output is Reddit's raw
-  rendered HTML; project errors/permalink instead. Publish as v2 of the config
+  rendered HTML; project errors/permalink instead. Publish as v2 of the package
   (first exercise of the version-append path — worth proving before strangers
   hit it). (packages/definitions/configs/reddit.com.json)
 - **Handle `SecurityError` on registration** — sites can reject injected tools
   via `Permissions-Policy: tools=()` (Chrome 150+); today a rejected
-  `registerTool` would just fail. Catch it and mark the config site-blocked
+  `registerTool` would just fail. Catch it and mark the package site-blocked
   rather than silently degrading. (docs/platform-risks.md → tools=())
 
 ## After launch
@@ -103,11 +103,11 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **Google OAuth** — `socialProviders.google` in apps/web/lib/auth.ts +
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` env (apps/web/.env.example);
   better-auth-ui picks it up automatically. (apps/web/AGENTS.md → Auth)
-- **Config search** — search across definitions (domain/title/description/
+- **Package search** — search across packages (domain/title/description/
   tool names) in the registry UI; browse is currently domain-filter + pagination
-  only. (apps/web/app/api/configs/route.ts GET)
+  only. (apps/web/app/api/packages/route.ts GET)
 - **Show official webmcps** — surface sites that ship their own first-party
-  WebMCP tools (no injection needed) alongside community configs; decide the
+  WebMCP tools (no injection needed) alongside community packages; decide the
   data model (curated list vs. detection) before building.
 - **Blog** (low prio) — launch/announcement posts; MDX route group is the
   simple path. Defer until landing + docs exist.
@@ -124,7 +124,7 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
   vs a packaged runner; document permissions friction. Gates tiers 2–3.
   (docs/api-execution-model.md → "MV3 constraints + spike plan", build-order 4)
 - **APQ / `persistedQuery` support** — executor currently throws on it; needs
-  hash + retry + cross-call cache. Blocks any real GraphQL config (e.g. Reddit
+  hash + retry + cross-call cache. Blocks any real GraphQL package (e.g. Reddit
   shreddit search). (apps/extension/src/lib/api-executor.ts TODO;
   docs/api-execution-model.md → "GraphQL support")
 
@@ -139,7 +139,7 @@ their own agent. Tier-1 configs only; extension installed unpacked or via CWS.
 - **Per-user/per-model output budget** — hard 1.5K truncation removed for v1;
   design the customization (e.g. extension setting) when usage says verbose
   outputs hurt. (docs/DECISIONS.md 2026-07-24 removal entry)
-- **Health canary for API configs** — loud failures need a listener; what runs
+- **Health canary for API packages** — loud failures need a listener; what runs
   it, and how are auth'd writes canaried safely? (docs/api-execution-model.md
   → Open questions)
 - **`ctx` composition for tier-2/3** — what slots/scripts receive (auth tokens,

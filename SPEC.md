@@ -7,7 +7,7 @@
 > **⚠ Historical (2026-07-24):** this is the original plan, kept for context — it is
 > no longer normative. The per-tool verification model (verification snapshots,
 > `yolo`, votes, `verify` endpoint, MCP `vote_on_config`) was replaced by the
-> package-install model (`webmcp_definitions` / append-only `definition_versions` /
+> package-install model (`packages` / append-only `package_versions` /
 > `installs`; see `docs/erd.md` and the root `AGENTS.md` decisions log), `urlPattern`
 > became `urlPatterns` (Chrome `@match`-style array), and the leaderboard page was
 > cut. Where this file and current code disagree, the code + `AGENTS.md` win.
