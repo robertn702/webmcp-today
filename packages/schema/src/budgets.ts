@@ -8,6 +8,13 @@ export const TOOL_NAME_MAX = 30;
 export const TOOL_DESCRIPTION_MAX = 500;
 export const PARAM_DESCRIPTION_MAX = 150;
 
-/** Current package format engine version. Bump when the format changes shape.
- *  History: 1 = DOM execution; 2 = tier-1 `api` block (docs/api-execution-model.md). */
-export const ENGINE_VERSION = 2;
+/** Current package format engine version — a capability level compared with
+ *  plain `>=` against a version's `minEngine` (docs/DECISIONS.md 2026-07-24).
+ *
+ *  PEGGED AT 1 FOR PRE-RELEASE. Do not bump it when the format changes shape.
+ *  The number exists so an older extension build refuses content it cannot run,
+ *  and pre-release there are no older builds and no published packages — so a
+ *  bump protects nobody and just strands the one config that has to move with
+ *  it. The format is still changing freely; that is the point. Start bumping at
+ *  the first release, from 2. */
+export const ENGINE_VERSION = 1;

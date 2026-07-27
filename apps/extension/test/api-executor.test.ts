@@ -3,6 +3,7 @@ import { apiBlockSchema, type ApiBlock } from "@robertn702/webmcp-cafe-schema";
 import {
   applyProjection,
   buildRequest,
+  clearAuthTokenCache,
   executeApiTool,
   getByPath,
   handleResponse,
@@ -17,8 +18,8 @@ const redditApi: ApiBlock = apiBlockSchema.parse({
   baseUrl: "https://www.reddit.com",
   auth: {
     csrf: {
-      source: { endpoint: "me", extract: "data.modhash" },
-      sendAs: { header: "X-Modhash" },
+      source: { endpoint: "me", extract: ["data", "modhash"] },
+      sendAs: { in: "header", name: "X-Modhash" },
     },
   },
   endpoints: {
@@ -34,13 +35,23 @@ const redditApi: ApiBlock = apiBlockSchema.parse({
       path: "/api/comment",
       form: { thing_id: "{{thingId}}", text: "{{text}}", api_type: "json" },
       auth: ["csrf"],
-      errorPath: "json.errors",
+      errorPath: ["json", "errors"],
     },
     search: {
       method: "POST",
       path: "/svc/shreddit/graphql",
       graphql: { document: "@documents/search", variables: { query: "{{query}}", first: 10 } },
-      errorPath: "errors",
+      errorPath: ["errors"],
+    },
+    // Typed substitution: `first` is a whole-string placeholder, so it must
+    // reach the wire as a number, not "25".
+    searchTyped: {
+      method: "POST",
+      path: "/svc/shreddit/graphql",
+      graphql: {
+        document: "@documents/search",
+        variables: { query: "{{query}}", first: "{{first}}", label: "top {{first}}" },
+      },
     },
     searchPersisted: {
       method: "POST",
@@ -64,14 +75,20 @@ function jsonResponse(body: unknown, status = 200): Response {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  // The TTL cache outlives a tool call by design, so it outlives a test too.
+  clearAuthTokenCache();
 });
 
 describe("getByPath", () => {
   it("walks object keys and array indices", () => {
     const value = { data: { children: [{ data: { title: "hi" } }] } };
-    expect(getByPath(value, "data.children.0.data.title")).toBe("hi");
-    expect(getByPath(value, "data.modhash")).toBeUndefined();
-    expect(getByPath(null, "a.b")).toBeUndefined();
+    expect(getByPath(value, ["data", "children", "0", "data", "title"])).toBe("hi");
+    expect(getByPath(value, ["data", "modhash"])).toBeUndefined();
+    expect(getByPath(null, ["a", "b"])).toBeUndefined();
+  });
+
+  it("reads a key containing a dot, which a dot-string locator could not", () => {
+    expect(getByPath({ "a.b": { c: 1 } }, ["a.b", "c"])).toBe(1);
   });
 });
 
@@ -99,21 +116,38 @@ describe("interpolateDeep", () => {
     expect(out).toEqual({ q: "cats", first: 10, nested: ["cats", 2] });
   });
 
-  it("substitutes missing params with empty string", () => {
-    expect(interpolateDeep("{{missing}}", {})).toBe("");
+  it("emits the raw typed value when the whole string is one placeholder", () => {
+    expect(interpolateDeep({ n: "{{n}}" }, { n: 10 })).toEqual({ n: 10 });
+    expect(interpolateDeep({ ok: "{{ok}}" }, { ok: false })).toEqual({ ok: false });
+    expect(interpolateDeep({ tags: "{{tags}}" }, { tags: ["a"] })).toEqual({ tags: ["a"] });
+  });
+
+  it("still concatenates when the placeholder is only part of the string", () => {
+    expect(interpolateDeep({ n: "page {{n}}" }, { n: 10 })).toEqual({ n: "page 10" });
+  });
+
+  it("yields undefined for a whole-string placeholder with no value, so JSON drops it", () => {
+    expect(interpolateDeep("{{missing}}", {})).toBeUndefined();
+    expect(JSON.stringify(interpolateDeep({ a: "{{missing}}", b: 1 }, {}))).toBe('{"b":1}');
+  });
+
+  it("still substitutes an empty string mid-template", () => {
+    expect(interpolateDeep("x{{missing}}y", {})).toBe("xy");
   });
 });
 
 describe("applyProjection", () => {
   const response = {
-    data: { children: [{ data: { title: "a" } }, { data: { title: "b" } }] },
+    data: {
+      children: [{ data: { title: "a", score: 10 } }, { data: { title: "b", score: 60 } }],
+    },
   };
 
-  it("selects a subtree via dot-path", () => {
+  it("selects a subtree via a path", () => {
     expect(applyProjection(response, "data.children")).toEqual(response.data.children);
   });
 
-  it("maps over an array with a []-suffixed segment", () => {
+  it("flattens and maps over an array", () => {
     expect(applyProjection(response, "data.children[].data.title")).toEqual(["a", "b"]);
   });
 
@@ -121,27 +155,40 @@ describe("applyProjection", () => {
     expect(applyProjection(response, undefined)).toBe(response);
   });
 
-  it("picks fields with a {a,b} picker segment", () => {
-    expect(applyProjection(response, "data.children[].data.{title}")).toEqual([
+  it("picks fields with a multi-select hash", () => {
+    expect(applyProjection(response, "data.children[].data.{title: title}")).toEqual([
       { title: "a" },
       { title: "b" },
     ]);
   });
 
   it("picks fields directly off an object", () => {
-    expect(applyProjection({ data: { name: "x", karma: 5 } }, "data.{name,karma}")).toEqual({
-      name: "x",
-      karma: 5,
-    });
+    expect(
+      applyProjection(
+        { data: { name: "x", karma: 5, junk: 1 } },
+        "data.{name: name, karma: karma}",
+      ),
+    ).toEqual({ name: "x", karma: 5 });
   });
 
-  it("falls back to the whole value for grammar it cannot interpret", () => {
-    // Wildcards/filters are deliberately not implemented (future decision).
-    expect(applyProjection(response, "data.children[].data.*")).toBe(response);
+  it("filters — expressible only because the grammar is JMESPath now", () => {
+    expect(applyProjection(response, "data.children[?data.score > `50`].data.title")).toEqual([
+      "b",
+    ]);
   });
 
-  it("falls back to the whole value when the path resolves to nothing", () => {
-    expect(applyProjection(response, "data.missing.title")).toBe(response);
+  it("THROWS when the projection matches nothing (API rot fails loudly)", () => {
+    // The old grammar silently returned the whole response here, hiding the
+    // shape change that caused it.
+    expect(() => applyProjection(response, "data.missing.title")).toThrow(/matched nothing/);
+  });
+
+  it("THROWS on a malformed expression rather than falling back", () => {
+    expect(() => applyProjection(response, "data.{unterminated")).toThrow();
+  });
+
+  it("passes an empty array through — no results is not an error", () => {
+    expect(applyProjection({ data: { children: [] } }, "data.children[].data.title")).toEqual([]);
   });
 });
 
@@ -193,9 +240,20 @@ describe("buildRequest — construction + interpolation", () => {
     const req = buildRequest(redditApi, redditApi.endpoints.search!, { query: "cats" });
     expect(req.headers["content-type"]).toBe("application/json");
     const body: unknown = JSON.parse(req.body ?? "");
-    expect(getByPath(body, "query")).toContain("query Search");
-    expect(getByPath(body, "variables.query")).toBe("cats");
-    expect(getByPath(body, "variables.first")).toBe(10);
+    expect(getByPath(body, ["query"])).toContain("query Search");
+    expect(getByPath(body, ["variables", "query"])).toBe("cats");
+    expect(getByPath(body, ["variables", "first"])).toBe(10);
+  });
+
+  it("sends a whole-string placeholder as its raw type in a JSON body", () => {
+    const req = buildRequest(redditApi, redditApi.endpoints.searchTyped!, {
+      query: "cats",
+      first: 25,
+    });
+    const body: unknown = JSON.parse(req.body ?? "");
+    // The number stays a number; the same param inside a larger string does not.
+    expect(getByPath(body, ["variables", "first"])).toBe(25);
+    expect(getByPath(body, ["variables", "label"])).toBe("top 25");
   });
 
   it("throws 'not yet supported' for persistedQuery endpoints (APQ stub)", () => {
@@ -248,7 +306,7 @@ describe("handleResponse — errorPath + projection", () => {
     expect(() => handleResponse(redditApi.endpoints.comment!, outcome)).not.toThrow();
   });
 
-  it("defaults GraphQL errorPath to 'errors'", () => {
+  it("defaults GraphQL errorPath to ['errors']", () => {
     const noExplicit = apiBlockSchema.parse({
       baseUrl: "https://www.reddit.com",
       endpoints: {
@@ -329,5 +387,90 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     const result = await executeApiTool("leak", evil, "leak", {});
     expect(result.content[0]?.text).toMatch(/same-origin/);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("auth token TTL cache", () => {
+  /** Same block, with a ttlSeconds on the csrf source. */
+  const withTtl = (ttlSeconds: number): ApiBlock =>
+    apiBlockSchema.parse({
+      baseUrl: "https://www.reddit.com",
+      auth: {
+        csrf: {
+          source: { endpoint: "me", extract: ["data", "modhash"] },
+          sendAs: { in: "header", name: "X-Modhash" },
+          ttlSeconds,
+        },
+      },
+      endpoints: {
+        me: { method: "GET", path: "/api/me.json" },
+        comment: {
+          method: "POST",
+          path: "/api/comment",
+          form: { thing_id: "{{thingId}}" },
+          auth: ["csrf"],
+        },
+      },
+    });
+
+  function stubFetch() {
+    const mock = vi.fn((url: string) =>
+      url.endsWith("/api/me.json")
+        ? Promise.resolve(jsonResponse({ data: { modhash: "TOKEN" } }))
+        : Promise.resolve(jsonResponse({ ok: true })),
+    );
+    vi.stubGlobal("fetch", mock);
+    return mock;
+  }
+
+  it("re-fetches the token on every call when ttlSeconds is omitted", async () => {
+    const mock = stubFetch();
+    await executeApiTool("c", redditApi, "comment", { thingId: "t3_a", text: "x" });
+    await executeApiTool("c", redditApi, "comment", { thingId: "t3_b", text: "y" });
+    // Two token fetches + two writes: the safe default, unchanged.
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
+  });
+
+  it("reuses a live token across calls when ttlSeconds is set", async () => {
+    const api = withTtl(300);
+    const mock = stubFetch();
+    await executeApiTool("c", api, "comment", { thingId: "t3_a" });
+    await executeApiTool("c", api, "comment", { thingId: "t3_b" });
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(1);
+    expect(mock).toHaveBeenCalledTimes(3);
+  });
+
+  it("re-fetches once the TTL has expired", async () => {
+    const api = withTtl(60);
+    const mock = stubFetch();
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    await executeApiTool("c", api, "comment", { thingId: "t3_a" });
+    vi.spyOn(Date, "now").mockReturnValue(now + 61_000);
+    await executeApiTool("c", api, "comment", { thingId: "t3_b" });
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
+  });
+
+  it("does not hand one package's token to another on the same origin", async () => {
+    // Same origin, same source name, different extract locator — the key must
+    // separate them.
+    const a = withTtl(300);
+    const b = apiBlockSchema.parse({
+      ...a,
+      auth: {
+        csrf: {
+          source: { endpoint: "me", extract: ["data", "other"] },
+          sendAs: { in: "header", name: "X-Modhash" },
+          ttlSeconds: 300,
+        },
+      },
+    });
+    const mock = stubFetch();
+    await executeApiTool("c", a, "comment", { thingId: "t3_a" });
+    const result = await executeApiTool("c", b, "comment", { thingId: "t3_b" });
+    // b's locator finds nothing, which is a loud failure rather than a silent
+    // reuse of a's cached token.
+    expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
+    expect(result.content[0]?.text).toMatch(/yielded no token at "data.other"/);
   });
 });

@@ -31,8 +31,14 @@ const base: ApiBlock = {
   baseUrl: "https://www.reddit.com",
   documents: { search: "query Search { search { docCount } }" },
   auth: {
-    session: { sendAs: { header: "X-Session" }, source: { endpoint: "me", extract: "data.sid" } },
-    csrf: { source: { endpoint: "me", extract: "data.modhash" }, sendAs: { header: "X-Modhash" } },
+    session: {
+      sendAs: { in: "header", name: "X-Session" },
+      source: { endpoint: "me", extract: ["data", "sid"] },
+    },
+    csrf: {
+      source: { endpoint: "me", extract: ["data", "modhash"] },
+      sendAs: { in: "header", name: "X-Modhash" },
+    },
   },
 };
 
@@ -41,8 +47,14 @@ const base: ApiBlock = {
 const reordered: ApiBlock = {
   baseUrl: "https://www.reddit.com",
   auth: {
-    csrf: { sendAs: { header: "X-Modhash" }, source: { extract: "data.modhash", endpoint: "me" } },
-    session: { source: { extract: "data.sid", endpoint: "me" }, sendAs: { header: "X-Session" } },
+    csrf: {
+      sendAs: { name: "X-Modhash", in: "header" },
+      source: { extract: ["data", "modhash"], endpoint: "me" },
+    },
+    session: {
+      source: { extract: ["data", "sid"], endpoint: "me" },
+      sendAs: { name: "X-Session", in: "header" },
+    },
   },
   documents: { search: "query Search { search { docCount } }" },
   endpoints: {
@@ -92,8 +104,8 @@ describe("canonicalizeApiBlock", () => {
     // Nested: endpoints record keys, endpoint fields, auth source fields, and
     // graphql.variables all sorted too.
     expect(canonical).toContain('"comment":{"auth":["csrf","session"],"form":');
-    expect(canonical).toContain('"csrf":{"sendAs":{"header":"X-Modhash"},"source":');
-    expect(canonical).toContain('"source":{"endpoint":"me","extract":"data.modhash"}');
+    expect(canonical).toContain('"csrf":{"sendAs":{"in":"header","name":"X-Modhash"},"source":');
+    expect(canonical).toContain('"source":{"endpoint":"me","extract":["data","modhash"]}');
     expect(canonical).toContain('"graphql":{"document":"@documents/search"');
     expect(canonical).toContain('"variables":{"first":10,"query":"{{query}}"}');
   });
@@ -163,7 +175,14 @@ describe("apiContentHash", () => {
    * pin the frozen surface, including the JCS edge cases that a dependency bump
    * could plausibly disturb — an astral-plane key, -0, a large exponent, and an
    * ordered auth array. A failure here means every stored copy just became
-   * unreachable, so fix the cause; never update the expected value. */
+   * unreachable, so fix the cause; never update the expected value.
+   *
+   * The one legitimate reason a value here moves is that the FIXTURE changed —
+   * i.e. the api block's own shape did, which pre-release it still may. That
+   * happened once: `sendAs` became {in, name} and `extract` became a locator
+   * array, so the third fixture's hash was recomputed by hand. Proof it was the
+   * input and not the algorithm: the first two fixtures carry neither field and
+   * did not move. */
   const knownAnswers: [string, ApiBlock, string][] = [
     ["minimal block", minimal, "1207250d1d1886ca321f15785eda2c49adcf7493fc09735632175fd07e092956"],
     [
@@ -181,9 +200,14 @@ describe("apiContentHash", () => {
       {
         baseUrl: "https://y.com",
         endpoints: { b: { method: "GET", path: "/b", auth: ["z", "a"] } },
-        auth: { z: { source: { endpoint: "b", extract: "t" }, sendAs: { header: "H" } } },
+        auth: {
+          z: {
+            source: { endpoint: "b", extract: ["t"] },
+            sendAs: { in: "header", name: "H" },
+          },
+        },
       },
-      "ea8f0bcc810652cb1009806f4b6acee3270efca401f6b97bf38178a46881baff",
+      "6419de53d00a52a5cc9588ac2c0553f2ec352bfbf17ecb82cbc88a7c9c214f24",
     ],
   ];
 
@@ -239,7 +263,7 @@ describe("apiContentHash", () => {
         (draft) => {
           const source = draft.auth?.csrf;
           if (!source) throw new Error("fixture missing auth source");
-          source.sendAs.header = "X-CSRF";
+          source.sendAs.name = "X-CSRF";
         },
       ],
       [

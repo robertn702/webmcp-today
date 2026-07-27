@@ -1,4 +1,5 @@
-import type { ApiBlock, ApiEndpoint } from "@robertn702/webmcp-cafe-schema";
+import { search, type JSONValue } from "@jmespath-community/jmespath";
+import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@robertn702/webmcp-cafe-schema";
 import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./model-context.js";
 
@@ -23,14 +24,9 @@ import type { McpResult } from "./model-context.js";
 //     already permit — so there is no CSP problem to route around.
 
 const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
+/** A string that is EXACTLY one placeholder ("{{n}}", not "x{{n}}"). */
+const WHOLE_PLACEHOLDER_RE = /^\{\{(\w+)\}\}$/;
 const DOCUMENT_REF_RE = /^@documents\/(.+)$/;
-// The tiny `returns` grammar we interpret: dot-separated segments, each either
-// `\w+` optionally suffixed with `[]` ("map over this array"), a bare `[]`, or
-// a field picker `{a,b,c}` (keep only those keys; maps over arrays). Anything
-// richer (wildcards, filters) is NOT interpreted — projection falls back to the
-// whole response. Richer projection is a deliberate future decision (docs open
-// question "Output projection language").
-const PROJECTION_SEGMENT_RE = /^\w+(\[\])?$|^\[\]$|^\{\w+(,\w+)*\}$/;
 
 export interface DerivedRequest {
   url: string;
@@ -58,10 +54,23 @@ function interpolatePath(template: string, params: Record<string, unknown>): str
 }
 
 /** Recursively interpolate {{param}} on every string leaf of a body / graphql
- *  variables template; non-string leaves pass through unchanged. Whole-value
- *  typed substitution ({{n}} -> number) is a known deferred case. */
+ *  variables template; non-string leaves pass through unchanged.
+ *
+ *  A leaf that is EXACTLY one placeholder emits the RAW TYPED value, so a JSON
+ *  body sends `{"count": 10}` rather than `{"count": "10"}` and a GraphQL
+ *  `Int!` variable stays an Int. Anything else ("page {{n}}") concatenates as
+ *  before. Only bodies need this: `query`/`form`/`path` are schema-typed as
+ *  strings and their encoders stringify anyway.
+ *
+ *  A whole-string placeholder for a param that was not supplied yields
+ *  `undefined`, which JSON.stringify drops from an object. That is deliberate —
+ *  an absent optional should be absent, not `""`. */
 export function interpolateDeep(value: unknown, params: Record<string, unknown>): unknown {
-  if (typeof value === "string") return interpolateString(value, params);
+  if (typeof value === "string") {
+    const whole = WHOLE_PLACEHOLDER_RE.exec(value);
+    if (whole !== null) return params[whole[1] ?? ""];
+    return interpolateString(value, params);
+  }
   if (Array.isArray(value)) return value.map((item) => interpolateDeep(item, params));
   if (value !== null && typeof value === "object") {
     const out: Record<string, unknown> = {};
@@ -71,12 +80,13 @@ export function interpolateDeep(value: unknown, params: Record<string, unknown>)
   return value;
 }
 
-/** Walk a dot-path (object keys + numeric array indices) into a value. Returns
- *  undefined if any segment is missing. Used for `extract`, `errorPath`, and
- *  single-key projection steps. */
-export function getByPath(value: unknown, path: string): unknown {
+/** Walk a locator (object keys + numeric array indices) into a value. Returns
+ *  undefined if any segment is missing. Used for `extract` and `errorPath` —
+ *  the two reads that must name one place in a document and nothing more, so
+ *  they take a segment array and never touch an expression evaluator. */
+export function getByPath(value: unknown, path: string[]): unknown {
   let current: unknown = value;
-  for (const segment of path.split(".")) {
+  for (const segment of path) {
     if (current === null || current === undefined) return undefined;
     if (Array.isArray(current)) {
       const index = Number(segment);
@@ -102,46 +112,26 @@ export function isNonEmpty(value: unknown): boolean {
   return true;
 }
 
-function projectSegments(value: unknown, segments: string[]): unknown {
-  if (segments.length === 0) return value;
-  const [segment, ...rest] = segments;
-  if (segment === undefined) return value;
-  if (segment === "[]") {
-    if (!Array.isArray(value)) return undefined;
-    return value.map((item) => projectSegments(item, rest));
-  }
-  if (segment.startsWith("{") && segment.endsWith("}")) {
-    // Field picker: keep only the named keys. Maps over arrays so
-    // "children[].data.{a,b}" works without a trailing bare "[]".
-    const keys = segment.slice(1, -1).split(",");
-    const pick = (item: unknown): unknown => {
-      if (item === null || typeof item !== "object" || Array.isArray(item)) return undefined;
-      const out: Record<string, unknown> = {};
-      for (const key of keys) out[key] = Reflect.get(item, key);
-      return projectSegments(out, rest);
-    };
-    return Array.isArray(value) ? value.map(pick) : pick(value);
-  }
-  const mapsArray = segment.endsWith("[]");
-  const key = mapsArray ? segment.slice(0, -2) : segment;
-  const next = getByPath(value, key);
-  if (mapsArray) {
-    if (!Array.isArray(next)) return undefined;
-    return next.map((item) => projectSegments(item, rest));
-  }
-  return projectSegments(next, rest);
-}
-
-/** Apply a `returns` projection to trim output for density and relevance.
- *  SMALLEST useful grammar only (see PROJECTION_SEGMENT_RE); anything outside
- *  it, or a path that resolves to nothing, falls back to the whole response
- *  (output is uncapped in v1 — see docs/DECISIONS.md 2026-07-24). */
-export function applyProjection(value: unknown, returns?: string): unknown {
+/** Apply the endpoint's `returns` JMESPath projection, trimming the response
+ *  for density and relevance (output itself is uncapped — docs/DECISIONS.md
+ *  2026-07-24).
+ *
+ *  FAILS LOUDLY, by design. The previous hand-rolled grammar fell back to the
+ *  whole response both when it couldn't parse the expression and when the path
+ *  matched nothing, which is precisely the silent rot this execution model
+ *  exists to replace. Now: a malformed expression or a runtime type error
+ *  throws out of `search`, and a projection that resolves to nothing (JMESPath
+ *  yields `null`) throws too — that is the API-shape-changed signal. An empty
+ *  array is a legitimate "no results" and passes through untouched. */
+export function applyProjection(value: JSONValue, returns?: string): JSONValue {
   if (returns === undefined || returns.length === 0) return value;
-  const segments = returns.split(".");
-  if (!segments.every((segment) => PROJECTION_SEGMENT_RE.test(segment))) return value;
-  const projected = projectSegments(value, segments);
-  return projected === undefined ? value : projected;
+  const projected = search(value, returns);
+  if (projected === null || projected === undefined) {
+    throw new Error(
+      `Projection "${returns}" matched nothing in the response — the API's shape has probably changed.`,
+    );
+  }
+  return projected;
 }
 
 /** Resolve a GraphQL document: `@documents/name` -> the package-level document,
@@ -244,10 +234,35 @@ async function performFetch(
   return { status: response.status, ok: response.ok, text: await response.text() };
 }
 
+interface CachedToken {
+  value: string;
+  expiresAt: number;
+}
+
+/** Tokens whose source declares `ttlSeconds`, cached ACROSS tool calls — the
+ *  per-invocation map only dedupes within a single call, which is why every
+ *  Reddit write used to re-fetch the modhash first. A source WITHOUT
+ *  `ttlSeconds` is never stored here (Airbyte's default: refresh every
+ *  request), so opting in is explicit.
+ *
+ *  Keyed by origin + source name + the source's own definition so two packages
+ *  on one origin that both name a source "csrf" cannot read each other's
+ *  token. */
+const persistentTokenCache = new Map<string, CachedToken>();
+
+function tokenCacheKey(api: ApiBlock, name: string, source: ApiAuthSource): string {
+  return [api.baseUrl, name, source.source.endpoint, ...source.source.extract].join("\u0000");
+}
+
+/** Drop every cross-call token. For tests; nothing in production needs it. */
+export function clearAuthTokenCache(): void {
+  persistentTokenCache.clear();
+}
+
 /** Resolve one named auth token source (e.g. Reddit's modhash): fetch its
- *  source endpoint, extract the token via the dot-path, and return the header
- *  to attach. Cached by source name so one tool call never fetches the same
- *  source twice. */
+ *  source endpoint, extract the token via its locator, and return the header to
+ *  attach. Two layers of caching — the per-call map (one fetch per source per
+ *  tool call, always) and the TTL cache above (only when the source opts in). */
 async function resolveAuthToken(
   api: ApiBlock,
   name: string,
@@ -256,9 +271,22 @@ async function resolveAuthToken(
 ): Promise<{ header: string; value: string }> {
   const source = api.auth?.[name];
   if (!source) throw new Error(`Auth source "${name}" is not defined in api.auth.`);
+  // `sendAs.in` has exactly one member today; when a second lands this must
+  // branch on it instead of assuming a header.
+  const header = source.sendAs.name;
 
   const cached = cache.get(name);
-  if (cached !== undefined) return { header: source.sendAs.header, value: cached };
+  if (cached !== undefined) return { header, value: cached };
+
+  const ttlMs = source.ttlSeconds === undefined ? 0 : source.ttlSeconds * 1000;
+  const key = tokenCacheKey(api, name, source);
+  if (ttlMs > 0) {
+    const stored = persistentTokenCache.get(key);
+    if (stored !== undefined && stored.expiresAt > Date.now()) {
+      cache.set(name, stored.value);
+      return { header, value: stored.value };
+    }
+  }
 
   const sourceEndpoint = api.endpoints[source.source.endpoint];
   if (!sourceEndpoint) {
@@ -279,20 +307,31 @@ async function resolveAuthToken(
   }
   const token = getByPath(json, source.source.extract);
   if (token === undefined || token === null || token === "") {
-    throw new Error(`Auth source "${name}" yielded no token at "${source.source.extract}".`);
+    throw new Error(
+      `Auth source "${name}" yielded no token at "${source.source.extract.join(".")}".`,
+    );
   }
   const value = String(token);
   cache.set(name, value);
-  return { header: source.sendAs.header, value };
+  if (ttlMs > 0) persistentTokenCache.set(key, { value, expiresAt: Date.now() + ttlMs });
+  return { header, value };
+}
+
+/** JSON.parse returns `any`. This is the one place that narrows it to the
+ *  JSONValue the projection engine's types want — sound by construction, since
+ *  JSON.parse cannot produce anything else, and it stops the `any` at this
+ *  line instead of letting it spread. */
+function parseJson(text: string): JSONValue {
+  return JSON.parse(text);
 }
 
 /** Interpret a completed response: HTTP status, then `errorPath` (GraphQL
- *  200-with-errors default to "errors"), then `returns` projection.
+ *  200-with-errors default to ["errors"]), then `returns` projection.
  *  Throws on failure so the outer wrapper formats a single error result. */
 export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): McpResult {
-  let json: unknown;
+  let json: JSONValue | undefined;
   try {
-    json = JSON.parse(outcome.text);
+    json = parseJson(outcome.text);
   } catch {
     json = undefined;
   }
@@ -306,11 +345,13 @@ export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): Mc
     throw new Error(`HTTP ${outcome.status}: ${JSON.stringify(json).slice(0, 500)}`);
   }
 
-  const errorPath = endpoint.errorPath ?? (endpoint.graphql ? "errors" : undefined);
+  const errorPath = endpoint.errorPath ?? (endpoint.graphql ? ["errors"] : undefined);
   if (errorPath !== undefined) {
     const payload = getByPath(json, errorPath);
     if (isNonEmpty(payload)) {
-      throw new Error(`API error at "${errorPath}": ${JSON.stringify(payload).slice(0, 500)}`);
+      throw new Error(
+        `API error at "${errorPath.join(".")}": ${JSON.stringify(payload).slice(0, 500)}`,
+      );
     }
   }
 

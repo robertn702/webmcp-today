@@ -3,27 +3,28 @@
   "urlPatterns": ["*://*.reddit.com/*"],
   "title": "Reddit (JSON API)",
   "description": "Read and write Reddit via its own JSON API: list subreddit posts, read threads, search, comment, and vote — executed as the logged-in user. Tier-1 API execution (no DOM selectors).",
-  "minEngine": 2,
-  "changelog": "Initial version: reads (me, subreddit hot, search, thread) and writes (comment, vote) via Reddit's JSON API with the modhash CSRF flow.",
+  "minEngine": 1,
+  "changelog": "`returns` projections are JMESPath, `extract`/`errorPath` are locator arrays, `sendAs` is {in, name}, and the modhash source caches for 300s instead of re-fetching before every write.",
   "api": {
     "baseUrl": "https://www.reddit.com",
     "auth": {
       "csrf": {
-        "source": { "endpoint": "me", "extract": "data.modhash" },
-        "sendAs": { "header": "X-Modhash" }
+        "source": { "endpoint": "me", "extract": ["data", "modhash"] },
+        "sendAs": { "in": "header", "name": "X-Modhash" },
+        "ttlSeconds": 300
       }
     },
     "endpoints": {
       "me": {
         "method": "GET",
         "path": "/api/me.json",
-        "returns": "data.{name,total_karma,created_utc}"
+        "returns": "data.{name: name, total_karma: total_karma, created_utc: created_utc}"
       },
       "subredditHot": {
         "method": "GET",
         "path": "/r/{{subreddit}}/hot.json",
         "query": { "limit": "{{limit}}", "raw_json": "1" },
-        "returns": "data.children[].data.{id,name,title,author,score,num_comments,permalink,url,created_utc}"
+        "returns": "data.children[].data.{id: id, name: name, title: title, author: author, score: score, num_comments: num_comments, permalink: permalink, url: url, created_utc: created_utc}"
       },
       "search": {
         "method": "GET",
@@ -35,20 +36,20 @@
           "limit": "{{limit}}",
           "raw_json": "1"
         },
-        "returns": "data.children[].data.{id,name,subreddit,title,author,score,num_comments,permalink,created_utc}"
+        "returns": "data.children[].data.{id: id, name: name, subreddit: subreddit, title: title, author: author, score: score, num_comments: num_comments, permalink: permalink, created_utc: created_utc}"
       },
       "thread": {
         "method": "GET",
         "path": "/comments/{{postId}}.json",
         "query": { "limit": "{{limit}}", "depth": "{{depth}}", "sort": "top", "raw_json": "1" },
-        "returns": "1.data.children[].data.{id,name,author,score,body,created_utc}"
+        "returns": "[1].data.children[].data.{id: id, name: name, author: author, score: score, body: body, created_utc: created_utc}"
       },
       "comment": {
         "method": "POST",
         "path": "/api/comment",
         "form": { "thing_id": "{{thingId}}", "text": "{{text}}", "api_type": "json" },
         "auth": ["csrf"],
-        "errorPath": "json.errors"
+        "errorPath": ["json", "errors"]
       },
       "vote": {
         "method": "POST",
