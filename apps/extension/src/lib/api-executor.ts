@@ -73,7 +73,10 @@ export function interpolateDeep(value: unknown, params: Record<string, unknown>)
   }
   if (Array.isArray(value)) return value.map((item) => interpolateDeep(item, params));
   if (value !== null && typeof value === "object") {
-    const out: Record<string, unknown> = {};
+    // Object.create(null): a template key of "__proto__" must not repoint this
+    // object's prototype (a plain `{}` treats `out["__proto__"] = x` as a
+    // prototype assignment, not an own property).
+    const out: Record<string, unknown> = Object.create(null);
     for (const [key, item] of Object.entries(value)) out[key] = interpolateDeep(item, params);
     return out;
   }
@@ -245,13 +248,27 @@ interface CachedToken {
  *  `ttlSeconds` is never stored here (Airbyte's default: refresh every
  *  request), so opting in is explicit.
  *
- *  Keyed by origin + source name + the source's own definition so two packages
- *  on one origin that both name a source "csrf" cannot read each other's
- *  token. */
+ *  Keyed by origin + source name + the source's own definition (including the
+ *  resolved fetch endpoint's method/path, not just its symbolic name) so two
+ *  packages on one origin that both name a source "csrf" — or reuse an
+ *  endpoint name like "me" for two different actual endpoints — cannot read
+ *  each other's token. */
 const persistentTokenCache = new Map<string, CachedToken>();
 
-function tokenCacheKey(api: ApiBlock, name: string, source: ApiAuthSource): string {
-  return [api.baseUrl, name, source.source.endpoint, ...source.source.extract].join("\u0000");
+function tokenCacheKey(
+  api: ApiBlock,
+  name: string,
+  source: ApiAuthSource,
+  sourceEndpoint: ApiEndpoint,
+): string {
+  return [
+    api.baseUrl,
+    name,
+    sourceEndpoint.method,
+    sourceEndpoint.path,
+    source.source.endpoint,
+    ...source.source.extract,
+  ].join("\u0000");
 }
 
 /** Drop every cross-call token. For tests; nothing in production needs it. */
@@ -278,8 +295,15 @@ async function resolveAuthToken(
   const cached = cache.get(name);
   if (cached !== undefined) return { header, value: cached };
 
+  const sourceEndpoint = api.endpoints[source.source.endpoint];
+  if (!sourceEndpoint) {
+    throw new Error(
+      `Auth source "${name}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
+    );
+  }
+
   const ttlMs = source.ttlSeconds === undefined ? 0 : source.ttlSeconds * 1000;
-  const key = tokenCacheKey(api, name, source);
+  const key = tokenCacheKey(api, name, source, sourceEndpoint);
   if (ttlMs > 0) {
     const stored = persistentTokenCache.get(key);
     if (stored !== undefined && stored.expiresAt > Date.now()) {
@@ -288,12 +312,6 @@ async function resolveAuthToken(
     }
   }
 
-  const sourceEndpoint = api.endpoints[source.source.endpoint];
-  if (!sourceEndpoint) {
-    throw new Error(
-      `Auth source "${name}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
-    );
-  }
   const request = buildRequest(api, sourceEndpoint, params);
   const outcome = await performFetch(request, request.headers);
   if (!outcome.ok) {

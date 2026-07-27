@@ -55,8 +55,10 @@ export const apiAuthSourceSchema = z.object({
    * every request, which is Airbyte's default and the safe one. Seconds rather
    * than an ISO-8601 duration ("PT1H"): a duration string needs a hand-written
    * parser plus a regex refine that has to agree with it, and its only payoff
-   * is familiarity in a format nothing but our executor reads. */
-  ttlSeconds: z.int().positive().optional(),
+   * is familiarity in a format nothing but our executor reads. Capped at 86400
+   * (24h) — a token cached longer than that is a stale-credential risk, not a
+   * legitimate performance optimization. */
+  ttlSeconds: z.int().positive().max(86400).optional(),
 });
 
 /** A GraphQL operation. `document` is opaque — either an inline query or a

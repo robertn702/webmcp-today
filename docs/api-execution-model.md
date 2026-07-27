@@ -155,6 +155,11 @@ Field semantics:
   that matches nothing **fails the call** rather than quietly returning the whole
   response — that is the API-shape-changed signal, and the whole point of preferring API
   execution over DOM execution.
+  > **Caveat:** "matches nothing" means the projection evaluates to JMESPath's `null`
+  > (e.g. a path segment that no longer exists) — that throws, distinguishing API rot
+  > from a legitimate empty result. An empty array (`[]`, "no posts in this subreddit")
+  > is a real result and passes through untouched; only `null`/`undefined` is treated as
+  > failure.
 - **`errorPath`** — where errors live in a 200 response body, as a locator array (e.g.
   `["errors"]` for GraphQL's 200-with-errors convention, `["json", "errors"]` for
   Reddit's REST API). A non-empty value at that path = tool failure, surfaced as an
