@@ -21,10 +21,9 @@ export class CafeClient {
     return text ? JSON.parse(text) : null;
   }
 
-  lookup(url: string, installed: boolean): Promise<unknown> {
+  lookup(url: string): Promise<unknown> {
     const params = new URLSearchParams({ url });
-    if (installed) params.set("installed", "true");
-    return this.request(`/api/configs/lookup?${params}`);
+    return this.request(`/api/packages/lookup?${params}`);
   }
 
   list(opts: { domain?: string; page?: number; pageSize?: number }): Promise<unknown> {
@@ -32,47 +31,45 @@ export class CafeClient {
     if (opts.domain) params.set("domain", opts.domain);
     if (opts.page) params.set("page", String(opts.page));
     if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
-    return this.request(`/api/configs?${params}`);
+    return this.request(`/api/packages?${params}`);
   }
 
   get(id: string): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}`);
+    return this.request(`/api/packages/${encodeURIComponent(id)}`);
   }
 
-  create(config: unknown): Promise<unknown> {
-    return this.request("/api/configs", { method: "POST", body: JSON.stringify(config) });
+  create(pkg: unknown): Promise<unknown> {
+    return this.request("/api/packages", { method: "POST", body: JSON.stringify(pkg) });
   }
 
   updateMeta(id: string, meta: unknown): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}`, {
+    return this.request(`/api/packages/${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(meta),
     });
   }
 
   publishVersion(id: string, version: unknown): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}/versions`, {
+    return this.request(`/api/packages/${encodeURIComponent(id)}/versions`, {
       method: "POST",
       body: JSON.stringify(version),
     });
   }
 
+  /** Set (create or move) the caller's install pin — also how rollback works. */
   install(id: string, versionId?: string): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}/install`, {
-      method: "POST",
+    return this.request(`/api/packages/${encodeURIComponent(id)}/install`, {
+      method: "PUT",
       body: JSON.stringify(versionId ? { versionId } : {}),
     });
   }
 
   uninstall(id: string): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}/install`, { method: "DELETE" });
+    return this.request(`/api/packages/${encodeURIComponent(id)}/install`, { method: "DELETE" });
   }
 
-  updateInstall(id: string, versionId?: string): Promise<unknown> {
-    return this.request(`/api/configs/${encodeURIComponent(id)}/update`, {
-      method: "POST",
-      body: JSON.stringify(versionId ? { versionId } : {}),
-    });
+  installs(): Promise<unknown> {
+    return this.request("/api/installs");
   }
 
   stats(): Promise<unknown> {
