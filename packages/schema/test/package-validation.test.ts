@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createConfigSchema } from "../src/index.js";
+import { createPackageSchema } from "../src/index.js";
 
 const baseTool = {
   name: "search",
@@ -19,14 +19,14 @@ const baseConfig = {
   tools: [baseTool],
 };
 
-describe("createConfigSchema", () => {
+describe("createPackageSchema", () => {
   it("normalizes domain (lowercase, strips www.)", () => {
-    const parsed = createConfigSchema.parse({ ...baseConfig, domain: "WWW.Example.com" });
+    const parsed = createPackageSchema.parse({ ...baseConfig, domain: "WWW.Example.com" });
     expect(parsed.domain).toBe("example.com");
   });
 
   it("rejects urlPatterns that aren't valid match patterns", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       urlPatterns: ["example.com/search"],
     });
@@ -34,18 +34,19 @@ describe("createConfigSchema", () => {
   });
 
   it("rejects an empty urlPatterns array", () => {
-    const result = createConfigSchema.safeParse({ ...baseConfig, urlPatterns: [] });
+    const result = createPackageSchema.safeParse({ ...baseConfig, urlPatterns: [] });
     expect(result.success).toBe(false);
   });
 
   it("accepts an optional changelog", () => {
     expect(
-      createConfigSchema.safeParse({ ...baseConfig, changelog: "Fixed a rotted selector" }).success,
+      createPackageSchema.safeParse({ ...baseConfig, changelog: "Fixed a rotted selector" })
+        .success,
     ).toBe(true);
   });
 
   it("rejects duplicate tool names", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       tools: [baseTool, { ...baseTool, description: "Another" }],
     });
@@ -53,19 +54,21 @@ describe("createConfigSchema", () => {
   });
 
   it("rejects empty tools arrays", () => {
-    const result = createConfigSchema.safeParse({ ...baseConfig, tools: [] });
+    const result = createPackageSchema.safeParse({ ...baseConfig, tools: [] });
     expect(result.success).toBe(false);
   });
 
   it("accepts optional minEngine integer level and rejects non-integer/non-positive", () => {
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 1 }).success).toBe(true);
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 0 }).success).toBe(false);
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: 1.5 }).success).toBe(false);
-    expect(createConfigSchema.safeParse({ ...baseConfig, minEngine: "1.0.0" }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 1 }).success).toBe(true);
+    expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 0 }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 1.5 }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: "1.0.0" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects tool names over the 30-char budget", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       tools: [{ ...baseTool, name: "a".repeat(31) }],
     });
@@ -73,7 +76,7 @@ describe("createConfigSchema", () => {
   });
 
   it("rejects a domain no urlPattern host covers (unreachable by lookup)", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       domain: "foo.com",
       urlPatterns: ["*://bar.com/*"],
@@ -85,7 +88,7 @@ describe("createConfigSchema", () => {
   });
 
   it("accepts a domain covered by a *.host wildcard (apex included)", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       domain: "reddit.com",
       urlPatterns: ["*://*.reddit.com/*"],
@@ -94,7 +97,7 @@ describe("createConfigSchema", () => {
   });
 
   it("checks coverage against the normalized domain (www-stripped)", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       ...baseConfig,
       domain: "www.example.com",
       urlPatterns: ["*://example.com/*"],

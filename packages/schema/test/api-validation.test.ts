@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createConfigSchema, publishVersionSchema } from "../src/index.js";
+import { createPackageSchema, publishVersionSchema } from "../src/index.js";
 
 // A Reddit-style tier-1 config: REST read (subredditHot) + write (comment with
 // the csrf modhash token source) + a GraphQL endpoint exercising errorPath,
@@ -89,13 +89,13 @@ const base = {
 
 describe("api block cross-validation", () => {
   it("accepts a valid Reddit-style REST + GraphQL config", () => {
-    expect(createConfigSchema.safeParse(base).success).toBe(true);
+    expect(createPackageSchema.safeParse(base).success).toBe(true);
   });
 
   it("rejects an {{placeholder}} that names no inputSchema property", () => {
     const c = structuredClone(base);
     c.api.endpoints.subredditHot.query.limit = "{{limitz}}";
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects a tool bound to an endpoint that does not exist", () => {
@@ -103,37 +103,37 @@ describe("api block cross-validation", () => {
     const tool = c.tools[0];
     if (!tool) throw new Error("fixture missing tool");
     tool.execution = { mode: "api", endpoint: "doesNotExist" };
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects an endpoint auth ref that names no auth token source", () => {
     const c = structuredClone(base);
     c.api.endpoints.comment.auth = ["nope"];
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects an @documents ref that names no defined document", () => {
     const c = structuredClone(base);
     c.api.endpoints.searchGraphql.graphql.document = "@documents/missing";
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects a baseUrl whose host no urlPatterns host covers", () => {
     const c = structuredClone(base);
     c.api.baseUrl = "https://evil.example.com";
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("does not flag {{placeholders}} inside the opaque documents block", () => {
     const c = structuredClone(base);
     c.api.documents.search = "query { {{notAProp}} }";
-    expect(createConfigSchema.safeParse(c).success).toBe(true);
+    expect(createPackageSchema.safeParse(c).success).toBe(true);
   });
 
   it("does not scan an inline graphql.document string (opaque)", () => {
     const c = structuredClone(base);
     c.api.endpoints.searchGraphql.graphql.document = "query { {{notAProp}} }";
-    expect(createConfigSchema.safeParse(c).success).toBe(true);
+    expect(createPackageSchema.safeParse(c).success).toBe(true);
   });
 
   it("scans body templates (rejects unknown, accepts valid)", () => {
@@ -159,24 +159,24 @@ describe("api block cross-validation", () => {
         },
       ],
     });
-    expect(createConfigSchema.safeParse(withBody({ title: "{{bogus}}" })).success).toBe(false);
-    expect(createConfigSchema.safeParse(withBody({ title: "{{title}}" })).success).toBe(true);
+    expect(createPackageSchema.safeParse(withBody({ title: "{{bogus}}" })).success).toBe(false);
+    expect(createPackageSchema.safeParse(withBody({ title: "{{title}}" })).success).toBe(true);
   });
 
   it("rejects a non-https baseUrl", () => {
     const c = structuredClone(base);
     c.api.baseUrl = "http://www.reddit.com";
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects an auth source that fetches from an undefined endpoint", () => {
     const c = structuredClone(base);
     c.api.auth.csrf.source.endpoint = "ghost";
-    expect(createConfigSchema.safeParse(c).success).toBe(false);
+    expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
   it("rejects a tool whose execution.mode is an unknown discriminator", () => {
-    const result = createConfigSchema.safeParse({
+    const result = createPackageSchema.safeParse({
       domain: "reddit.com",
       urlPatterns: ["*://*.reddit.com/*"],
       title: "x",

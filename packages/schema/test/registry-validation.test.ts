@@ -7,7 +7,7 @@ import { revocationEntrySchema, revocationsResponseSchema } from "../src/registr
 
 const entry = {
   id: 1,
-  definitionId: "def-1",
+  packageId: "pkg-1",
   versionId: null,
   reason: "Exfiltrated form values",
   revokedAt: "2026-07-25T00:00:00.000Z",

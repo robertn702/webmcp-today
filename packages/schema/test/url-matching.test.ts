@@ -3,7 +3,7 @@ import {
   domainLookupKeys,
   matchUrlPattern,
   parseUrlPattern,
-  rankConfigsByUrl,
+  rankPackagesByUrl,
 } from "../src/index.js";
 
 describe("parseUrlPattern", () => {
@@ -62,7 +62,7 @@ describe("matchUrlPattern", () => {
   });
 });
 
-describe("rankConfigsByUrl", () => {
+describe("rankPackagesByUrl", () => {
   it("sorts most-specific-first: host specificity dominates, path breaks ties", () => {
     const configs = [
       { id: "wildcard-path", urlPatterns: ["*://*.example.com/*"] },
@@ -70,7 +70,7 @@ describe("rankConfigsByUrl", () => {
       { id: "exact-host", urlPatterns: ["*://example.com/items/*"] },
       { id: "no-match", urlPatterns: ["*://*.other.com/*"] },
     ];
-    const ranked = rankConfigsByUrl(configs, "https://example.com/items/special");
+    const ranked = rankPackagesByUrl(configs, "https://example.com/items/special");
     expect(ranked.map((c) => c.id)).toEqual(["exact-host", "exact-path", "wildcard-path"]);
   });
 
@@ -79,13 +79,13 @@ describe("rankConfigsByUrl", () => {
       { id: "wildcard-path", urlPatterns: ["*://example.com/*"] },
       { id: "exact-path", urlPatterns: ["*://example.com/items/special"] },
     ];
-    const ranked = rankConfigsByUrl(configs, "https://example.com/items/special");
+    const ranked = rankPackagesByUrl(configs, "https://example.com/items/special");
     expect(ranked.map((c) => c.id)).toEqual(["exact-path", "wildcard-path"]);
   });
 
   it("picks the best-matching pattern when an item has several", () => {
     const configs = [{ id: "multi", urlPatterns: ["*://*.example.com/*", "*://example.com/a"] }];
-    const ranked = rankConfigsByUrl(configs, "https://example.com/a");
+    const ranked = rankPackagesByUrl(configs, "https://example.com/a");
     expect(ranked).toHaveLength(1);
   });
 });
@@ -116,7 +116,7 @@ describe("domainLookupKeys", () => {
   });
 });
 
-describe("subdomain config lookup (domainLookupKeys + rankConfigsByUrl)", () => {
+describe("subdomain config lookup (domainLookupKeys + rankPackagesByUrl)", () => {
   // Emulates the prefilter both apps run: keep configs whose `domain` lookup key
   // matches the hostname's candidate keys, then rank the survivors by urlPattern.
   function lookup<T extends { domain: string; urlPatterns: string[] }>(
@@ -124,7 +124,7 @@ describe("subdomain config lookup (domainLookupKeys + rankConfigsByUrl)", () => 
     url: string,
   ): T[] {
     const keys = domainLookupKeys(new URL(url).hostname);
-    return rankConfigsByUrl(
+    return rankPackagesByUrl(
       configs.filter((c) => keys.includes(c.domain)),
       url,
     );
