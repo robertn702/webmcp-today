@@ -75,9 +75,9 @@ CREATE TABLE "auth"."verifications" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "definition_versions" (
+CREATE TABLE "package_versions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"definition_id" uuid NOT NULL,
+	"package_id" uuid NOT NULL,
 	"version" integer NOT NULL,
 	"url_patterns" jsonb NOT NULL,
 	"tools" jsonb NOT NULL,
@@ -86,28 +86,28 @@ CREATE TABLE "definition_versions" (
 	"min_engine" integer,
 	"changelog" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "uq_definition_versions_definition_version" UNIQUE("definition_id","version")
+	CONSTRAINT "uq_package_versions_package_version" UNIQUE("package_id","version")
 );
 --> statement-breakpoint
 CREATE TABLE "installs" (
 	"user_id" text NOT NULL,
-	"definition_id" uuid NOT NULL,
+	"package_id" uuid NOT NULL,
 	"version_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "installs_user_id_definition_id_pk" PRIMARY KEY("user_id","definition_id")
+	CONSTRAINT "installs_user_id_package_id_pk" PRIMARY KEY("user_id","package_id")
 );
 --> statement-breakpoint
 CREATE TABLE "revocations" (
 	"id" bigserial PRIMARY KEY NOT NULL,
-	"definition_id" uuid NOT NULL,
+	"package_id" uuid NOT NULL,
 	"version_id" uuid,
 	"reason" text NOT NULL,
 	"revoked_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"revoked_by" text
 );
 --> statement-breakpoint
-CREATE TABLE "webmcp_definitions" (
+CREATE TABLE "packages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"domain" text NOT NULL,
 	"page_type" text,
@@ -121,20 +121,20 @@ CREATE TABLE "webmcp_definitions" (
 ALTER TABLE "auth"."api_keys" ADD CONSTRAINT "api_keys_reference_id_users_id_fk" FOREIGN KEY ("reference_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "definition_versions" ADD CONSTRAINT "definition_versions_definition_id_webmcp_definitions_id_fk" FOREIGN KEY ("definition_id") REFERENCES "public"."webmcp_definitions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "package_versions" ADD CONSTRAINT "package_versions_package_id_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."packages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "installs" ADD CONSTRAINT "installs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "installs" ADD CONSTRAINT "installs_definition_id_webmcp_definitions_id_fk" FOREIGN KEY ("definition_id") REFERENCES "public"."webmcp_definitions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "installs" ADD CONSTRAINT "installs_version_id_definition_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."definition_versions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "revocations" ADD CONSTRAINT "revocations_definition_id_webmcp_definitions_id_fk" FOREIGN KEY ("definition_id") REFERENCES "public"."webmcp_definitions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "revocations" ADD CONSTRAINT "revocations_version_id_definition_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."definition_versions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "installs" ADD CONSTRAINT "installs_package_id_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."packages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "installs" ADD CONSTRAINT "installs_version_id_package_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."package_versions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "revocations" ADD CONSTRAINT "revocations_package_id_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."packages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "revocations" ADD CONSTRAINT "revocations_version_id_package_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."package_versions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "revocations" ADD CONSTRAINT "revocations_revoked_by_users_id_fk" FOREIGN KEY ("revoked_by") REFERENCES "auth"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "webmcp_definitions" ADD CONSTRAINT "webmcp_definitions_contributor_id_users_id_fk" FOREIGN KEY ("contributor_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "idx_definition_versions_definition_id" ON "definition_versions" USING btree ("definition_id");--> statement-breakpoint
-CREATE INDEX "idx_webmcp_definitions_domain" ON "webmcp_definitions" USING btree ("domain");--> statement-breakpoint
+ALTER TABLE "packages" ADD CONSTRAINT "packages_contributor_id_users_id_fk" FOREIGN KEY ("contributor_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_package_versions_package_id" ON "package_versions" USING btree ("package_id");--> statement-breakpoint
+CREATE INDEX "idx_packages_domain" ON "packages" USING btree ("domain");--> statement-breakpoint
 CREATE TRIGGER "mdt_api_keys" BEFORE UPDATE ON "auth"."api_keys" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_accounts" BEFORE UPDATE ON "auth"."accounts" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_sessions" BEFORE UPDATE ON "auth"."sessions" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_users" BEFORE UPDATE ON "auth"."users" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_verifications" BEFORE UPDATE ON "auth"."verifications" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_installs" BEFORE UPDATE ON "installs" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
-CREATE TRIGGER "mdt_webmcp_definitions" BEFORE UPDATE ON "webmcp_definitions" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");
+CREATE TRIGGER "mdt_packages" BEFORE UPDATE ON "packages" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");

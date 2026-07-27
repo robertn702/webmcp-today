@@ -18,8 +18,8 @@ import { user } from "./auth-schema";
  * design: rival packages may target the same site — installs + specificity
  * rank them instead of a first-come registration.
  */
-export const webmcpDefinitions = pgTable(
-  "webmcp_definitions",
+export const packages = pgTable(
+  "packages",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     domain: text("domain").notNull(),
@@ -32,7 +32,7 @@ export const webmcpDefinitions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("idx_webmcp_definitions_domain").on(t.domain)],
+  (t) => [index("idx_packages_domain").on(t.domain)],
 );
 
 /**
@@ -40,13 +40,13 @@ export const webmcpDefinitions = pgTable(
  * truth — there is no separate snapshot table. Browse/fresh lookups serve
  * max(version); installed users stay pinned via `installs.versionId`.
  */
-export const definitionVersions = pgTable(
-  "definition_versions",
+export const packageVersions = pgTable(
+  "package_versions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    definitionId: uuid("definition_id")
+    packageId: uuid("package_id")
       .notNull()
-      .references(() => webmcpDefinitions.id, { onDelete: "cascade" }),
+      .references(() => packages.id, { onDelete: "cascade" }),
     version: integer("version").notNull(),
     urlPatterns: jsonb("url_patterns").$type<string[]>().notNull(),
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
@@ -65,14 +65,14 @@ export const definitionVersions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("idx_definition_versions_definition_id").on(t.definitionId),
-    unique("uq_definition_versions_definition_version").on(t.definitionId, t.version),
+    index("idx_package_versions_package_id").on(t.packageId),
+    unique("uq_package_versions_package_version").on(t.packageId, t.version),
   ],
 );
 
 /**
  * Auth-only per-user installs; double duty as the trust signal (COUNT/GROUP
- * BY definition_id, derived at query time — no counter cache).
+ * BY package_id, derived at query time — no counter cache).
  */
 export const installs = pgTable(
   "installs",
@@ -80,21 +80,21 @@ export const installs = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    definitionId: uuid("definition_id")
+    packageId: uuid("package_id")
       .notNull()
-      .references(() => webmcpDefinitions.id, { onDelete: "cascade" }),
+      .references(() => packages.id, { onDelete: "cascade" }),
     versionId: uuid("version_id")
       .notNull()
-      .references(() => definitionVersions.id),
+      .references(() => packageVersions.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.definitionId] })],
+  (t) => [primaryKey({ columns: [t.userId, t.packageId] })],
 );
 
 /**
  * Append-only kill list, polled by clients with `id` as the cursor. Once
- * installed config bodies live in the extension's storage the registry is off
+ * installed package bodies live in the extension's storage the registry is off
  * the read path, so this is the only lever it keeps after install
  * (docs/local-first-installs.md §5). Writes are hand-run SQL in v1 — there is
  * no admin role and no write endpoint.
@@ -104,11 +104,11 @@ export const installs = pgTable(
  */
 export const revocations = pgTable("revocations", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
-  definitionId: uuid("definition_id")
+  packageId: uuid("package_id")
     .notNull()
-    .references(() => webmcpDefinitions.id, { onDelete: "cascade" }),
+    .references(() => packages.id, { onDelete: "cascade" }),
   /** Null revokes the whole package; otherwise only this version. */
-  versionId: uuid("version_id").references(() => definitionVersions.id),
+  versionId: uuid("version_id").references(() => packageVersions.id),
   /** Short, and shown to the user — a package never silently vanishes. */
   reason: text("reason").notNull(),
   revokedAt: timestamp("revoked_at", { withTimezone: true }).notNull().defaultNow(),

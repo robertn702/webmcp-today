@@ -481,8 +481,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.definition_versions": {
-      "name": "definition_versions",
+    "public.package_versions": {
+      "name": "package_versions",
       "schema": "",
       "columns": {
         "id": {
@@ -492,8 +492,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "definition_id": {
-          "name": "definition_id",
+        "package_id": {
+          "name": "package_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -549,11 +549,11 @@
         }
       },
       "indexes": {
-        "idx_definition_versions_definition_id": {
-          "name": "idx_definition_versions_definition_id",
+        "idx_package_versions_package_id": {
+          "name": "idx_package_versions_package_id",
           "columns": [
             {
-              "expression": "definition_id",
+              "expression": "package_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -566,12 +566,12 @@
         }
       },
       "foreignKeys": {
-        "definition_versions_definition_id_webmcp_definitions_id_fk": {
-          "name": "definition_versions_definition_id_webmcp_definitions_id_fk",
-          "tableFrom": "definition_versions",
-          "tableTo": "webmcp_definitions",
+        "package_versions_package_id_packages_id_fk": {
+          "name": "package_versions_package_id_packages_id_fk",
+          "tableFrom": "package_versions",
+          "tableTo": "packages",
           "columnsFrom": [
-            "definition_id"
+            "package_id"
           ],
           "columnsTo": [
             "id"
@@ -582,11 +582,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "uq_definition_versions_definition_version": {
-          "name": "uq_definition_versions_definition_version",
+        "uq_package_versions_package_version": {
+          "name": "uq_package_versions_package_version",
           "nullsNotDistinct": false,
           "columns": [
-            "definition_id",
+            "package_id",
             "version"
           ]
         }
@@ -605,8 +605,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "definition_id": {
-          "name": "definition_id",
+        "package_id": {
+          "name": "package_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -648,12 +648,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "installs_definition_id_webmcp_definitions_id_fk": {
-          "name": "installs_definition_id_webmcp_definitions_id_fk",
+        "installs_package_id_packages_id_fk": {
+          "name": "installs_package_id_packages_id_fk",
           "tableFrom": "installs",
-          "tableTo": "webmcp_definitions",
+          "tableTo": "packages",
           "columnsFrom": [
-            "definition_id"
+            "package_id"
           ],
           "columnsTo": [
             "id"
@@ -661,10 +661,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "installs_version_id_definition_versions_id_fk": {
-          "name": "installs_version_id_definition_versions_id_fk",
+        "installs_version_id_package_versions_id_fk": {
+          "name": "installs_version_id_package_versions_id_fk",
           "tableFrom": "installs",
-          "tableTo": "definition_versions",
+          "tableTo": "package_versions",
           "columnsFrom": [
             "version_id"
           ],
@@ -676,11 +676,11 @@
         }
       },
       "compositePrimaryKeys": {
-        "installs_user_id_definition_id_pk": {
-          "name": "installs_user_id_definition_id_pk",
+        "installs_user_id_package_id_pk": {
+          "name": "installs_user_id_package_id_pk",
           "columns": [
             "user_id",
-            "definition_id"
+            "package_id"
           ]
         }
       },
@@ -699,8 +699,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "definition_id": {
-          "name": "definition_id",
+        "package_id": {
+          "name": "package_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -733,12 +733,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "revocations_definition_id_webmcp_definitions_id_fk": {
-          "name": "revocations_definition_id_webmcp_definitions_id_fk",
+        "revocations_package_id_packages_id_fk": {
+          "name": "revocations_package_id_packages_id_fk",
           "tableFrom": "revocations",
-          "tableTo": "webmcp_definitions",
+          "tableTo": "packages",
           "columnsFrom": [
-            "definition_id"
+            "package_id"
           ],
           "columnsTo": [
             "id"
@@ -746,10 +746,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "revocations_version_id_definition_versions_id_fk": {
-          "name": "revocations_version_id_definition_versions_id_fk",
+        "revocations_version_id_package_versions_id_fk": {
+          "name": "revocations_version_id_package_versions_id_fk",
           "tableFrom": "revocations",
-          "tableTo": "definition_versions",
+          "tableTo": "package_versions",
           "columnsFrom": [
             "version_id"
           ],
@@ -780,8 +780,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.webmcp_definitions": {
-      "name": "webmcp_definitions",
+    "public.packages": {
+      "name": "packages",
       "schema": "",
       "columns": {
         "id": {
@@ -837,8 +837,8 @@
         }
       },
       "indexes": {
-        "idx_webmcp_definitions_domain": {
-          "name": "idx_webmcp_definitions_domain",
+        "idx_packages_domain": {
+          "name": "idx_packages_domain",
           "columns": [
             {
               "expression": "domain",
@@ -854,9 +854,9 @@
         }
       },
       "foreignKeys": {
-        "webmcp_definitions_contributor_id_users_id_fk": {
-          "name": "webmcp_definitions_contributor_id_users_id_fk",
-          "tableFrom": "webmcp_definitions",
+        "packages_contributor_id_users_id_fk": {
+          "name": "packages_contributor_id_users_id_fk",
+          "tableFrom": "packages",
           "tableTo": "users",
           "schemaTo": "auth",
           "columnsFrom": [
