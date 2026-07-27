@@ -43,18 +43,27 @@ describe("revocationEntrySchema", () => {
 
 describe("revocationsResponseSchema", () => {
   it("accepts an empty feed", () => {
-    expect(revocationsResponseSchema.safeParse({ cursor: 0, entries: [] }).success).toBe(true);
+    expect(revocationsResponseSchema.safeParse({ cursor: 0, latest: 0, entries: [] }).success).toBe(
+      true,
+    );
   });
 
   it("accepts a feed with entries", () => {
-    expect(revocationsResponseSchema.safeParse({ cursor: 1, entries: [entry] }).success).toBe(true);
+    expect(
+      revocationsResponseSchema.safeParse({ cursor: 1, latest: 1, entries: [entry] }).success,
+    ).toBe(true);
   });
 
   it("rejects a feed carrying a malformed entry", () => {
     const result = revocationsResponseSchema.safeParse({
       cursor: 1,
+      latest: 1,
       entries: [{ ...entry, reason: 42 }],
     });
     expect(result.success).toBe(false);
+  });
+
+  it("rejects a feed missing latest", () => {
+    expect(revocationsResponseSchema.safeParse({ cursor: 0, entries: [] }).success).toBe(false);
   });
 });

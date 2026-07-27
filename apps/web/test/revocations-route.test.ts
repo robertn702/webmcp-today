@@ -24,6 +24,10 @@ vi.mock("@/lib/revocations-repo", () => ({
     state.cursors.push(cursor);
     return Promise.resolve(state.rows.filter((row) => row.id > cursor));
   },
+  getLatestRevocationId: () => {
+    const max = state.rows.reduce((acc, row) => Math.max(acc, row.id), 0);
+    return Promise.resolve(max);
+  },
 }));
 
 function revoked(id: number, versionId: string | null): (typeof state.rows)[number] {
@@ -60,6 +64,7 @@ describe("GET /api/revocations", () => {
     expect(state.cursors).toEqual([2]);
     expect(body).toEqual({
       cursor: 3,
+      latest: 3,
       entries: [
         {
           id: 3,
@@ -74,7 +79,21 @@ describe("GET /api/revocations", () => {
 
   it("echoes the cursor it was given when there is nothing new", async () => {
     const response = await get("?since=3");
-    await expect(response.json()).resolves.toEqual({ cursor: 3, entries: [] });
+    await expect(response.json()).resolves.toEqual({ cursor: 3, latest: 3, entries: [] });
+  });
+
+  it("returns latest 0 on an empty page (empty table)", async () => {
+    state.rows = [];
+    const response = await get("");
+    await expect(response.json()).resolves.toEqual({ cursor: 0, latest: 0, entries: [] });
+  });
+
+  it("reports a latest below a since that is ahead of the server, so a client can detect a cursor reset is needed (e.g. after a DB wipe restarts the bigserial)", async () => {
+    const response = await get("?since=999");
+    const body = await response.json();
+    expect(body.latest).toBe(3);
+    expect(body.latest).toBeLessThan(999);
+    expect(body.entries).toEqual([]);
   });
 
   it("starts from 0 on a since it cannot parse", async () => {
