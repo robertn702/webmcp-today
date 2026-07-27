@@ -1,4 +1,3 @@
-import canonicalize from "canonicalize";
 import { describe, expect, it } from "vitest";
 import { apiContentHash, canonicalizeApiBlock, type ApiBlock } from "../src/index.js";
 
@@ -145,7 +144,7 @@ describe("canonicalizeApiBlock", () => {
       if (!search?.graphql) throw new Error("fixture missing graphql endpoint");
       search.graphql.variables = { first: Number.NaN };
     });
-    expect(() => canonicalizeApiBlock(notANumber)).toThrow(/non-finite/);
+    expect(() => canonicalizeApiBlock(notANumber)).toThrow(/NaN is not allowed/);
   });
 
   it("produces the exact pinned canonical string", () => {
@@ -155,69 +154,49 @@ describe("canonicalizeApiBlock", () => {
   });
 });
 
-describe("RFC 8785 (JCS) conformance", () => {
-  // The canonical form is frozen, so it is kept in-tree rather than taken as a
-  // runtime dependency. These assertions are what stops it drifting from the
-  // spec: every case is checked against the reference `canonicalize` package.
-  // Edge cases ride in `endpoints.probe.body`, which is genuinely `unknown` in
-  // the schema and so is the one place an api block can hold arbitrary JSON.
-  const edgeCases: [string, unknown][] = [
-    ["null", null],
-    ["booleans", { t: true, f: false }],
-    ["empty object", {}],
-    ["empty array", []],
-    ["empty-string key", { "": "empty" }],
-    ["uppercase sorts before lowercase", { auth: 1, Auth: 2, a: 3, A: 4, z: 5 }],
-    ["numeric-looking keys sort as strings", { "10": "ten", "2": "two", "1": "one" }],
-    ["non-ascii keys", { é: 1, z: 2, a: 3 }],
-    ["astral-plane key", { "😀": "grin", a: 1 }],
-    ["strings needing escapes", { s: 'quote " tab \t newline \n backslash \\' }],
-    ["negative zero", { n: -0 }],
-    ["integral float", { n: 1.0 }],
-    ["large exponent", { n: 1e21 }],
-    ["small exponent", { n: 1e-7 }],
-    ["max safe integer", { n: 2 ** 53 }],
-    ["fraction", { n: 3.14159 }],
-    ["negative", { n: -17 }],
-    ["undefined-valued key is dropped", { a: 1, b: undefined, c: 3 }],
-    ["array order is preserved", ["z", "a", "m", 3, 1, 2]],
-    ["undefined in an array becomes null", [1, undefined, 3]],
-    ["nested mixture", { b: [{ z: 1, a: [2, { y: 3, x: 4 }] }], a: { d: null, c: "x" } }],
+describe("apiContentHash", () => {
+  it("is 64 lowercase hex characters", () => {
+    expect(apiContentHash(base)).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  /** Computed independently: printf '%s' '<canonical>' | shasum -a 256. These
+   * pin the frozen surface, including the JCS edge cases that a dependency bump
+   * could plausibly disturb — an astral-plane key, -0, a large exponent, and an
+   * ordered auth array. A failure here means every stored copy just became
+   * unreachable, so fix the cause; never update the expected value. */
+  const knownAnswers: [string, ApiBlock, string][] = [
+    ["minimal block", minimal, "1207250d1d1886ca321f15785eda2c49adcf7493fc09735632175fd07e092956"],
+    [
+      "astral key, -0, large exponent, null in a body",
+      {
+        baseUrl: "https://x.com",
+        endpoints: {
+          a: { method: "POST", path: "/a", body: { "😀": [1, -0, 1e21, null], é: "x" } },
+        },
+      },
+      "43dc01e78e9bcfbb1a3b6911feb8d408f09df1aa7ecec806e68438f85fb5ea06",
+    ],
+    [
+      "ordered endpoint auth + auth sources",
+      {
+        baseUrl: "https://y.com",
+        endpoints: { b: { method: "GET", path: "/b", auth: ["z", "a"] } },
+        auth: { z: { source: { endpoint: "b", extract: "t" }, sendAs: { header: "H" } } },
+      },
+      "ea8f0bcc810652cb1009806f4b6acee3270efca401f6b97bf38178a46881baff",
+    ],
   ];
 
-  it.each(edgeCases)("matches the reference implementation: %s", (_label, value) => {
-    const block: ApiBlock = {
-      baseUrl: "https://example.com",
-      endpoints: { probe: { method: "POST", path: "/probe", body: value } },
-    };
-    expect(canonicalizeApiBlock(block)).toBe(canonicalize(block));
+  it.each(knownAnswers)("matches the pinned known answer: %s", (_label, block, expected) => {
+    expect(apiContentHash(block)).toBe(expected);
   });
 
-  it("matches the reference implementation on the realistic fixtures", () => {
-    expect(canonicalizeApiBlock(base)).toBe(canonicalize(base));
-    expect(canonicalizeApiBlock(reordered)).toBe(canonicalize(reordered));
-    expect(canonicalizeApiBlock(minimal)).toBe(canonicalize(minimal));
-  });
-});
-
-describe("apiContentHash", () => {
-  it("is 64 lowercase hex characters", async () => {
-    expect(await apiContentHash(base)).toMatch(/^[0-9a-f]{64}$/);
+  it("is identical for blocks differing only in key order", () => {
+    expect(apiContentHash(reordered)).toBe(apiContentHash(base));
   });
 
-  it("matches sha256 of the canonical string (pinned known answer)", async () => {
-    // Computed independently: printf '%s' '<canonical>' | shasum -a 256
-    expect(await apiContentHash(minimal)).toBe(
-      "1207250d1d1886ca321f15785eda2c49adcf7493fc09735632175fd07e092956",
-    );
-  });
-
-  it("is identical for blocks differing only in key order", async () => {
-    expect(await apiContentHash(reordered)).toBe(await apiContentHash(base));
-  });
-
-  it("changes when any value changes", async () => {
-    const unchanged = await apiContentHash(base);
+  it("changes when any value changes", () => {
+    const unchanged = apiContentHash(base);
     const mutations: [string, (draft: ApiBlock) => void][] = [
       [
         "baseUrl",
@@ -280,7 +259,7 @@ describe("apiContentHash", () => {
     ];
 
     for (const [label, mutate] of mutations) {
-      expect(await apiContentHash(variant(mutate)), label).not.toBe(unchanged);
+      expect(apiContentHash(variant(mutate)), label).not.toBe(unchanged);
     }
   });
 });
