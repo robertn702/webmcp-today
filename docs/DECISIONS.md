@@ -63,13 +63,13 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   store approval is precedented for this exact category (remote-registry lookup +
   content-script tool registration), and Hub's 21 users in five months says today's
   reachable audience is people willing to run a Chrome flag, i.e. developers — so ship
-  config-authoring docs and honest "this is early" framing rather than polishing for a
+  package-authoring docs and honest "this is early" framing rather than polishing for a
   consumer audience that can't run the API yet. Hub's popup takes a configurable hub
-  URL, so a wire-compatible `GET /api/configs/lookup` is a zero-review-latency
+  URL, so a wire-compatible `GET /api/packages/lookup` is a zero-review-latency
   distribution fallback (`docs/BACKLOG.md`).
 
 - 2026-07-24 — **Flag-missing and SPA-navigation handling: four calls that look
-  arbitrary from the code.** (1) Configs are looked up _before_ `getModelContext()` is
+  arbitrary from the code.** (1) Packages are looked up _before_ `getModelContext()` is
   probed — the other order can't distinguish "the flag is off" from "nothing to inject
   here", and warning on the probe alone would fire on every page on the internet. (2)
   The signal goes to the extension's own surfaces (popup, action badge, page-console
@@ -98,8 +98,8 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   `docs/local-first-installs.md` (**decided, largely unimplemented** — code,
   `ARCHITECTURE.md` and `docs/erd.md` describe the current design until each step
   lands). What forced it: the extension sends every URL it sees to
-  `GET /api/configs/lookup`, so the registry receives a browsing-history feed, and the
-  lookup's default branch serves latest-version configs to anyone — meaning **install
+  `GET /api/packages/lookup`, so the registry receives a browsing-history feed, and the
+  lookup's default branch serves latest-version packages to anyone — meaning **install
   has never affected what registers**. Consequences worth knowing without opening the
   doc: the auto-registering bundled fallback becomes a first-run _suggestion_ list; a
   revocation feed is **mandatory**, because once bodies live on disk it is the
@@ -108,7 +108,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   Supersedes the older credentialed-`installed=true` plan, which kept the URL feed and
   made consumption require an account — the opposite of the direction chosen.
 
-- 2026-07-25 — **Submitted configs are covered by `/terms`, not a per-config license
+- 2026-07-25 — **Submitted packages are covered by `/terms`, not a per-package license
   field.** The inbound grant is irrevocable, which is load-bearing: versions are
   append-only and installs pin, so a revoked grant would break live installs. The
   corpus goes out under CC0 because MIT's notice-retention clause is unworkable on a
