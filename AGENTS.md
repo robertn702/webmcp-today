@@ -100,9 +100,9 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 - `{ domain, urlPatterns[], title, description, tools[], changelog? }`; `urlPatterns` is
   Chrome `@match`-style (`scheme://host/path`), versioned alongside `tools`.
-- Tool `execution`: simple mode (fields/autosubmit/resultSelector) or multi-step
-  (`navigate | click | fill | select | wait | extract | scroll | condition`).
-- No `evaluate` step (arbitrary code execution in the user's logged-in page).
+- Tool `execution` is `api`-mode only: the tool binds to an entry in the
+  package-level `api.endpoints` block by name. (DOM execution was cut
+  pre-launch — `docs/DECISIONS.md` 2026-07-28.)
 - `minEngine`: positive-integer capability level (not semver), version-scoped.
 - Extension must skip + warn on tool-name collision with site-registered tools.
 - `ENGINE_VERSION` is **pegged at 1 until release** — change the format shape freely,
@@ -164,7 +164,7 @@ a correction, and prune entries whose reasoning has since migrated into code or 
 | Extension notes                 | `apps/extension/AGENTS.md`                                                                                                      |
 | Extension internal map          | `apps/extension/ARCHITECTURE.md`                                                                                                |
 | Data model ERD                  | `docs/erd.md`                                                                                                                   |
-| API execution model             | `docs/api-execution-model.md`                                                                                                   |
+| Execution model (API-only)      | `docs/api-execution-model.md`                                                                                                   |
 | Platform risk register          | `docs/platform-risks.md`                                                                                                        |
 | Why non-obvious calls were made | `docs/DECISIONS.md`                                                                                                             |
 | Open follow-ups (prune as done) | `docs/BACKLOG.md`                                                                                                               |

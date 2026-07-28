@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionStepSchema, toolDescriptorSchema } from "../src/index.js";
+import { toolDescriptorSchema } from "../src/index.js";
 
 const inputSchema = {
   type: "object",
@@ -8,116 +8,43 @@ const inputSchema = {
 };
 
 describe("toolDescriptorSchema", () => {
-  it("rejects execution fields that do not map to inputSchema properties", () => {
+  it("accepts a valid api-execution tool", () => {
     const result = toolDescriptorSchema.safeParse({
       name: "search",
       description: "Search",
       inputSchema,
-      execution: {
-        mode: "dom",
-        selector: "form",
-        autosubmit: true,
-        fields: [{ type: "text", selector: "#q", name: "nope", description: "Bad field" }],
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects {{template}} vars that do not map to inputSchema properties", () => {
-    const result = toolDescriptorSchema.safeParse({
-      name: "search",
-      description: "Search",
-      inputSchema,
-      execution: {
-        mode: "dom",
-        selector: "form",
-        autosubmit: false,
-        steps: [{ action: "fill", selector: "#q", value: "{{missing}}" }],
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects {{template}} vars nested inside a condition step's then branch", () => {
-    const result = toolDescriptorSchema.safeParse({
-      name: "search",
-      description: "Search",
-      inputSchema,
-      execution: {
-        mode: "dom",
-        selector: "form",
-        autosubmit: false,
-        steps: [
-          {
-            action: "condition",
-            selector: "#modal",
-            state: "visible",
-            then: [{ action: "fill", selector: "#q", value: "{{missing}}" }],
-          },
-        ],
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects {{template}} vars nested inside a condition step's else branch", () => {
-    const result = toolDescriptorSchema.safeParse({
-      name: "search",
-      description: "Search",
-      inputSchema,
-      execution: {
-        mode: "dom",
-        selector: "form",
-        autosubmit: false,
-        steps: [
-          {
-            action: "condition",
-            selector: "#modal",
-            state: "hidden",
-            then: [{ action: "click", selector: "#ok" }],
-            else: [
-              {
-                action: "condition",
-                selector: "#inner",
-                state: "visible",
-                then: [{ action: "fill", selector: "#q", value: "{{typo}}" }],
-              },
-            ],
-          },
-        ],
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts a valid multi-step tool with nested condition steps", () => {
-    const result = toolDescriptorSchema.safeParse({
-      name: "search",
-      description: "Search",
-      inputSchema,
-      execution: {
-        mode: "dom",
-        selector: "body",
-        autosubmit: false,
-        steps: [
-          { action: "fill", selector: "#q", value: "{{query}}" },
-          {
-            action: "condition",
-            selector: "#cookie-banner",
-            state: "visible",
-            then: [{ action: "click", selector: "#accept" }],
-          },
-          { action: "extract", selector: ".results", extract: "list" },
-        ],
-      },
+      execution: { mode: "api", endpoint: "search" },
     });
     expect(result.success).toBe(true);
   });
-});
 
-describe("actionStepSchema", () => {
-  it("has no evaluate step (by design)", () => {
-    const result = actionStepSchema.safeParse({ action: "evaluate", value: "alert(1)" });
+  it("rejects an unknown execution mode", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      execution: { mode: "dom", selector: "form", autosubmit: true },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an api execution without an endpoint", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      execution: { mode: "api" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a tool with no execution mode (bare execution object)", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      execution: { endpoint: "search" },
+    });
     expect(result.success).toBe(false);
   });
 });

@@ -29,7 +29,7 @@ flowchart LR
         PAGE["Any website<br/>(user's logged-in session)"]
         EXT -- "registerTool()" --> PAGE
         BA -- "invoke tool" --> PAGE
-        PAGE -- "DOM / same-origin API" --> EXT
+        PAGE -- "same-origin API" --> EXT
     end
 
     subgraph Registry["Registry (apps/web — Next.js)"]
@@ -144,29 +144,20 @@ sequenceDiagram
 
     A->>MC: invoke tool(name, input)
     MC->>EX: execute(validated input)
-    alt execution.mode === "dom"
-        EX->>S: navigate / click / fill / select / wait / extract / scroll
-        S-->>EX: DOM state
-        EX->>EX: extract resultSelector
-    else execution.mode === "api" (tier 1)
-        EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
-        EX->>S: same-origin fetch (user's cookies ride along)
-        S-->>EX: JSON (errorPath checked, returns projection applied)
-    end
+    EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
+    EX->>S: same-origin fetch (user's cookies ride along)
+    S-->>EX: JSON (errorPath checked, returns projection applied)
     EX-->>A: tool output (uncapped in v1)
 ```
 
-Two execution modes, selected per tool:
+One execution mode, selected per tool by binding to an `api.endpoints` entry:
 
-- **DOM mode** — declarative step choreography ported from Joakim Selemyr's MIT
-  webmcp-extension (native value setters to defeat React overrides, synthetic paste
-  events for Lexical/Draft, shadow-DOM traversal, trusted `el.click()`). No `evaluate`
-  step — no arbitrary code in the user's logged-in page.
 - **API mode (tier 1)** — the package declares the site's own HTTP API as data
   (`api.endpoints`, `auth` token sources, `returns` projections); the executor derives
   and performs the call. Ships zero code. The load-bearing invariant: **all network
   access is same-origin with the package's `urlPatterns`**, enforced at publish and
-  again at execution. Tiers 2–3 (scoped script slots, full `evaluate`) are designed
+  again at execution. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
+  2026-07-28.) Tiers 2–3 (scoped script slots, full `evaluate`) are designed
   but not shipped — see `docs/api-execution-model.md`.
 
 `destructiveHint` tools gate on a blocking `window.confirm` — writes wait for a human.
@@ -224,7 +215,7 @@ validated by zod in `packages/schema`:
 - `minEngine` — positive-integer capability level per version; lets the format evolve
   without old executors silently mis-running new packages.
 - Placeholders (`{{param}}`, double-brace) may only name `inputSchema` properties —
-  cross-validated at the schema level for both DOM steps and API endpoints.
+  cross-validated at the schema level for API endpoints.
 
 ## Auth & trust
 

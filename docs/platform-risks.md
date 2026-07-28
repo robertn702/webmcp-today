@@ -32,12 +32,12 @@ injected tools below first-party. That degrades rather than kills; official
 tools win ties, community packages become second-class. Worth designing for
 regardless (e.g. don't build UI that assumes parity with site-registered tools).
 
-Fallback if registration does break: the package format's DOM executor doesn't
-need WebMCP as transport — an extension can still drive the page for an agent
-through its own surface (side panel, or the WebMCP CDP domain via
-`chrome.debugger`, already exposed in Chromium — see end of #74). Agents stop
-discovering tools through the page's `modelContext`; the product shape changes,
-it doesn't die.
+Fallback if registration does break: the package format's API executor doesn't
+need WebMCP as transport — an extension can still perform the same-origin
+calls for an agent through its own surface (side panel, or the WebMCP CDP
+domain via `chrome.debugger`, already exposed in Chromium — see end of #74).
+Agents stop discovering tools through the page's `modelContext`; the product
+shape changes, it doesn't die.
 
 ## `Permissions-Policy: tools=()` — per-site kill switch (bounded)
 
