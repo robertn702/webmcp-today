@@ -3,7 +3,7 @@ import { definitions } from "../src/index.js";
 
 describe("curated definitions", () => {
   it("contains all curated packages", () => {
-    expect(definitions).toHaveLength(6);
+    expect(definitions).toHaveLength(1);
   });
 
   it("has unique domains", () => {

@@ -61,10 +61,6 @@ key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
   `history.pushState` — patching `history` only intercepts the isolated world's
   own calls, so SPA navigation is detected by polling `location.href`
   (`src/lib/navigation.ts`). Don't "fix" it by monkey-patching history.
-- **Selector-rot debugging recipe.** Evaluate the package's `resultSelector`
-  against the live page via the chrome-devtools bridge (`evaluate_script`)
-  before touching code. Wikipedia's Parsoid DOM (`.mw-parser-output > section`
-  wrappers) broke `wiki_summary` on day one.
 
 ## E2E testing (chrome-devtools-mcp)
 
@@ -124,8 +120,11 @@ dev` + web on :3000 → open `/packages/<id>` → click Install via
 - `src/entrypoints/popup/` + the action badge — per-tab status, the install
   list (with uninstall), and the paused/recovery states. Never inject UI into
   the page.
-- `src/lib/executor.ts` + `steps.ts` — DOM executor ported from Joakim Selemyr's
-  MIT webmcp-extension; no `evaluate` step by design.
+- `src/lib/api-executor.ts` — the only executor (DOM mode was cut pre-launch,
+  `docs/DECISIONS.md` 2026-07-28): binds `{{param}}` templates, acquires auth
+  tokens from `api.auth` sources, performs the same-origin fetch, checks
+  `errorPath`, applies the `returns` JMESPath projection. `destructiveHint`
+  tools gate on a blocking `window.confirm`.
 - The bundled fallback is gone: the `@webmcp-cafe/definitions` dependency was
   removed in step 5b (U7). The package remains the seed source for the registry
   (`apps/web/scripts/seed.ts`).

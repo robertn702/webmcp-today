@@ -120,7 +120,7 @@ export default async function LandingPage() {
           <Reason
             index="03"
             title="Agents can write packages"
-            body="A package is data. URL patterns, tool descriptions, and either DOM steps or an API block. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
+            body="A package is data. URL patterns, tool descriptions, and an API block declaring the site's own HTTP endpoints. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
           />
         </div>
       </section>
@@ -188,8 +188,9 @@ export default async function LandingPage() {
               repo. What the extension does with a package is code you can read.
             </TrustFact>
             <TrustFact title="Packages are data, not code">
-              A package is a JSON document. URL patterns, tool descriptions, and either DOM steps or
-              an API block. Nothing in it can run arbitrary code in your page.
+              A package is a JSON document. URL patterns, tool descriptions, and an API block
+              declaring the site's own HTTP endpoints. Nothing in it can run arbitrary code in your
+              page.
             </TrustFact>
             <TrustFact title="You see every tool first">
               The package page lists each tool it registers and what that tool takes. Nothing shows

@@ -34,15 +34,11 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
         description: "wiki_summary fixture tool",
         inputSchema: { type: "object", properties: {} },
         annotations: { readOnlyHint: true },
-        execution: {
-          mode: "dom",
-          selector: "body",
-          autosubmit: false,
-          resultSelector: "p",
-          resultExtract: "text",
-        },
+        execution: { mode: "api", endpoint: "summary" },
       },
     ],
+    api: API_BLOCK,
+    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }
@@ -117,8 +113,8 @@ describe("installs-store", () => {
         "a hash that does not match the api block",
         { api: API_BLOCK, apiContentHash: "f".repeat(64) },
       ],
-      ["an api block without its hash", { api: API_BLOCK }],
-      ["a hash without an api block", { apiContentHash: "f".repeat(64) }],
+      ["an api block without its hash", { api: API_BLOCK, apiContentHash: undefined }],
+      ["a hash without an api block", { api: undefined, apiContentHash: "f".repeat(64) }],
     ])("rejects %s, writing nothing", async (_label, overrides) => {
       const area = createFakeStorageArea();
       const store = createInstallsStore(area);

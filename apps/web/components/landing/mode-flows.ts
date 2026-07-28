@@ -185,6 +185,6 @@ export const inBrowserSteps: readonly FlowStep[] = [
     to: "site",
     elbow: "horizontal",
     title: "The executor does the work",
-    body: "Either declarative DOM steps (navigate, click, fill, select, wait, extract, scroll, and deliberately no `evaluate`) or a same-origin API call riding the cookies you already have. Anything flagged `destructiveHint` stops for a confirm dialog.",
+    body: "A same-origin API call riding the cookies you already have — no DOM selectors, no scraping. Anything flagged `destructiveHint` stops for a confirm dialog.",
   },
 ];

@@ -24,14 +24,12 @@ function pkg(...toolNames: string[]): WebMcpPackage {
       description: `${name} fixture tool`,
       inputSchema: { type: "object", properties: {} },
       annotations: { readOnlyHint: true },
-      execution: {
-        mode: "dom",
-        selector: "body",
-        autosubmit: false,
-        resultSelector: "p",
-        resultExtract: "text",
-      },
+      execution: { mode: "api", endpoint: "summary" },
     })),
+    api: {
+      baseUrl: "https://en.wikipedia.org",
+      endpoints: { summary: { method: "GET", path: "/api/summary" } },
+    },
   });
 }
 

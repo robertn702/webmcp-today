@@ -31,15 +31,11 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
         description: "wiki_summary fixture tool",
         inputSchema: { type: "object", properties: {} },
         annotations: { readOnlyHint: true },
-        execution: {
-          mode: "dom",
-          selector: "body",
-          autosubmit: false,
-          resultSelector: "p",
-          resultExtract: "text",
-        },
+        execution: { mode: "api", endpoint: "summary" },
       },
     ],
+    api: API_BLOCK,
+    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }

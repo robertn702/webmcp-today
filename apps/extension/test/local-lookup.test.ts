@@ -9,9 +9,15 @@ import {
 } from "../src/lib/store-schema.js";
 import { createFakeStorageArea, type FakeStorageArea } from "./fake-storage-area.js";
 import type { RevocationEntry } from "@robertn702/webmcp-cafe-schema";
+import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
 
 const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.cafe" };
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";
+
+const API_BLOCK = {
+  baseUrl: "https://en.wikipedia.org",
+  endpoints: { summary: { method: "GET", path: "/api/summary" } },
+};
 
 function servedPackage(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -31,15 +37,11 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
         description: "wiki_summary fixture tool",
         inputSchema: { type: "object", properties: {} },
         annotations: { readOnlyHint: true },
-        execution: {
-          mode: "dom",
-          selector: "body",
-          autosubmit: false,
-          resultSelector: "p",
-          resultExtract: "text",
-        },
+        execution: { mode: "api", endpoint: "summary" },
       },
     ],
+    api: API_BLOCK,
+    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }
