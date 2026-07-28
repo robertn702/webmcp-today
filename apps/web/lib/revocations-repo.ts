@@ -46,5 +46,7 @@ export async function getLatestRevocationId(): Promise<number> {
   const [row] = await db
     .select({ latest: sql<number>`coalesce(max(${revocations.id}), 0)` })
     .from(revocations);
-  return row?.latest ?? 0;
+  // sql<number> is a type-only annotation — pg's max(bigserial) arrives as a
+  // raw string, so coerce before the route serializes it.
+  return Number(row?.latest ?? 0);
 }
