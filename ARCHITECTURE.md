@@ -64,8 +64,8 @@ flowchart LR
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
   against; published as `@robertn702/webmcp-cafe-schema`.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
-- **`packages/definitions`** — the curated first-party corpus
-  (`@webmcp-cafe/definitions`): the registry's seed source.
+- **`packages/curated-packages`** — the curated first-party corpus
+  (`@webmcp-cafe/curated-packages`): the registry's seed source.
 
 ## Package dependency graph
 
@@ -73,7 +73,7 @@ flowchart LR
 flowchart TD
     schema["packages/schema<br/>(published)"]
     db["packages/db"]
-    defs["packages/definitions"]
+    defs["packages/curated-packages"]
     web["apps/web"]
     ext["apps/extension"]
     mcp["packages/mcp<br/>(published)"]
@@ -241,10 +241,10 @@ webmcp-cafe/
 │   ├── web/            # Next.js — registry UI + public REST API (port 3000)
 │   └── extension/      # WXT — package lookup + tool injection (dev port 5173, CDP 9222)
 ├── packages/
-│   ├── schema/         # @robertn702/webmcp-cafe-schema — zod package format (published)
-│   ├── db/             # Drizzle + Neon — schema + client
-│   ├── definitions/    # @webmcp-cafe/definitions — curated first-party packages (registry seed source)
-│   └── mcp/            # @robertn702/webmcp-cafe-mcp — MCP server (published)
+│   ├── schema/            # @robertn702/webmcp-cafe-schema — zod package format (published)
+│   ├── db/                # Drizzle + Neon — schema + client
+│   ├── curated-packages/  # @webmcp-cafe/curated-packages — curated first-party packages (registry seed source)
+│   └── mcp/               # @robertn702/webmcp-cafe-mcp — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
 ```
 

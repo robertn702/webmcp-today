@@ -87,8 +87,8 @@ bun run --filter @webmcp-cafe/web db:seed     # or cd apps/web && bun run db:see
 Split, so the pieces worth adopting stay permissive:
 
 - **AGPL-3.0-only** — the server: `apps/web` and `packages/db` (root `LICENSE`). Run a modified copy as a network service and you owe your users the source.
-- **MIT** — everything built to be adopted freely: `packages/schema` (package format), `packages/mcp` (MCP server), `packages/definitions` (curated packages), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
+- **MIT** — everything built to be adopted freely: `packages/schema` (package format), `packages/mcp` (MCP server), `packages/curated-packages` (curated packages), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
 
-Community-submitted packages are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.cafe/terms) (`apps/web/app/(registry)/terms`). `packages/definitions` is the first-party exception: it ships as MIT source.
+Community-submitted packages are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.cafe/terms) (`apps/web/app/(registry)/terms`). `packages/curated-packages` is the first-party exception: it ships as MIT source.
 
 Executor and package format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).

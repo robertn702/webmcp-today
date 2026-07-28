@@ -73,9 +73,9 @@ validation is skipped and marked broken in the popup — never half-registered.
 **Quota.** `chrome.storage.local.QUOTA_BYTES` is 10,485,760 (10 MB), measured as JSON
 stringification of keys plus values ([storage
 API](https://developer.chrome.com/docs/extensions/reference/api/storage)). Measured against the
-six curated packages (`packages/definitions/configs/*.json`, minified): 0.9–4.7 KB each, mean
-~1.8 KB; the registry envelope (`id`, `versionId`, `contributor`, timestamps) adds ~0.2 KB. So
-**500 installed packages ≈ 1 MB, 5% of quota**. Do not request `unlimitedStorage` — it carries
+curated seed corpus (`packages/curated-packages/data/*.json`, minified): each package is a few
+KB; the registry envelope (`id`, `versionId`, `contributor`, timestamps) adds ~0.2 KB. Even at a
+generous 5 KB per package, **500 installed packages ≈ 2.5 MB, a quarter of quota**. Do not request `unlimitedStorage` — it carries
 no permission warning, but asking for quota we demonstrably do not need is a review smell.
 Revisit if a single package approaches ~100 KB.
 
@@ -208,7 +208,7 @@ still inside the 10 MB quota but an unpleasant download. Escalation path, in ord
 The rule that must survive both steps: **a filter hit is never resolved by asking the registry
 about the URL.** That would reintroduce exactly the leak this design removes. A false positive
 resolves into "open the popup to check", which is a user action, or it stays a slightly
-over-eager badge. Today there are six packages; this is a list, and stays one.
+over-eager badge. At current corpus size this is a list, and stays one.
 
 ## 5. Revocation
 
@@ -256,17 +256,17 @@ signing.
 
 ## 6. The bundled fallback
 
-`BUNDLED_DOMAINS` (`apps/extension/src/lib/packages.ts:13`) auto-registers five curated packages
+`BUNDLED_DOMAINS` (`apps/extension/src/lib/packages.ts:13`) auto-registers the curated packages
 whenever the registry returns nothing. In a consent model that is the same consent gap in
 miniature, with a nicer curator.
 
-**Recommendation: delete the auto-registering fallback.** `@webmcp-cafe/definitions` stays the
+**Recommendation: delete the auto-registering fallback.** `@webmcp-cafe/curated-packages` stays the
 registry's seed source (`apps/web/scripts/seed.ts`) and becomes, in the extension, a **first-run
-suggestion list** in the popup: "6 packages ready to install", each installing through the same
+suggestion list** in the popup: "packages ready to install", each installing through the same
 local path as any other package. One click, explicit, indistinguishable afterwards from a
 registry install except for a `source: "bundled"` marker in the index.
 
-Rejected alternative: pre-installing the six on first run. It is consent-by-default wearing an
+Rejected alternative: pre-installing them on first run. It is consent-by-default wearing an
 install's clothes, and it muddies both the trust story and any future count.
 
 This also kills the **silent-fallback trap** (`ARCHITECTURE.md:117`, `apps/extension/AGENTS.md`)

@@ -212,7 +212,7 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 ## Proof Points
 
 **Metrics:** None yet (pre-launch; registry counters on the landing page are live
-but small — 6 curated packages / 18 tools from `@webmcp-cafe/definitions`).
+but small — just the curated seed packages from `@webmcp-cafe/curated-packages`).
 **Customers:** None.
 **Testimonials:** None. Do not invent.
 **Value themes:**

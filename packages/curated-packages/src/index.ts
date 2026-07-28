@@ -1,6 +1,6 @@
 import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
 
-import rawReddit from "../configs/reddit.com.json";
+import rawReddit from "../data/reddit.com.json";
 
 // Curated first-party WebMCP packages — the registry's seed source. Validated
 // once at import; an invalid curated file is a build-time bug, so this throws
@@ -15,4 +15,4 @@ function parse(raw: unknown, file: string): CreatePackageInput {
 }
 
 /** All curated packages, validated against `createPackageSchema`. */
-export const definitions: CreatePackageInput[] = [parse(rawReddit, "reddit.com.json")];
+export const curatedPackages: CreatePackageInput[] = [parse(rawReddit, "reddit.com.json")];

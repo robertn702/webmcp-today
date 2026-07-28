@@ -125,7 +125,7 @@ dev` + web on :3000 → open `/packages/<id>` → click Install via
   tokens from `api.auth` sources, performs the same-origin fetch, checks
   `errorPath`, applies the `returns` JMESPath projection. `destructiveHint`
   tools gate on a blocking `window.confirm`.
-- The bundled fallback is gone: the `@webmcp-cafe/definitions` dependency was
+- The bundled fallback is gone: the `@webmcp-cafe/curated-packages` dependency was
   removed in step 5b (U7). The package remains the seed source for the registry
   (`apps/web/scripts/seed.ts`).
 - `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and
