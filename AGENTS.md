@@ -22,7 +22,7 @@ apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — package lookup + tool injection
 packages/schema/        @robertn702/webmcp-cafe-schema — zod package format (not yet published to npm); keystone, all consumers validate against it
 packages/db/            Drizzle + Neon — schema + client
-packages/definitions/   @webmcp-cafe/definitions — curated first-party packages (extension fallback bundle + registry seed source)
+packages/definitions/   @webmcp-cafe/definitions — curated first-party packages (registry seed source)
 packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (not yet published to npm)
 ```
 
