@@ -95,9 +95,8 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
 - 2026-07-25 — **Installed packages move into the extension's `chrome.storage.local`;
   no account needed to consume, auth only to publish.** Design:
-  `docs/local-first-installs.md` (**decided, largely unimplemented** — code,
-  `ARCHITECTURE.md` and `docs/erd.md` describe the current design until each step
-  lands). What forced it: the extension sends every URL it sees to
+  `docs/local-first-installs.md` (**decided; steps 1–6 implemented, step 7 pending**).
+  What forced it: the extension sends every URL it sees to
   `GET /api/packages/lookup`, so the registry receives a browsing-history feed, and the
   lookup's default branch serves latest-version packages to anyone — meaning **install
   has never affected what registers**. Consequences worth knowing without opening the
@@ -189,3 +188,29 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   carry RCE CVEs (CVE-2024-21534, CVE-2025-1302).** `extract`/`errorPath` stayed locator
   arrays because they name one place in a document: unambiguous, dot-safe, and it keeps
   an expression evaluator out of the two security-adjacent reads.
+
+- 2026-07-28 — **Install bodies are fetched from `sender.origin`, not the build-time
+  env var.** The bridge handler validates the sender against the closed
+  `externally_connectable` allowlist, then fetches the version body from that same
+  origin. One build works against dev (`http://localhost`) and prod
+  (`https://webmcp.cafe`), and the whole class of "installed from localhost, fetched
+  from prod" bugs disappears. Attestation is unchanged: the origin set is still fixed
+  at build time. Rejected: a build-time constant for the fetch origin — it would be
+  wrong in exactly the environment we test in.
+
+- 2026-07-28 — **Popup suggestions come from `GET /api/packages?pageSize=6`, not a
+  bundled `@webmcp-cafe/definitions` fallback.** Bundled packages are
+  `CreatePackageInput` — no `id`/`versionId` — so routing them through the local
+  install path would need synthetic ids that can never be revoked or updated. Fetching
+  the registry's own browse endpoint leaks nothing (no URL is involved), shows real
+  installable packages, keeps a single install path, and drops a dependency and ~30 KB
+  of bundle. Rejected: demoting the bundle to a first-run suggestion list — it would
+  have required a parallel install path with weaker guarantees than the registry one.
+
+- 2026-07-28 — **The revocations feed carries a `latest` field so the client cursor
+  can self-heal.** `revocations.id` is a `bigserial` that restarts at 1 after a DB
+  wipe (sanctioned pre-launch); a client whose stored cursor is ahead of the server's
+  max would never see another revocation — silent, permanent, and exactly the failure
+  the feed exists to prevent. `latest` (max id, or 0) lets the client reset to 0 when
+  `stored > latest`. Rejected: an epoch constant bumped on every wipe — more
+  operational overhead, and the value already exists in the feed for free.

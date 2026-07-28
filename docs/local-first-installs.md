@@ -1,9 +1,11 @@
 # Local-First Installs
 
-> Design doc. Status: **decided, unimplemented** (docs/DECISIONS.md 2026-07-25). The code
-> described here does not exist yet; `ARCHITECTURE.md`, `docs/erd.md` and
-> `apps/web/components/landing/mode-flows.ts` describe what runs **today** and must not be
-> updated until the matching step of the plan lands.
+> Design doc. Status: **steps 1–6 implemented; step 7 (drop `<all_urls>`) pending**
+> (docs/DECISIONS.md 2026-07-25). The storage model, local page-load path, install
+> bridge, revocation feed, domain sync, registry-backed suggestions, and install-count
+> retirement all landed; what remains is the permission surgery that makes
+> content-script injection per-origin. `ARCHITECTURE.md`, `docs/erd.md` and
+> `apps/web/components/landing/mode-flows.ts` now describe the post-step-6 world.
 
 **The decision:** installed packages move into the extension's `chrome.storage.local`. No
 account is required to consume. Authentication is required only to publish.

@@ -5,8 +5,9 @@ schema changes.
 
 ## Registry tables (app-owned)
 
-Package-install model: trust is install count, not per-tool verification. There is no
-snapshot table — `package_versions` rows are themselves the served truth.
+Package-install model: trust is readable data, explicit consent, and a version you
+hold — not per-tool verification. There is no snapshot table — `package_versions`
+rows are themselves the served truth.
 
 These tables are in `public`; `users` below is the cross-schema `auth.users` (see the
 next section). Mermaid entity names can't carry the qualifier, so the FK notes do.
@@ -158,14 +159,14 @@ erDiagram
   `package_versions`, not the package, since it's a property of a version's
   content.
 - **No `(domain, url_pattern)` uniqueness — by design.** Packages are opinions, not
-  registrations: rival packages may target the same site. Install counts + pattern
-  specificity rank them at lookup time (`rankPackagesByUrl` in `@robertn702/webmcp-cafe-schema`);
+  registrations: rival packages may target the same site. Pattern specificity ranks
+  them at lookup time (`rankPackagesByUrl` in `@robertn702/webmcp-cafe-schema`);
   an abandoned package never blocks a fresh replacement.
-- **Derived trust:** install count is `COUNT(*) ... GROUP BY package_id` on `installs`,
-  computed at query time — no denormalized counter in v1.
-- **`installs` does double duty:** `WHERE user_id = ?` drives what the extension should
-  fetch for a signed-in user (with `version_id` saying which version); `GROUP BY
-package_id` drives the trust signal.
+- **`installs` records account-side pins, not a trust signal.** `WHERE user_id = ?`
+  is what the MCP server's `install_package` writes (and what the handoff link on
+  the package page points at); `version_id` says which version the account is
+  pinned to. The extension's local installs live in `chrome.storage.local`, not
+  here — this table no longer drives a public trust number.
 - **`revocations` is append-only and read-only over HTTP.** Served by
   `GET /api/revocations?since=<cursor>` (public, `WHERE id > cursor ORDER BY id`); writes
   are hand-run SQL in v1 — there is no admin role and no write endpoint. `id` is a
