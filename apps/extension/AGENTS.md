@@ -1,6 +1,8 @@
 # AGENTS.md — apps/extension
 
 Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
+Internal architecture map (the three processes, the four flows every `src/lib/` file
+serves, where to look when something breaks): `apps/extension/ARCHITECTURE.md`.
 
 ## Dev browser
 

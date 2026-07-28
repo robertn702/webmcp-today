@@ -162,6 +162,7 @@ a correction, and prune entries whose reasoning has since migrated into code or 
 | System architecture + diagrams  | `ARCHITECTURE.md`                                                                                                               |
 | Web app + API notes             | `apps/web/AGENTS.md`                                                                                                            |
 | Extension notes                 | `apps/extension/AGENTS.md`                                                                                                      |
+| Extension internal map          | `apps/extension/ARCHITECTURE.md`                                                                                                |
 | Data model ERD                  | `docs/erd.md`                                                                                                                   |
 | API execution model             | `docs/api-execution-model.md`                                                                                                   |
 | Platform risk register          | `docs/platform-risks.md`                                                                                                        |

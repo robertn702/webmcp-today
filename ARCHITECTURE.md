@@ -11,7 +11,7 @@ map of how the pieces fit together. Companion docs:
 | API execution model      | `docs/api-execution-model.md`                                    |
 | Package format (history) | `SPEC.md` (historical — code + `AGENTS.md` win on disagreements) |
 | Web app specifics        | `apps/web/AGENTS.md`                                             |
-| Extension specifics      | `apps/extension/AGENTS.md`                                       |
+| Extension specifics      | `apps/extension/AGENTS.md` + `apps/extension/ARCHITECTURE.md` (internal map) |
 
 ## System overview
 
