@@ -1,4 +1,4 @@
-import { definitions } from "@webmcp-cafe/definitions";
+import { curatedPackages } from "@webmcp-cafe/curated-packages";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as postVersion } from "@/app/api/packages/[id]/versions/route";
 import { POST as postPackage } from "@/app/api/packages/route";
@@ -29,8 +29,8 @@ vi.mock("@/lib/mutations", () => ({
   publishVersion: () => Promise.resolve({ versionId: "ver-2", version: 2 }),
 }));
 
-const pkg = definitions[0];
-if (!pkg) throw new Error("expected at least one curated definition to publish in this test");
+const pkg = curatedPackages[0];
+if (!pkg) throw new Error("expected at least one curated package to publish in this test");
 
 function post(url: string, body: unknown): Request {
   return new Request(url, {

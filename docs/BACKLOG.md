@@ -82,7 +82,7 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 - **`returns` projection for `reddit_comment`** — write output is Reddit's raw
   rendered HTML; project errors/permalink instead. Publish as v2 of the package
   (first exercise of the version-append path — worth proving before strangers
-  hit it). (packages/definitions/configs/reddit.com.json)
+  hit it). (packages/curated-packages/data/reddit.com.json)
 
 ## After launch
 

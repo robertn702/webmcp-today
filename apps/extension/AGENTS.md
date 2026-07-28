@@ -126,7 +126,7 @@ dev` + web on :3000 → open `/packages/<id>` → click Install via
   the page.
 - `src/lib/executor.ts` + `steps.ts` — DOM executor ported from Joakim Selemyr's
   MIT webmcp-extension; no `evaluate` step by design.
-- The bundled fallback is gone: the `@webmcp-cafe/definitions` dependency was
+- The bundled fallback is gone: the `@webmcp-cafe/curated-packages` dependency was
   removed in step 5b (U7). The package remains the seed source for the registry
   (`apps/web/scripts/seed.ts`).
 - `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and

@@ -3,7 +3,7 @@
 WXT extension that injects community WebMCP tool packages into sites that haven't
 implemented WebMCP themselves. It fetches each package's latest published
 version for the current page from the webmcp.cafe registry API, falling back to
-the bundled curated packages (`@webmcp-cafe/definitions`) when the registry has
+the bundled curated packages (`@webmcp-cafe/curated-packages`) when the registry has
 nothing for the domain or is unreachable.
 
 The DOM executor is ported from Joakim Selemyr's MIT-licensed
@@ -104,7 +104,7 @@ ends up injected as a tool in a live page.
    curl -X POST http://localhost:3000/api/packages \
      -H "Authorization: Bearer <your-api-key>" \
      -H "Content-Type: application/json" \
-     --data @packages/definitions/configs/en.wikipedia.org.json
+     --data @packages/curated-packages/data/en.wikipedia.org.json
    ```
    Note the returned `id`.
 4. **Confirm it's served** — publishing makes the package immediately servable

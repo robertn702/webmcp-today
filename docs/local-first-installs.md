@@ -73,7 +73,7 @@ validation is skipped and marked broken in the popup — never half-registered.
 **Quota.** `chrome.storage.local.QUOTA_BYTES` is 10,485,760 (10 MB), measured as JSON
 stringification of keys plus values ([storage
 API](https://developer.chrome.com/docs/extensions/reference/api/storage)). Measured against the
-six curated packages (`packages/definitions/configs/*.json`, minified): 0.9–4.7 KB each, mean
+six curated packages (`packages/curated-packages/data/*.json`, minified): 0.9–4.7 KB each, mean
 ~1.8 KB; the registry envelope (`id`, `versionId`, `contributor`, timestamps) adds ~0.2 KB. So
 **500 installed packages ≈ 1 MB, 5% of quota**. Do not request `unlimitedStorage` — it carries
 no permission warning, but asking for quota we demonstrably do not need is a review smell.
@@ -260,7 +260,7 @@ signing.
 whenever the registry returns nothing. In a consent model that is the same consent gap in
 miniature, with a nicer curator.
 
-**Recommendation: delete the auto-registering fallback.** `@webmcp-cafe/definitions` stays the
+**Recommendation: delete the auto-registering fallback.** `@webmcp-cafe/curated-packages` stays the
 registry's seed source (`apps/web/scripts/seed.ts`) and becomes, in the extension, a **first-run
 suggestion list** in the popup: "6 packages ready to install", each installing through the same
 local path as any other package. One click, explicit, indistinguishable afterwards from a

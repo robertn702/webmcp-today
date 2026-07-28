@@ -1,10 +1,10 @@
 /**
- * Seed the registry with the curated packages from @webmcp-cafe/definitions.
+ * Seed the registry with the curated packages from @webmcp-cafe/curated-packages.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
 import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
 import { createDb, packages, packageVersions, user } from "@webmcp-cafe/db";
-import { definitions } from "@webmcp-cafe/definitions";
+import { curatedPackages } from "@webmcp-cafe/curated-packages";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
@@ -21,7 +21,7 @@ await db
   })
   .onConflictDoNothing();
 
-for (const input of definitions) {
+for (const input of curatedPackages) {
   const [pkg] = await db
     .insert(packages)
     .values({

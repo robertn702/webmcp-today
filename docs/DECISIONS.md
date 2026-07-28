@@ -84,7 +84,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
 - 2026-07-25 — **Split license: AGPL-3.0-only server, MIT adoption surface.** Root
   `LICENSE` (AGPL) scopes to `apps/web` + `packages/db`; `packages/schema`,
-  `packages/mcp`, `packages/definitions` and `apps/extension` each ship their own MIT
+  `packages/mcp`, `packages/curated-packages` and `apps/extension` each ship their own MIT
   `LICENSE`. Start open, but keep the option to sell a hosted server later. The Joakim
   Selemyr attribution block therefore lives only where the ported MIT code actually is
   (`packages/schema/LICENSE`, `apps/extension/LICENSE`). `CONTRIBUTING.md` carries a
@@ -111,7 +111,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   field.** The inbound grant is irrevocable, which is load-bearing: versions are
   append-only and installs pin, so a revoked grant would break live installs. The
   corpus goes out under CC0 because MIT's notice-retention clause is unworkable on a
-  JSON blob injected into a live page and would be decorative (`packages/definitions`
+  JSON blob injected into a live page and would be decorative (`packages/curated-packages`
   stays MIT — it's code-shaped and ships its own LICENSE). Deliberately not done: a
   `license` field on `packages/schema`, and a required `agreeToTerms` field — that
   would break the seed corpus and every published consumer, and a notice at the
@@ -199,7 +199,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   wrong in exactly the environment we test in.
 
 - 2026-07-28 — **Popup suggestions come from `GET /api/packages?pageSize=6`, not a
-  bundled `@webmcp-cafe/definitions` fallback.** Bundled packages are
+  bundled `@webmcp-cafe/curated-packages` fallback.** Bundled packages are
   `CreatePackageInput` — no `id`/`versionId` — so routing them through the local
   install path would need synthetic ids that can never be revoked or updated. Fetching
   the registry's own browse endpoint leaks nothing (no URL is involved), shows real
