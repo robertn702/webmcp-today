@@ -154,13 +154,13 @@ export const inBrowserSteps: readonly FlowStep[] = [
     from: "cs",
     to: "bg",
     title: "The content script hands the URL off",
-    body: "One in-memory index cache in the background worker is shared by every tab, and the revocation check lives there too, so `browser.runtime.sendMessage` passes the URL to the worker rather than each frame reading storage directly.",
+    body: "The background worker holds the install index and the revocation check, so `browser.runtime.sendMessage` passes the URL to the worker rather than each frame reading storage directly.",
   },
   {
     from: "bg",
     to: "store",
     title: "Match against your installed packages",
-    body: "The worker reads the install index (cached in memory) and matches the URL with `domainLookupKeys` + `rankPackagesByUrl`. Only packages you've explicitly installed register — nothing auto-discovers — and revoked versions are dropped at registration time.",
+    body: "The worker reads the install index from local storage and matches the URL with `domainLookupKeys` + `rankPackagesByUrl`. Only packages you've explicitly installed register — nothing auto-discovers — and revoked versions are dropped at registration time.",
   },
   {
     from: "store",

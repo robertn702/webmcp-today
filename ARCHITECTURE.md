@@ -105,7 +105,7 @@ sequenceDiagram
 
     P->>CS: document_idle
     CS->>BG: sendMessage(getPackagesForUrl)
-    BG->>ST: get("index") (memory-cached)
+    BG->>ST: get("index")
     BG->>ST: get("pkg:<id>") for each match
     BG->>BG: domainLookupKeys → rankPackagesByUrl → drop revoked → minEngine gate
     alt revocation list missing (fail-closed)
