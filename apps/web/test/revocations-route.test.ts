@@ -26,7 +26,9 @@ vi.mock("@/lib/revocations-repo", () => ({
   },
   getLatestRevocationId: () => {
     const max = state.rows.reduce((acc, row) => Math.max(acc, row.id), 0);
-    return Promise.resolve(max);
+    // pg returns max(bigserial) as a raw string; the route must coerce, and the
+    // toEqual/wire-schema assertions below fail if it ever stops.
+    return Promise.resolve(String(max));
   },
 }));
 

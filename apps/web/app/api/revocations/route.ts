@@ -36,7 +36,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   return NextResponse.json({
     cursor: entries[entries.length - 1]?.id ?? cursor,
-    latest,
+    latest: Number(latest),
     entries,
   });
 }
