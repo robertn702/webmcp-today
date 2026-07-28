@@ -67,7 +67,7 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
 - `scripts/seed.ts` seeds the curated packages from `@webmcp-cafe/curated-packages`
-  (6 packages / 18 tools, incl. the tier-1 Reddit package).
+  (currently just the tier-1 Reddit package).
 
 ## Auth
 
