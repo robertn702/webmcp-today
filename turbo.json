@@ -10,7 +10,13 @@
     "WEBMCP_CAFE_API_URL",
     "WEBMCP_CAFE_API_KEY",
     "WXT_REGISTRY_API_URL",
-    "WXT_EXTENSION_KEY"
+    "WXT_EXTENSION_KEY",
+    "NEXT_RUNTIME",
+    "CI",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT"
   ],
   "tasks": {
     "build": {

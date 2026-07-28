@@ -68,6 +68,17 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   One instance only; check `lsof -nP -i :3000` for strays.
 - `scripts/seed.ts` seeds the curated packages from `@webmcp-cafe/curated-packages`
   (currently just the tier-1 Reddit package).
+- Sentry (error monitoring only — no tracing/replay/logs) is wired via
+  `instrumentation{,-client}.ts` + `sentry.{server,edge}.config.ts`. The repo is
+  source-available, so nothing Sentry-specific is hardcoded: the DSN comes from
+  `NEXT_PUBLIC_SENTRY_DSN` (optional — unset disables the SDK so outside
+  contributors don't need a Sentry project), and org/project come from
+  `SENTRY_ORG`/`SENTRY_PROJECT` env vars. Source-map upload needs
+  `SENTRY_AUTH_TOKEN` too — local builds read all three from gitignored
+  `.env.sentry-build-plugin`, Vercel has them as env vars (Production +
+  Preview). Robert's Sentry: org `roberts-personal`, project `webmcp-today`.
+  `next.config.ts` keeps the ad-blocker `tunnelRoute` commented out; enable it
+  at launch if client events get blocked.
 
 ## Auth
 
