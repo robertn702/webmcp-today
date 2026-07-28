@@ -1,0 +1,12 @@
+{
+  "worktree": {
+    "setup": "./.paseo/setup.sh"
+  },
+  "scripts": {
+    "web": {
+      "type": "service",
+      "command": "cd apps/web && bun dev",
+      "port": 3000
+    }
+  }
+}
