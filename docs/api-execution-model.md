@@ -8,11 +8,11 @@
 
 ## Motivation
 
-Package format v1 executes tools by driving the DOM: CSS selectors, form fills, clicks.
-That works, but it rots _silently_ — the Wikipedia package broke on day one when the
-article DOM changed shape, and nothing about the failure was visible until a human
-noticed. Selector rot is the expected failure mode of every DOM-backed package, and the
-current model has no way to detect it short of a health canary we haven't built.
+The original package format executed tools by driving the DOM: CSS selectors, form
+fills, clicks. That works, but it rots _silently_ — the Wikipedia package broke on day
+one when the article DOM changed shape, and nothing about the failure was visible
+until a human noticed. Selector rot is the expected failure mode of every DOM-backed
+package, and the DOM model had no way to detect it short of a health canary.
 
 Most sites we care about already expose the operation as an HTTP call their own frontend
 makes. Executing a tool as a **declared API call** instead of a DOM choreography gives us:
@@ -28,8 +28,9 @@ Flagship target: a **read + write Reddit package** backed by its JSON API — re
 threads, plus posting comments — controllable from a terminal LLM through WebMCP. That
 requires authenticated writes, which forces the token-acquisition design below.
 
-DOM execution is not going away. The API model is an _additional_ execution mode for
-tools where a known API exists; the DOM steps stay the fallback for sites without one.
+DOM execution was cut pre-launch (2026-07-28 — `docs/DECISIONS.md`): this API model
+is the only execution mode. The selector-rot argument above won, and dropping the DOM
+fallback shrank the schema, executor, and docs surface to one model.
 
 ## Tiered execution model
 
@@ -142,7 +143,7 @@ Field semantics:
   omitting it re-fetches on every request, which is the safe default and was the only
   behaviour before the field existed.
 - **`path` / `query` / `body` / `form`** — `{{param}}` templates bound from the
-  validated tool input (the same cross-validation the schema already does for DOM steps;
+  validated tool input (cross-validated at the schema level;
   placeholders may only name `inputSchema` properties). In a `body` or in
   `graphql.variables`, a string that is **exactly** one placeholder emits the raw typed
   value — `"{{n}}"` sends `10`, not `"10"` — while `"page {{n}}"` concatenates. `query`

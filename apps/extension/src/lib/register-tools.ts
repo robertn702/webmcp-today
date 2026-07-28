@@ -1,7 +1,6 @@
 import { ENGINE_VERSION } from "@robertn702/webmcp-cafe-schema";
 import { executeApiTool } from "./api-executor.js";
 import { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
-import { executeTool } from "./executor.js";
 import type { PageLoadPackages } from "./local-lookup.js";
 import type { McpResult, ModelContextLike } from "./model-context.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "./status.js";
@@ -79,30 +78,20 @@ export async function runRegistrationPass(
       const execution = tool.execution;
       if (!execution) continue;
 
-      // Resolve an execute() for the supported execution modes; skip + warn on
-      // anything not yet supported.
-      let execute: ToolExecute | undefined;
-      if (execution.mode === "dom") {
-        execute = (params) => executeTool(tool.name, execution, params, tool.annotations);
-      } else if (execution.mode === "api") {
-        const api = pkg.api;
-        const endpoint = api?.endpoints[execution.endpoint];
-        if (!api || !endpoint) {
-          console.warn(
-            `[webmcp-cafe] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the package's api block.`,
-          );
-          continue;
-        }
-        const endpointName = execution.endpoint;
-        execute = (params) =>
-          executeApiTool(tool.name, api, endpointName, params, tool.annotations);
-      }
-      if (!execute) {
+      // v1 has one execution mode: api. The endpoint must resolve against the
+      // package's api block (install-time zod validation makes this a
+      // should-never-happen guard).
+      const api = pkg.api;
+      const endpoint = api?.endpoints[execution.endpoint];
+      if (!api || !endpoint) {
         console.warn(
-          `[webmcp-cafe] Skipping tool "${tool.name}" — execution mode is not supported yet.`,
+          `[webmcp-cafe] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the package's api block.`,
         );
         continue;
       }
+      const endpointName = execution.endpoint;
+      const execute: ToolExecute = (params) =>
+        executeApiTool(tool.name, api, endpointName, params, tool.annotations);
 
       if (seen.has(tool.name)) continue;
       if (declarativeNames.has(tool.name)) {

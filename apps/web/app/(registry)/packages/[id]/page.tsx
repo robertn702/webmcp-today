@@ -86,7 +86,7 @@ export default async function PackagePage({
                 <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
                 <details className="mt-2">
                   <summary className="cursor-pointer text-xs text-muted-foreground">
-                    Show input schema and execution steps
+                    Show input schema and execution
                   </summary>
                   <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 font-mono text-xs">
                     {JSON.stringify(

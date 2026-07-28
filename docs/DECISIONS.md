@@ -5,6 +5,18 @@ Inclusion bar and entry format: root `AGENTS.md` → "Decision log". This is del
 **not** a changelog or a complete history — entries are pruned once their reasoning
 lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
+- 2026-07-28 — **DOM execution mode was removed entirely; `api` is the only execution
+  mode.** The pre-launch curated set was 5/6 DOM packages, but they were read-only
+  page-extraction demos nobody needed, while the Reddit API package was the actual
+  product thesis ("act as me on a site I live in"). Keeping DOM meant maintaining two
+  executors, two validation paths, and two doc stories for a fallback whose expected
+  failure (selector rot) is silent — the exact opposite of the API model's loud 4xx.
+  Rejected: keeping read-only DOM extraction — it survives breakage better, but the
+  format/docs surface was the cost being cut, and unauthenticated content APIs (or the
+  site's own WebMCP, eventually) cover that need. If a site with no usable API ever
+  matters, the `mode` literal in `packages/schema/src/execution.ts` turns back into a
+  discriminated union; the deleted executor is in git history.
+
 - 2026-07-23 — **Registry lookups are fetched in the extension's background worker, not
   the content script.** A background fetch goes to the registry's own origin and is not
   subject to the page's CSP; `host_permissions` does _not_ override a page's
@@ -41,9 +53,8 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   `package_versions`, not `packages`.** The format has no patch releases,
   so semver's extra dimensions were meaningless — it's compared with plain `>=` against
   `ENGINE_VERSION` (`packages/schema/src/budgets.ts`). Version-scoped because an engine
-  requirement is a property of a version's _content_ (a version adding an `api` block
-  needs more than a DOM-only one), so a user pinned to an older version must never be
-  blocked by a newer version's requirement.
+  requirement is a property of a version's _content_, so a user pinned to an older
+  version must never be blocked by a newer version's requirement.
 
 - 2026-07-24 — **No tool-output character cap in v1.** The executors used to truncate
   every result to 1.5K (`TOOL_OUTPUT_MAX`), which silently clipped read tools mid-JSON.

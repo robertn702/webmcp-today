@@ -12,8 +12,7 @@ import { domainCoveredByPatterns, parseUrlPattern } from "./url-matching.js";
  * Not semver: the format has no patch releases, so semver's extra dimensions
  * are meaningless here. Lives on `package_versions` (see publishVersionSchema),
  * not package metadata, since engine requirements are a property of a
- * version's content (e.g. a version using the `api` block needs a higher level
- * than a DOM-only version) — a user pinned to an older version must not be
+ * version's content — a user pinned to an older version must not be
  * told their engine is too old because of a newer version's requirements.
  */
 export const engineLevelSchema = z.number().int().positive();
@@ -53,9 +52,8 @@ const toolsArraySchema = z
 
 /**
  * Base object shape. Kept as a plain ZodObject (no refinement) so the derived
- * schemas below can still `.pick`/`.omit`/`.partial`/`.extend` it — the same
- * split tool.ts uses (object schema vs refined schema). `createPackageSchema`
- * wraps it with the api cross-validation.
+ * schemas below can still `.pick`/`.omit`/`.partial`/`.extend` it.
+ * `createPackageSchema` wraps it with the api cross-validation.
  */
 export const createPackageObjectSchema = z.object({
   domain: domainSchema,

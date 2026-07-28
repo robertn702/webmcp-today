@@ -76,9 +76,10 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   (who flags, where it lands) and the tier-2/3 review bar.
   (docs/api-execution-model.md → Open questions)
 - **Param-description budget gap** — `inputSchema` property descriptions allow
-  1,000 chars vs Chrome's 150 guidance; DOM `fields[]` enforce 150, API tools
-  bypass it. Align or consciously relax — tightening it after strangers publish
-  invalidates stored packages. (packages/schema/src/input-schema.ts vs fields.ts)
+  1,000 chars vs Chrome's 150 guidance; the removed DOM `fields[]` enforced
+  150, API tools bypass it. Align or consciously relax — tightening it after
+  strangers publish invalidates stored packages.
+  (packages/schema/src/input-schema.ts)
 - **`returns` projection for `reddit_comment`** — write output is Reddit's raw
   rendered HTML; project errors/permalink instead. Publish as v2 of the package
   (first exercise of the version-append path — worth proving before strangers
