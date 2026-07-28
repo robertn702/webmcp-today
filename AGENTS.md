@@ -9,6 +9,8 @@ implemented WebMCP — "Greasyfork for the agentic web".
   data. Skip production concerns (zero-downtime migrations, backfills, API
   backwards compat).
 - DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
+- **Nothing is published to npm yet** — `packages/schema` and `packages/mcp` are
+  consumed locally only; changesets are not in use pre-launch.
 - Schema changes are squashed into `packages/db/migrations/0000_init.sql`: edit it and
   its meta snapshot in place rather than stacking a migration, then confirm drift-free
   with `drizzle-kit generate` ("No schema changes, nothing to migrate").
@@ -18,10 +20,10 @@ implemented WebMCP — "Greasyfork for the agentic web".
 ```
 apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — package lookup + tool injection
-packages/schema/        @robertn702/webmcp-cafe-schema — zod package format (published); keystone, all consumers validate against it
+packages/schema/        @robertn702/webmcp-cafe-schema — zod package format (not yet published to npm); keystone, all consumers validate against it
 packages/db/            Drizzle + Neon — schema + client
 packages/definitions/   @webmcp-cafe/definitions — curated first-party packages (extension fallback bundle + registry seed source)
-packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
+packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (not yet published to npm)
 ```
 
 ## Commands
@@ -65,8 +67,8 @@ packages/mcp/           @robertn702/webmcp-cafe-mcp — MCP server (published)
 
 Bun + Turborepo, TypeScript strict ESM, Next.js + React 19 + Tailwind 4 + shadcn/ui,
 Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHub OAuth
-\+ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets,
-@modelcontextprotocol/sdk.
+\+ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets
+(not in use pre-launch), @modelcontextprotocol/sdk.
 
 ## Conventions
 
@@ -75,7 +77,7 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - Simplicity bias: smallest version that works; no abstraction without a current need.
 - Conventional commits; keep `main` green (typecheck + lint + test before committing).
 - Skills install project-locally via `npx skills add` (never `-g`).
-- Published packages must list `LICENSE` in their `files` array.
+- Once a package is published to npm, its `files` array must list `LICENSE`.
 - `CLAUDE.md` symlinks to `AGENTS.md` (pre-commit auto-creates) — never diverge them.
 - Env: `apps/web/.env.example` lists required vars (`DATABASE_URL`, GitHub OAuth,
   `BETTER_AUTH_SECRET`).
