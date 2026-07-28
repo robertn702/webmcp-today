@@ -20,27 +20,19 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 - **Docs page** — package format, publishing guide, extension install guide;
   source content exists in docs/ + apps/extension/README.md to adapt.
   (docs/api-execution-model.md, packages/schema)
-- **Local-first installs** — installed packages move into the extension's
-  `chrome.storage.local`; no account to consume, auth only to publish. Fixes the
-  browsing-history feed the registry receives today and makes install actually
-  gate what registers (it doesn't). Includes a **mandatory** revocation feed,
-  deletes the auto-registering bundled fallback, and drops install count as a
-  trust signal. Supersedes the old credentialed-`installed=true` fetch plan,
-  which kept the URL feed and would have made consumption require an account.
-  Eight sequenced steps; docs update when each lands, not before.
-  (docs/local-first-installs.md)
 - **Chrome Web Store distribution decision** — CWS listing at launch vs.
   unpacked install (users already need `#enable-webmcp-testing`). Precedent:
   the reference impl (WebMCP Hub) shipped this exact category — remote-registry
   lookup + content-script registration — to CWS in Feb 2026, so reviewer risk
   is lower than feared; position the listing as declarative packages interpreted
   by a bundled executor (no `evaluate`, no remote code). **The privacy
-  declaration depends on local-first installs**: as built, every URL goes to the
-  registry, so "no data collected" would be false — it becomes true (no browsing
-  history; the registry sees only which package versions you downloaded) once
-  steps 3–4 land, and the `<all_urls>` warning goes away at step 7. Declare
-  whatever is true at submission and update the listing after. Submit early
-  regardless: review turnaround is the constraint.
+  declaration turns on local-first installs**: page loads no longer touch the
+  network (steps 3–6 landed), so "no data collected" is now true for browsing
+  history — the registry sees only which package versions you download and
+  which domains have packages. The `<all_urls>` content-script warning is still
+  present (it goes at step 7, not yet shipped). Declare whatever is true at
+  submission and update the listing after.
+  Submit early regardless: review turnaround is the constraint.
   Zero-review fallback worth a compatibility check — Hub's popup accepts a
   custom hub URL, so its store-approved build could be pointed at our
   `GET /api/packages/lookup`. Needs Robert: $5 developer account, listing
@@ -91,10 +83,6 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   rendered HTML; project errors/permalink instead. Publish as v2 of the package
   (first exercise of the version-append path — worth proving before strangers
   hit it). (packages/definitions/configs/reddit.com.json)
-- **Handle `SecurityError` on registration** — sites can reject injected tools
-  via `Permissions-Policy: tools=()` (Chrome 150+); today a rejected
-  `registerTool` would just fail. Catch it and mark the package site-blocked
-  rather than silently degrading. (docs/platform-risks.md → tools=())
 
 ## After launch
 

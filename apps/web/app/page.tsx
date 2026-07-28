@@ -155,12 +155,12 @@ export default async function LandingPage() {
           <ModeCard
             index="Mode 02"
             title="In the browser"
-            summary="No terminal, no API key. The extension looks up packages for whatever page you're on and registers their tools, and the browser's own agent picks them up as if the site had shipped them."
+            summary="No terminal, no API key. Packages you've installed live in the extension's local storage; on each page load the extension matches them against the URL and registers their tools, and the browser's own agent picks them up as if the site had shipped them."
           >
             <FlowDiagram
               nodes={inBrowserNodes}
               steps={inBrowserSteps}
-              label="In the browser, the extension fetches packages for the current URL and registers their tools on document.modelContext, where the browser's agent invokes them."
+              label="In the browser, the extension reads installed packages from local storage, matches them against the current URL, and registers their tools on document.modelContext, where the browser's agent invokes them."
             />
           </ModeCard>
         </div>

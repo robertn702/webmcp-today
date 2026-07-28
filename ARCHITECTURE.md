@@ -41,7 +41,8 @@ flowchart LR
     DB[("Neon Postgres<br/>(packages/db — Drizzle)")]
     MCP["packages/mcp<br/>MCP server (stdio)"]
 
-    EXT -- "GET /api/packages/lookup?url=…" --> API
+    UI -. "install bridge<br/>(externally_connectable)" .-> EXT
+    EXT -- "GET /api/revocations ·<br/>GET /api/domains (alarms)" --> API
     MCP -- "REST (+ Bearer API key)" --> API
     TA --> MCP
     UI --> API
@@ -52,9 +53,12 @@ flowchart LR
 - **`apps/web`** — the registry. Next.js UI for humans + public REST API for
   everything else. Owns auth (better-auth) and all persistence.
 - **`apps/extension`** — the delivery mechanism. A content script on every page asks
-  the background worker for packages matching the URL, then registers their tools via
-  `document.modelContext.registerTool()` so in-page agents can call them. Falls back
-  to bundled packages when the registry is unreachable.
+  the background worker for packages matching the URL; the worker resolves them from
+  `chrome.storage.local` (no network on page load) and the content script registers
+  their tools via `document.modelContext.registerTool()` so in-page agents can call
+  them. Installs arrive over an `externally_connectable` bridge from the registry
+  site; the only other HTTP the extension makes is a revocation poll and a domain
+  list, both on `chrome.alarms`.
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
   install packages without a browser. Thin client over the same REST API.
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
@@ -96,22 +100,22 @@ sequenceDiagram
     participant P as Web page
     participant CS as Content script
     participant BG as Background worker
-    participant R as Registry API
+    participant ST as chrome.storage.local
     participant MC as document.modelContext
 
     P->>CS: document_idle
     CS->>BG: sendMessage(getPackagesForUrl)
-    BG->>R: GET /api/packages/lookup?url=…
-    R-->>BG: packages (zod-validated at boundary)
-    alt registry unreachable / no match / schema mismatch
-        BG-->>CS: bundled fallback from @webmcp-cafe/definitions (silent — watch page console)
+    BG->>ST: get("index") (memory-cached)
+    BG->>ST: get("pkg:<id>") for each match
+    BG->>BG: domainLookupKeys → rankPackagesByUrl → drop revoked → minEngine gate
+    alt revocation list missing (fail-closed)
+        BG-->>CS: no packages (paused, waiting on the safety list)
     else
         BG-->>CS: matched packages, most-specific first
     end
     loop each package
-        CS->>CS: skip package if minEngine > ENGINE_VERSION
+        CS->>CS: skip on name collision with site tools (form[toolname] or already seen)
         loop each tool
-            CS->>CS: skip on name collision with site tools (form[toolname] or already seen)
             CS->>MC: registerTool({ name, description, inputSchema, execute })
         end
     end
@@ -119,11 +123,15 @@ sequenceDiagram
 
 Key behaviors:
 
-- The fetch happens in the **background worker** (page CSP would block it from the
-  content script), but all logging lands in the **page console**.
-- **Silent-fallback trap:** any failure falls back to bundled packages, so a "working"
-  test may never touch the registry. The ground-truth log line is
-  `[webmcp-cafe] Using N package(s) from the registry`.
+- **Page loads never hit the network.** The background resolves every URL from
+  `chrome.storage.local` (install index + bodies); all logging lands in the **page
+  console**, with `[webmcp-cafe] N installed package(s) matched this URL` as the
+  ground-truth line.
+- **Fail-closed gate:** if the revocation list is missing (a fresh client that has
+  never completed a poll), the worker registers nothing and reports
+  `safety-list-missing`. A package can only enter storage via the install bridge,
+  which bootstraps the list, so this state is unreachable in normal use — it is the
+  belt for the braces.
 - **Engine gate:** a package whose `minEngine` exceeds the extension's level is skipped
   wholesale — a too-new package must never register inert or mis-executed tools.
 
@@ -172,7 +180,9 @@ sequenceDiagram
     participant C as Contributor (human or agent)
     participant W as apps/web REST API
     participant D as Neon (packages/db)
-    participant E as Extension / MCP consumers
+    participant P as Registry site (page)
+    participant E as Extension background
+    participant ST as chrome.storage.local
 
     C->>W: POST /api/packages (session cookie or Bearer API key)
     W->>W: zod-validate against @robertn702/webmcp-cafe-schema
@@ -180,22 +190,28 @@ sequenceDiagram
     C->>W: POST /api/packages/:id/versions (owner only)
     W->>D: append version N+1 (never mutates N)
 
-    E->>W: PUT /api/packages/:id/install
-    W->>D: insert/move installs row pinned to version_id
+    P->>E: install bridge: { type:"install", packageId, versionId }
+    E->>W: GET <origin>/api/packages/:id/versions/:versionId
+    W-->>E: served body (webMcpPackageSchema)
+    E->>E: re-verify apiContentHash; bootstrap revocation list if absent
+    E->>ST: atomic set({ pkg:<id>: body, index: next })
 
-    E->>W: GET /api/packages/lookup?url=…
-    W->>D: latest version per package, ranked by pattern specificity + installs
-    E->>W: GET /api/installs (auth)
-    W->>D: caller's pinned versions
+    E->>W: GET /api/revocations?since=cursor (alarms: 6h + startup)
+    W-->>E: append-only kill list (latest = max(id) → self-healing cursor)
+    E->>W: GET /api/domains (alarms: daily)
+    W-->>E: domain set for the discovery badge
 ```
 
 The model in one breath: `packages` is the one mutable row per package
 (title/description/domain); `package_versions` is append-only and **is** the
-served truth (no snapshot table); `installs` pins user→version and doubles as the
-trust signal (`COUNT(*) GROUP BY package_id`, computed at query time). Installed
-users never auto-update — moving the pin is the same idempotent `PUT …/install` with
-a different `versionId`, and rollback is that same call pinning to an older version.
-Full schema: `docs/erd.md`.
+served truth (no snapshot table). Page-load resolution is purely local — the
+extension matches its install index against the URL and reads the bodies from
+`chrome.storage.local`, with no network hop. The registry retains exactly two
+levers after install: the revocation feed (enforced at registration time against
+bodies already on disk) and the version a user chooses to install next.
+Account-side `installs` rows still record pins made through the MCP server
+(Mode 01) and feed the handoff link, but no browser reads them. Full schema:
+`docs/erd.md`.
 
 ## Package format
 
@@ -220,10 +236,13 @@ validated by zod in `packages/schema`:
   `packages/db/src/apikey-schema.ts` matched to the plugin. Auth tables are plural
   snake_case in SQL (`users`, `api_keys`, …) but keep singular drizzle **export**
   names, which is the only name better-auth resolves (`apps/web/AGENTS.md` § Auth).
-- **Trust = install count, not verification.** No per-tool verification, no approval
-  gate: rival packages may target the same site, and installs + pattern specificity
-  rank them. Version pinning is the containment mechanism — a malicious or broken
-  update reaches zero installed users until each opts in (the Greasyfork model).
+- **Trust = readable data, explicit consent, and a version you hold.** No per-tool
+  verification, no approval gate: rival packages may target the same site, ranked by
+  pattern specificity alone. Nothing registers that you didn't install; the installed
+  body lives on disk, so a malicious or broken update reaches you only when you move
+  the pin (the Greasyfork model); and the whole package is a JSON document you can
+  read before running it. The registry's one post-install lever is the revocation
+  feed (`docs/local-first-installs.md` §5).
 
 ## Repository & build topology
 
