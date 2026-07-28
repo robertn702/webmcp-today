@@ -65,8 +65,7 @@ flowchart LR
   against; published as `@robertn702/webmcp-cafe-schema`.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
 - **`packages/definitions`** — the curated first-party corpus
-  (`@webmcp-cafe/definitions`): the extension's bundled fallback and the
-  registry's seed source.
+  (`@webmcp-cafe/definitions`): the registry's seed source.
 
 ## Package dependency graph
 
@@ -83,7 +82,6 @@ flowchart TD
     web --> db
     web --> defs
     ext --> schema
-    ext --> defs
     mcp --> schema
     defs --> schema
 ```
@@ -254,7 +252,7 @@ webmcp-cafe/
 ├── packages/
 │   ├── schema/         # @robertn702/webmcp-cafe-schema — zod package format (published)
 │   ├── db/             # Drizzle + Neon — schema + client
-│   ├── definitions/    # @webmcp-cafe/definitions — curated first-party packages (fallback + seed)
+│   ├── definitions/    # @webmcp-cafe/definitions — curated first-party packages (registry seed source)
 │   └── mcp/            # @robertn702/webmcp-cafe-mcp — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
 ```
