@@ -20,23 +20,20 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 - **Docs page** — package format, publishing guide, extension install guide;
   source content exists in docs/ + apps/extension/README.md to adapt.
   (docs/api-execution-model.md, packages/schema)
-- **Chrome Web Store distribution decision** — CWS listing at launch vs.
-  unpacked install (users already need `#enable-webmcp-testing`). Precedent:
-  the reference impl (WebMCP Hub) shipped this exact category — remote-registry
-  lookup + content-script registration — to CWS in Feb 2026, so reviewer risk
-  is lower than feared; position the listing as declarative packages interpreted
-  by a bundled executor (no `evaluate`, no remote code). **The privacy
-  declaration turns on local-first installs**: page loads no longer touch the
-  network (steps 3–6 landed), so "no data collected" is now true for browsing
-  history — the registry sees only which package versions you download and
-  which domains have packages. The `<all_urls>` content-script warning is still
-  present (it goes at step 7, not yet shipped). Declare whatever is true at
-  submission and update the listing after.
-  Submit early regardless: review turnaround is the constraint.
+- **Chrome Web Store submission — in review** (2026-07-29): went with CWS at
+  launch. v1.0.0 ZIP uploaded (prod-only `https://webmcp.today/*` host perms,
+  dev `key` stripped, all four icons), store icon + publisher contact email
+  verified. Hit the expected `<all_urls>` content-script warning → in-depth
+  review queue; submitted as-is with justification (greasyfork-model needs
+  arbitrary sites; Tampermonkey precedent). Research: in-depth reviews run
+  1–2 wks typical, 3–4 for new publisher accounts; escalate via One Stop
+  Support after 3 wks. Re-review fires on every update while `<all_urls>`
+  stays (4–5 days steady-state), one pending review at a time, and
+  cancel-and-resubmit resets queue position — so batch releases ~biweekly and
+  never cancel a pending review to sneak in a commit.
   Zero-review fallback worth a compatibility check — Hub's popup accepts a
   custom hub URL, so its store-approved build could be pointed at our
-  `GET /api/packages/lookup`. Needs Robert: $5 developer account, listing
-  identity, privacy policy page. The tiers 2–3 "no remote code" answer can
+  `GET /api/packages/lookup`. The tiers 2–3 "no remote code" answer can
   follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
 - **Email service** (password reset, verification) — pick a provider (needs
@@ -108,6 +105,15 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 
 ### Extension / executor
 
+- **Move `<all_urls>` to `optional_host_permissions`** — drop the static
+  `<all_urls>` content script, request broad access at onboarding (or per-site
+  from the popup), register content scripts dynamically via
+  `chrome.scripting.registerContentScripts`. One-time refactor that moves every
+  future CWS update off the in-depth review queue (fast queue often <1 day vs
+  4–5 days) — Google's own chromium-extensions guidance names this the single
+  biggest review-time lever. Do after v1 clears review.
+  (apps/extension/wxt.config.ts manifest; docs/BACKLOG.md CWS item for the
+  review-time research)
 - **Chat UI** — embedded chat panel in the extension so users can drive the
   page's WebMCP tools without a terminal agent (today's loop needs opencode +
   chrome-devtools-mcp). Needs a design call: model/API-key story, panel
