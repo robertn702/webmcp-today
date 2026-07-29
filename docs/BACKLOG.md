@@ -51,6 +51,14 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 
 ### Cheap now, expensive after launch
 
+- **Idempotent, version-aware curated seed** — re-running `seed.ts` today
+  inserts duplicate `packages` rows (harmless while DB wipes are fine). Once
+  curated packages accrue real versions, seed must instead: look up the
+  seed-owned package by domain, canonical-hash the version-scoped payload
+  (urlPatterns+tools+api+minEngine — `apiContentHash` alone misses tool-only
+  changes), no-op on match, insert `max(version)+1` with the JSON's `changelog`
+  on change. Then curated updates are edit-JSON + run-seed.
+  (apps/web/scripts/seed.ts; packages/schema/src/api-hash.ts)
 - **Vercel preview deploys fail on every PR** — t3-env "Invalid environment
   variables" at page-data collection; the Vercel project lacks the required
   env vars for preview builds. Still failing as of PR 42, including a docs-only
