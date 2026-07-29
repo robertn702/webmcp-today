@@ -1,0 +1,154 @@
+{
+  "domain": "google.com",
+  "urlPatterns": ["*://www.google.com/maps/*", "*://google.com/maps/*"],
+  "title": "Google Maps (internal web API)",
+  "description": "Google Maps via the web app's own internal endpoints: place search, place details (ratings, hours, phone, website), driving directions, and — with a logged-in Google session — your saved lists and the places in them. No Google Cloud project, API key, or billing account required; search/details/directions also work logged out. NOTE: Maps responds with positional arrays, so these projections are the registry's loudest canary for API rot — when Google reshapes the payload the tools throw instead of answering wrong.",
+  "minEngine": 1,
+  "changelog": "Adds maps_lists and maps_list_places (signed-in only) alongside maps_search, maps_place_details, maps_directions. Requires engine support for `stripPrefix` (Google's anti-XSSI `)]}'` response marker).",
+  "api": {
+    "baseUrl": "https://www.google.com",
+    "endpoints": {
+      "search": {
+        "method": "GET",
+        "path": "/search",
+        "query": {
+          "tbm": "map",
+          "authuser": "0",
+          "hl": "en",
+          "gl": "us",
+          "q": "{{query}}",
+          "pb": "!1s{{query}}!7i{{limit}}!10b1"
+        },
+        "stripPrefix": ")]}'",
+        "returns": "[0][1][1:].{name: [14][11], rating: [14][4][7], review_count: [14][4][8], category: [14][13][0], address: [14][39], lat: [14][9][2], lng: [14][9][3], feature_id: [14][10], place_id: [14][78]}"
+      },
+      "place": {
+        "method": "GET",
+        "path": "/maps/preview/place",
+        "query": {
+          "authuser": "0",
+          "hl": "en",
+          "gl": "us",
+          "pb": "!1m1!1s{{featureId}}"
+        },
+        "stripPrefix": ")]}'",
+        "returns": "[6].{name: [11], rating: [4][7], review_count: [4][8], categories: [13], address: [39], lat: [9][2], lng: [9][3], phone: [178][0][0], website: [38][0], hours: [203][0][*].{day: [0], times: [3][*][0]}}"
+      },
+      "directions": {
+        "method": "GET",
+        "path": "/maps/preview/directions",
+        "query": {
+          "authuser": "0",
+          "hl": "en",
+          "gl": "us",
+          "pb": "!1m2!1s{{origin}}!6e0!1m2!1s{{destination}}!6e0"
+        },
+        "stripPrefix": ")]}'",
+        "returns": "{origin: [0][0][0][0][0][0], destination: [0][0][1][0][0][0], routes: [0][1][0][?@[3][1] != `null`].{via: [1], distance: [2][1], distance_m: [2][0], duration: [3][1], duration_s: [3][0]}}"
+      },
+      "lists": {
+        "method": "GET",
+        "path": "/locationhistory/preview/mas",
+        "query": {
+          "authuser": "0",
+          "hl": "en",
+          "gl": "us",
+          "pb": "!2m3!1s!7e81!15i17409!7m1!1i50!12m1!1i50!15m1!1i50!23m2!1i50!3b1!24m2!1i50!3b1!38m2!1i50!3b1"
+        },
+        "stripPrefix": ")]}'",
+        "returns": "[29][3][*].{id: [0][0], type: [0][1], name: [4], place_count: [12]}"
+      },
+      "listPlaces": {
+        "method": "GET",
+        "path": "/maps/preview/entitylist/getlist",
+        "query": {
+          "authuser": "0",
+          "hl": "en",
+          "gl": "us",
+          "pb": "!1m6!1s{{listId}}!2e3!3m1!1e1!3m1!1e9!2e2!3e2!4i{{limit}}"
+        },
+        "stripPrefix": ")]}'",
+        "returns": "{list: [0][4], total: [0][12], places: [0][8][*].{name: [2], lat: [1][5][2], lng: [1][5][3], feature_id_decimal: [1][6], added_at: [9][0]}}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "maps_search",
+      "description": "Search Google Maps for places matching a query: name, rating, review count, category, address, coordinates, and the feature_id / place_id that maps_place_details needs. Works logged out.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search text, e.g. 'coffee san francisco' or 'ramen east village'"
+          },
+          "limit": { "type": "integer", "description": "Max results to return (1-20)" }
+        },
+        "required": ["query", "limit"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "search" }
+    },
+    {
+      "name": "maps_place_details",
+      "description": "Get full details for one Google Maps place: rating, review count, categories, address, coordinates, phone, website, and this week's opening hours. Use a feature_id from maps_search.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "featureId": {
+            "type": "string",
+            "description": "Hex feature ID pair from maps_search, e.g. 0x89c259fea13836e1:0xdc1041da3f77c1fd"
+          }
+        },
+        "required": ["featureId"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "place" }
+    },
+    {
+      "name": "maps_directions",
+      "description": "Get driving directions between two places: the resolved endpoints plus route options with summary road, distance, and duration. Driving only; origins and destinations are free-text place names or addresses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "Start point: place name or address, e.g. 'Empire State Building'"
+          },
+          "destination": {
+            "type": "string",
+            "description": "End point: place name or address, e.g. 'Grand Central Terminal'"
+          }
+        },
+        "required": ["origin", "destination"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "directions" }
+    },
+    {
+      "name": "maps_lists",
+      "description": "List the signed-in user's saved Google Maps lists — Favorites, Want to go, Travel plans, and custom lists — with name, list id, type (1=custom, 2=Favorites, 3=Want to go, 5=Travel plans, 6=Saved places), and place count. Requires a logged-in Google session; fails logged out. Use a list id with maps_list_places.",
+      "inputSchema": { "type": "object", "properties": {} },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "lists" }
+    },
+    {
+      "name": "maps_list_places",
+      "description": "List the places in one of the signed-in user's Google Maps lists: name, coordinates, and when each was added. Requires a logged-in session; get list ids from maps_lists. To open a listed place, search its name with maps_search and call maps_place_details with the hex feature_id from there — the decimal feature_id pair here is NOT accepted by maps_place_details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "string",
+            "description": "List id from maps_lists, e.g. 187LlV3R33BitbJO4zWapsILfJwY"
+          },
+          "limit": { "type": "integer", "description": "Max places to return (1-500)" }
+        },
+        "required": ["listId", "limit"]
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "listPlaces" }
+    }
+  ]
+}

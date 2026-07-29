@@ -1,5 +1,6 @@
 import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
 
+import rawGoogle from "../data/google.com.json";
 import rawReddit from "../data/reddit.com.json";
 
 // Curated first-party WebMCP packages — the registry's seed source. Validated
@@ -15,4 +16,7 @@ function parse(raw: unknown, file: string): CreatePackageInput {
 }
 
 /** All curated packages, validated against `createPackageSchema`. */
-export const curatedPackages: CreatePackageInput[] = [parse(rawReddit, "reddit.com.json")];
+export const curatedPackages: CreatePackageInput[] = [
+  parse(rawReddit, "reddit.com.json"),
+  parse(rawGoogle, "google.com.json"),
+];
