@@ -27,6 +27,9 @@ export function SiteFooter() {
           <Link href="/terms" className="hover:text-foreground hover:underline">
             Terms
           </Link>
+          <Link href="/privacy" className="hover:text-foreground hover:underline">
+            Privacy
+          </Link>
           <a href={SOURCE_HREF} className="hover:text-foreground hover:underline">
             Source
           </a>
