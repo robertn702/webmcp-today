@@ -166,6 +166,12 @@ Field semantics:
   Reddit's REST API). A non-empty value at that path = tool failure, surfaced as an
   error to the agent. An array rather than a dot string so a key containing a dot is
   unambiguous; `extract` takes the same shape for the same reason.
+- **`stripPrefix`** — a literal response-body prefix to strip before JSON parsing.
+  Exists for Google's anti-XSSI marker (`")]}'"`), which every `google.com` internal
+  JSON endpoint (Maps, Gmail) prepends; the Google Maps curated package is the
+  reference user. A literal string rather than a boolean so the executor carries no
+  site-specific constants, and stripped only when present so a site dropping its own
+  prefix doesn't break a working package.
 - **`persistedQuery`** — enables APQ retry (see GraphQL section).
 - **`documents`** — package-level named static GraphQL documents; endpoints reference
   them as `@documents/name`. Keeps megabyte-adjacent captured queries out of the
