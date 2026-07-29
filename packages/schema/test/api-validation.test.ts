@@ -228,10 +228,106 @@ describe("api block cross-validation", () => {
     expect(withTtl(86401)).toBe(false);
   });
 
-  it("rejects a sendAs location other than header", () => {
+  it("accepts header/form/query sendAs locations, rejects anything else", () => {
+    const withIn = (location: string) => {
+      const c = structuredClone(base);
+      Object.assign(c.api.auth.csrf.sendAs, { in: location });
+      return createPackageSchema.safeParse(c).success;
+    };
+    expect(withIn("header")).toBe(true);
+    expect(withIn("query")).toBe(true);
+    // `form` requires a form body on the endpoint — covered by its own test.
+    expect(withIn("cookie")).toBe(false);
+  });
+
+  it("accepts a form-field token when the endpoint declares a form body", () => {
     const c = structuredClone(base);
-    Object.assign(c.api.auth.csrf.sendAs, { in: "query" });
+    Object.assign(c.api.auth.csrf.sendAs, { in: "form", name: "hmac" });
+    expect(createPackageSchema.safeParse(c).success).toBe(true);
+  });
+
+  it("rejects a form-field token on an endpoint with no form body", () => {
+    const c = structuredClone(base);
+    Object.assign(c.api.auth.csrf.sendAs, { in: "form", name: "hmac" });
+    // Point the read tool's endpoint (no form) at the form-token source.
+    Object.assign(c.api.endpoints.subredditHot, { auth: ["csrf"] });
     expect(createPackageSchema.safeParse(c).success).toBe(false);
+  });
+
+  it("requires exactly one of extract / pattern on an auth source", () => {
+    const neither = structuredClone(base);
+    // @ts-expect-error fixture surgery — testing the validation, not the type
+    delete neither.api.auth.csrf.source.extract;
+    expect(createPackageSchema.safeParse(neither).success).toBe(false);
+
+    const both = structuredClone(base);
+    Object.assign(both.api.auth.csrf.source, { pattern: 'name="hmac" value="([^"]+)"' });
+    expect(createPackageSchema.safeParse(both).success).toBe(false);
+
+    const patternOnly = structuredClone(base);
+    // @ts-expect-error fixture surgery — testing the validation, not the type
+    delete patternOnly.api.auth.csrf.source.extract;
+    Object.assign(patternOnly.api.auth.csrf.source, { pattern: 'name="hmac" value="([^"]+)"' });
+    expect(createPackageSchema.safeParse(patternOnly).success).toBe(true);
+  });
+
+  it("scans {{placeholders}} in an auth source's pattern and fetch endpoint", () => {
+    // An HN-shaped config: the auth source regexes the vote token out of an
+    // HTML page that is never bound to a tool directly.
+    const hnLike = {
+      domain: "news.ycombinator.com",
+      urlPatterns: ["*://news.ycombinator.com/*"],
+      title: "HN write tools",
+      description: "Vote and comment on HN.",
+      api: {
+        baseUrl: "https://news.ycombinator.com",
+        auth: {
+          voteAuth: {
+            source: {
+              endpoint: "itemPage",
+              pattern: 'vote\\?id={{itemId}}&how=up&auth=([^&"]+)',
+            },
+            sendAs: { in: "query", name: "auth" },
+          },
+        },
+        endpoints: {
+          itemPage: { method: "GET", path: "/item", query: { id: "{{itemId}}" } },
+          vote: {
+            method: "GET",
+            path: "/vote",
+            query: { id: "{{itemId}}", how: "{{how}}" },
+            auth: ["voteAuth"],
+          },
+        },
+      },
+      tools: [
+        {
+          name: "hn_vote",
+          description: "Vote on an item.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              itemId: { type: "string", description: "Item ID" },
+              how: { type: "string", description: "up/un" },
+            },
+            required: ["itemId", "how"],
+          },
+          execution: { mode: "api", endpoint: "vote" },
+        },
+      ],
+    };
+    expect(createPackageSchema.safeParse(hnLike).success).toBe(true);
+
+    // A pattern placeholder no tool prop supplies must fail — even though the
+    // pattern lives in api.auth, not on a tool-bound endpoint.
+    const broken = structuredClone(hnLike);
+    broken.api.auth.voteAuth.source.pattern = "vote\\?id={{itemIdZ}}&auth=([0-9a-f]+)";
+    expect(createPackageSchema.safeParse(broken).success).toBe(false);
+
+    // Same for a placeholder on the source's fetch endpoint (never tool-bound).
+    const brokenEndpoint = structuredClone(hnLike);
+    brokenEndpoint.api.endpoints.itemPage.query = { id: "{{itemIdZ}}" };
+    expect(createPackageSchema.safeParse(brokenEndpoint).success).toBe(false);
   });
 
   it("rejects a tool whose execution.mode is an unknown discriminator", () => {

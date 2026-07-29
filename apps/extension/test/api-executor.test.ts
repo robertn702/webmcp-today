@@ -428,6 +428,179 @@ describe("executeApiTool — end to end with mocked fetch", () => {
   });
 });
 
+describe("executeApiTool — HTML pattern token sources (Hacker News shape)", () => {
+  // HN serves no JSON: the hmac is a hidden input on /item, the vote auth
+  // token lives inside a vote href, and both ride the write call as a form
+  // field / query param rather than a header.
+  const hnApi: ApiBlock = apiBlockSchema.parse({
+    baseUrl: "https://news.ycombinator.com",
+    auth: {
+      hmac: {
+        source: { endpoint: "itemPage", pattern: 'name="hmac" value="([^"]+)"' },
+        sendAs: { in: "form", name: "hmac" },
+        ttlSeconds: 300,
+      },
+      voteAuth: {
+        source: {
+          endpoint: "itemPage",
+          pattern: 'vote\\?id={{itemId}}&(?:amp;)?how={{how}}&(?:amp;)?auth=([^&"]+)',
+        },
+        sendAs: { in: "query", name: "auth" },
+        ttlSeconds: 300,
+      },
+    },
+    endpoints: {
+      itemPage: { method: "GET", path: "/item", query: { id: "{{itemId}}" } },
+      comment: {
+        method: "POST",
+        path: "/comment",
+        form: { parent: "{{itemId}}", text: "{{text}}" },
+        auth: ["hmac"],
+      },
+      vote: {
+        method: "GET",
+        path: "/vote",
+        query: { id: "{{itemId}}", how: "{{how}}" },
+        auth: ["voteAuth"],
+      },
+    },
+  });
+
+  const itemPageHtml = (itemId: string, hmac: string, auth: string) =>
+    `<html><body>` +
+    `<a id="up_${itemId}" href="vote?id=${itemId}&amp;how=up&amp;auth=${auth}&amp;goto=item%3Fid%3D${itemId}">` +
+    `<input type="hidden" name="hmac" value="${hmac}">` +
+    `</body></html>`;
+
+  function stubHnFetch(calls: { url: string; body?: string }[]) {
+    const mock = vi.fn((url: string, init?: RequestInit) => {
+      const body = typeof init?.body === "string" ? init.body : undefined;
+      calls.push({ url, body });
+      const id = new URL(url).searchParams.get("id") ?? "0";
+      if (url.includes("/item")) {
+        return Promise.resolve(new Response(itemPageHtml(id, `HMAC_${id}`, `auth_${id}`)));
+      }
+      return Promise.resolve(new Response("<html>done</html>"));
+    });
+    vi.stubGlobal("fetch", mock);
+    return mock;
+  }
+
+  it("extracts the hmac from HTML and appends it as a form field", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    stubHnFetch(calls);
+
+    const result = await executeApiTool("hn_comment", hnApi, "comment", {
+      itemId: "42",
+      text: "hello hn",
+    });
+
+    expect(result.content[0]?.text).not.toMatch(/^Error/);
+    const commentCall = calls.find((c) => c.url.includes("/comment"));
+    const form = new URLSearchParams(commentCall?.body);
+    expect(form.get("parent")).toBe("42");
+    expect(form.get("text")).toBe("hello hn");
+    expect(form.get("hmac")).toBe("HMAC_42");
+  });
+
+  it("extracts the vote token with an interpolated pattern and sends it as a query param", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    stubHnFetch(calls);
+
+    const result = await executeApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "up" });
+
+    expect(result.content[0]?.text).not.toMatch(/^Error/);
+    const voteCall = calls.find((c) => c.url.includes("/vote"));
+    const voteUrl = new URL(voteCall?.url ?? "");
+    expect(voteUrl.searchParams.get("id")).toBe("42");
+    expect(voteUrl.searchParams.get("how")).toBe("up");
+    expect(voteUrl.searchParams.get("auth")).toBe("auth_42");
+  });
+
+  it("extracts the retract (how=un) token from the unvote href, not the upvote one", async () => {
+    // An already-voted item page shows an unvote link (how=un) with a
+    // DIFFERENT auth token, and no how=up link. The pattern interpolates
+    // {{how}}, so retraction must still resolve — a hardcoded how=up pattern
+    // would match nothing here.
+    const calls: { url: string; body?: string }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        calls.push({ url });
+        if (url.includes("/item")) {
+          return Promise.resolve(
+            new Response(
+              `<html><body><a id="un_42" href="vote?id=42&amp;how=un&amp;auth=unauth_42">unvote</a></body></html>`,
+            ),
+          );
+        }
+        return Promise.resolve(new Response("<html>done</html>"));
+      }),
+    );
+
+    const result = await executeApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "un" });
+
+    expect(result.content[0]?.text).not.toMatch(/^Error/);
+    const voteCall = calls.find((c) => c.url.includes("/vote"));
+    const voteUrl = new URL(voteCall?.url ?? "");
+    expect(voteUrl.searchParams.get("how")).toBe("un");
+    expect(voteUrl.searchParams.get("auth")).toBe("unauth_42");
+  });
+
+  it("fails loudly when the pattern matches nothing (page shape changed / logged out)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response("<html>login required</html>"))),
+    );
+    const result = await executeApiTool("hn_comment", hnApi, "comment", {
+      itemId: "42",
+      text: "x",
+    });
+    expect(result.content[0]?.text).toMatch(/pattern matched nothing/);
+  });
+
+  it("caches tokens per resolved URL — item A's token is never sent for item B", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    const mock = stubHnFetch(calls);
+
+    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "a" });
+    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "2", text: "b" });
+    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "c" });
+
+    // Items 1 and 2 fetch their own page once; the repeat of item 1 hits the TTL cache.
+    const pageFetches = mock.mock.calls.filter(([url]) => url.includes("/item"));
+    expect(pageFetches).toHaveLength(2);
+    const hmacs = calls
+      .filter((c) => c.url.includes("/comment"))
+      .map((c) => new URLSearchParams(c.body).get("hmac"));
+    expect(hmacs).toEqual(["HMAC_1", "HMAC_2", "HMAC_1"]);
+  });
+
+  it("returns a clear error when a form token is paired with a body-less endpoint", async () => {
+    const broken: ApiBlock = apiBlockSchema.parse({
+      baseUrl: "https://news.ycombinator.com",
+      auth: {
+        hmac: {
+          source: { endpoint: "itemPage", pattern: 'name="hmac" value="([^"]+)"' },
+          sendAs: { in: "form", name: "hmac" },
+        },
+      },
+      endpoints: {
+        itemPage: { method: "GET", path: "/item", query: { id: "{{itemId}}" } },
+        // Schema validation would reject this pairing at publish time; the
+        // executor guard is the second line of defense.
+        vote: { method: "GET", path: "/vote", query: { id: "{{itemId}}" }, auth: ["hmac"] },
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response(itemPageHtml("42", "H", "a")))),
+    );
+    const result = await executeApiTool("hn_vote", broken, "vote", { itemId: "42" });
+    expect(result.content[0]?.text).toMatch(/no form body/);
+  });
+});
+
 describe("auth token TTL cache", () => {
   /** Same block, with a ttlSeconds on the csrf source. */
   const withTtl = (ttlSeconds: number): ApiBlock =>

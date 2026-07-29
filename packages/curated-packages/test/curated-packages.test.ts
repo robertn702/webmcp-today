@@ -3,7 +3,7 @@ import { curatedPackages } from "../src/index.js";
 
 describe("curated packages", () => {
   it("contains all curated packages", () => {
-    expect(curatedPackages).toHaveLength(2);
+    expect(curatedPackages).toHaveLength(3);
   });
 
   it("has unique domains", () => {

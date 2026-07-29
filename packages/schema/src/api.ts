@@ -34,21 +34,40 @@ const endpointName = z.string().min(1).max(NAME_MAX);
 const locatorPath = z.array(z.string().min(1).max(PATH_SEGMENT_MAX)).min(1).max(PATH_SEGMENTS_MAX);
 
 /** A named credential-acquisition flow, e.g. Reddit's modhash dance: fetch an
- * endpoint, extract a token from its JSON, resend it as a header. */
+ * endpoint, extract a token from its response, resend it on the write call. */
 export const apiAuthSourceSchema = z.object({
-  source: z.object({
-    // Endpoint (by name) to fetch the token from.
-    endpoint: endpointName,
-    // Locator into the JSON response, e.g. ["data", "modhash"].
-    extract: locatorPath,
-  }),
+  source: z
+    .object({
+      // Endpoint (by name) to fetch the token from.
+      endpoint: endpointName,
+      // Locator into the JSON response, e.g. ["data", "modhash"].
+      extract: locatorPath.optional(),
+      // Regex (JS syntax) matched against the RAW response text — for token
+      // sources that return HTML rather than JSON (Hacker News serves its hmac
+      // as a hidden form input, its vote token inside an href). Capture group
+      // 1 is the token; no match is a loud failure. May carry {{param}}
+      // placeholders (e.g. a per-item id in a vote URL), interpolated RAW
+      // before compiling — nothing regex-escapes them, so keep interpolated
+      // params to identifier shapes (numeric ids, slugs).
+      pattern: z.string().min(1).max(500).optional(),
+    })
+    .superRefine((src, ctx) => {
+      // Exactly one extraction mode. Zero = no way to get a token; two = the
+      // executor picks one and the other silently rots.
+      if ((src.extract === undefined) === (src.pattern === undefined)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Declare exactly one of extract (JSON locator) or pattern (raw-text regex).",
+          path: src.extract === undefined ? ["extract"] : ["pattern"],
+        });
+      }
+    }),
   sendAs: z.object({
-    // Where the token is injected. A single-member enum on purpose: it
-    // reserves the {in, name} axis four independent teams converged on
-    // (OpenAPI `in`, Airbyte `inject_into`, Higress `position`, FastMCP
-    // `location`) without shipping a query/cookie branch nothing needs.
-    // Adding one is an executor change plus an engine bump.
-    in: z.enum(["header"]),
+    // Where the token is injected: a request header (Reddit's X-Modhash), a
+    // form field (HN's hmac), or a query param (HN's vote auth). The {in,
+    // name} axis is the one four independent teams converged on (OpenAPI `in`,
+    // Airbyte `inject_into`, Higress `position`, FastMCP `location`).
+    in: z.enum(["header", "form", "query"]),
     name: z.string().min(1).max(200),
   }),
   /** How long a fetched token stays usable, in seconds. OMITTED = re-fetch on
@@ -228,6 +247,31 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
         issues,
       );
     }
+
+    // Auth-token sources ride along on the tool's call: their fetch endpoint's
+    // templates and their extraction `pattern` bind the SAME tool params, so
+    // they are scanned against this tool's props too. (The source endpoint is
+    // typically not tool-bound itself, so the main scan above never sees it.)
+    for (const authRef of endpoint.auth ?? []) {
+      const src = api?.auth?.[authRef];
+      if (!src) continue; // missing ref — flagged by the reference check below.
+      const srcEndpoint = api?.endpoints[src.source.endpoint];
+      if (srcEndpoint) {
+        const srcBase = ["api", "endpoints", src.source.endpoint];
+        scanTemplateValue(srcEndpoint.path, props, [...srcBase, "path"], issues);
+        if (srcEndpoint.query) {
+          scanTemplateValue(srcEndpoint.query, props, [...srcBase, "query"], issues);
+        }
+      }
+      if (src.source.pattern !== undefined) {
+        scanTemplateValue(
+          src.source.pattern,
+          props,
+          ["api", "auth", authRef, "source", "pattern"],
+          issues,
+        );
+      }
+    }
   }
 
   if (!api) return issues;
@@ -236,12 +280,21 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
   const endpointNames = new Set(Object.keys(api.endpoints));
   const documentNames = new Set(Object.keys(api.documents ?? {}));
 
-  // 3. Endpoint auth refs exist in api.auth; 4. @documents refs exist.
+  // 3. Endpoint auth refs exist in api.auth; 4. @documents refs exist;
+  //    4b. A form-field token needs a form body to land in — anything else
+  //    sends a request missing its credential, a silent auth failure.
   for (const [name, endpoint] of Object.entries(api.endpoints)) {
     (endpoint.auth ?? []).forEach((ref, ai) => {
       if (!authNames.has(ref)) {
         issues.push({
           message: `Endpoint "${name}" references auth source "${ref}", which is not defined in api.auth.`,
+          path: ["api", "endpoints", name, "auth", ai],
+        });
+        return;
+      }
+      if (api.auth?.[ref]?.sendAs.in === "form" && endpoint.form === undefined) {
+        issues.push({
+          message: `Endpoint "${name}" attaches form-token source "${ref}" but declares no form body.`,
           path: ["api", "endpoints", name, "auth", ai],
         });
       }

@@ -248,26 +248,26 @@ interface CachedToken {
  *  `ttlSeconds` is never stored here (Airbyte's default: refresh every
  *  request), so opting in is explicit.
  *
- *  Keyed by origin + source name + the source's own definition (including the
- *  resolved fetch endpoint's method/path, not just its symbolic name) so two
- *  packages on one origin that both name a source "csrf" — or reuse an
- *  endpoint name like "me" for two different actual endpoints — cannot read
- *  each other's token. */
+ *  Keyed by origin + source name + the RESOLVED fetch URL + the extraction
+ *  spec (locator or interpolated pattern). The resolved URL matters: a source
+ *  whose endpoint is parameterized (HN's /item?id={{itemId}}) yields a
+ *  DIFFERENT token per param value, so the template path alone would hand
+ *  item A's vote token to a vote on item B. */
 const persistentTokenCache = new Map<string, CachedToken>();
 
 function tokenCacheKey(
   api: ApiBlock,
   name: string,
   source: ApiAuthSource,
-  sourceEndpoint: ApiEndpoint,
+  resolvedUrl: string,
+  resolvedPattern?: string,
 ): string {
   return [
     api.baseUrl,
     name,
-    sourceEndpoint.method,
-    sourceEndpoint.path,
-    source.source.endpoint,
-    ...source.source.extract,
+    resolvedUrl,
+    ...(source.source.extract ?? []),
+    resolvedPattern ?? "",
   ].join("\u0000");
 }
 
@@ -276,50 +276,44 @@ export function clearAuthTokenCache(): void {
   persistentTokenCache.clear();
 }
 
-/** Resolve one named auth token source (e.g. Reddit's modhash): fetch its
- *  source endpoint, extract the token via its locator, and return the header to
- *  attach. Two layers of caching — the per-call map (one fetch per source per
- *  tool call, always) and the TTL cache above (only when the source opts in). */
-async function resolveAuthToken(
-  api: ApiBlock,
+/** A resolved auth token, ready to inject where its source's `sendAs` says. */
+interface ResolvedToken {
+  in: "header" | "form" | "query";
+  name: string;
+  value: string;
+}
+
+/** Extract the token from a fetched auth-source response: a `pattern` source
+ *  regexes the raw text (HTML token sources); an `extract` source walks a
+ *  locator into the parsed JSON (after the source endpoint's `stripPrefix` is
+ *  removed). Both fail loudly on no token — a silent empty credential would
+ *  surface later as an opaque site error. */
+function extractToken(
+  source: ApiAuthSource,
   name: string,
+  text: string,
   params: Record<string, unknown>,
-  cache: Map<string, string>,
-): Promise<{ header: string; value: string }> {
-  const source = api.auth?.[name];
-  if (!source) throw new Error(`Auth source "${name}" is not defined in api.auth.`);
-  // `sendAs.in` has exactly one member today; when a second lands this must
-  // branch on it instead of assuming a header.
-  const header = source.sendAs.name;
-
-  const cached = cache.get(name);
-  if (cached !== undefined) return { header, value: cached };
-
-  const sourceEndpoint = api.endpoints[source.source.endpoint];
-  if (!sourceEndpoint) {
-    throw new Error(
-      `Auth source "${name}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
-    );
-  }
-
-  const ttlMs = source.ttlSeconds === undefined ? 0 : source.ttlSeconds * 1000;
-  const key = tokenCacheKey(api, name, source, sourceEndpoint);
-  if (ttlMs > 0) {
-    const stored = persistentTokenCache.get(key);
-    if (stored !== undefined && stored.expiresAt > Date.now()) {
-      cache.set(name, stored.value);
-      return { header, value: stored.value };
+  stripPrefix?: string,
+): string {
+  if (source.source.pattern !== undefined) {
+    const resolvedPattern = interpolateString(source.source.pattern, params);
+    const match = new RegExp(resolvedPattern).exec(text);
+    const token = match?.[1];
+    if (token === undefined || token === "") {
+      throw new Error(
+        `Auth source "${name}" pattern matched nothing — the page shape has probably changed (or the session is logged out).`,
+      );
     }
+    return token;
   }
-
-  const request = buildRequest(api, sourceEndpoint, params);
-  const outcome = await performFetch(request, request.headers);
-  if (!outcome.ok) {
-    throw new Error(`Auth source "${name}" request failed: HTTP ${outcome.status}.`);
+  if (source.source.extract === undefined) {
+    // Unreachable post-validation (exactly one extraction mode is enforced);
+    // throw rather than guess if an unvalidated block ever gets here.
+    throw new Error(`Auth source "${name}" declares no extraction mode.`);
   }
   let json: unknown;
   try {
-    json = parseJson(outcome.text, sourceEndpoint.stripPrefix);
+    json = parseJson(text, stripPrefix);
   } catch {
     throw new Error(`Auth source "${name}" did not return JSON.`);
   }
@@ -329,10 +323,56 @@ async function resolveAuthToken(
       `Auth source "${name}" yielded no token at "${source.source.extract.join(".")}".`,
     );
   }
-  const value = String(token);
+  return String(token);
+}
+
+/** Resolve one named auth token source (e.g. Reddit's modhash): fetch its
+ *  source endpoint, extract the token, and return it with its injection
+ *  target. Two layers of caching — the per-call map (one fetch per source per
+ *  tool call, always) and the TTL cache above (only when the source opts in). */
+async function resolveAuthToken(
+  api: ApiBlock,
+  name: string,
+  params: Record<string, unknown>,
+  cache: Map<string, string>,
+): Promise<ResolvedToken> {
+  const source = api.auth?.[name];
+  if (!source) throw new Error(`Auth source "${name}" is not defined in api.auth.`);
+  const sendAs = source.sendAs;
+
+  const cached = cache.get(name);
+  if (cached !== undefined) return { in: sendAs.in, name: sendAs.name, value: cached };
+
+  const sourceEndpoint = api.endpoints[source.source.endpoint];
+  if (!sourceEndpoint) {
+    throw new Error(
+      `Auth source "${name}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
+    );
+  }
+
+  const ttlMs = source.ttlSeconds === undefined ? 0 : source.ttlSeconds * 1000;
+  const request = buildRequest(api, sourceEndpoint, params);
+  const resolvedPattern =
+    source.source.pattern === undefined
+      ? undefined
+      : interpolateString(source.source.pattern, params);
+  const key = tokenCacheKey(api, name, source, request.url, resolvedPattern);
+  if (ttlMs > 0) {
+    const stored = persistentTokenCache.get(key);
+    if (stored !== undefined && stored.expiresAt > Date.now()) {
+      cache.set(name, stored.value);
+      return { in: sendAs.in, name: sendAs.name, value: stored.value };
+    }
+  }
+
+  const outcome = await performFetch(request, request.headers);
+  if (!outcome.ok) {
+    throw new Error(`Auth source "${name}" request failed: HTTP ${outcome.status}.`);
+  }
+  const value = extractToken(source, name, outcome.text, params, sourceEndpoint.stripPrefix);
   cache.set(name, value);
   if (ttlMs > 0) persistentTokenCache.set(key, { value, expiresAt: Date.now() + ttlMs });
-  return { header, value };
+  return { in: sendAs.in, name: sendAs.name, value };
 }
 
 /** JSON.parse returns `any`. This is the one place that narrows it to the
@@ -424,13 +464,41 @@ async function executeApiToolInner(
 
   // Resolve auth token sources first, caching per source-name for this call.
   const tokenCache = new Map<string, string>();
-  const authHeaders: Record<string, string> = {};
+  const tokens: ResolvedToken[] = [];
   for (const authName of endpoint.auth ?? []) {
-    const { header, value } = await resolveAuthToken(api, authName, params, tokenCache);
-    authHeaders[header] = value;
+    tokens.push(await resolveAuthToken(api, authName, params, tokenCache));
   }
 
   const request = buildRequest(api, endpoint, params);
-  const outcome = await performFetch(request, { ...request.headers, ...authHeaders });
+  // Inject each token where its source's sendAs points: header, query param,
+  // or an extra urlencoded form field appended to the built body.
+  let url = request.url;
+  let body = request.body;
+  const headers: Record<string, string> = { ...request.headers };
+  for (const token of tokens) {
+    if (token.in === "header") {
+      headers[token.name] = token.value;
+    } else if (token.in === "query") {
+      const parsed = new URL(url);
+      parsed.searchParams.set(token.name, token.value);
+      url = parsed.toString();
+    } else {
+      // form — schema validation already requires a form body for this
+      // pairing; the guard is for unvalidated blocks reaching the executor.
+      if (body === undefined || endpoint.form === undefined) {
+        throw new Error(
+          `Auth token "${token.name}" targets a form field but endpoint "${endpointName}" has no form body.`,
+        );
+      }
+      // Re-parse and re-serialize rather than string-appending: the body was
+      // built by URLSearchParams (spaces as `+`), and routing the token
+      // through the same encoder keeps the whole payload one encoding.
+      const form = new URLSearchParams(body);
+      form.set(token.name, token.value);
+      body = form.toString();
+    }
+  }
+
+  const outcome = await performFetch({ url, method: request.method, headers, body }, headers);
   return handleResponse(endpoint, outcome);
 }
