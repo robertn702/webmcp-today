@@ -103,6 +103,12 @@ export const apiEndpointSchema = z
     // Locator for an error payload in a 200 body (GraphQL ["errors"], Reddit
     // ["json", "errors"]); a non-empty value there = tool failure.
     errorPath: locatorPath.optional(),
+    // Literal response-body prefix to strip BEFORE JSON parsing — Google's
+    // anti-XSSI marker `)]}'` is the canonical case (Maps, Gmail). A literal
+    // string rather than a boolean so the executor carries no site-specific
+    // constants. Stripped only when present: a site that drops its own prefix
+    // must not break a package that was already working.
+    stripPrefix: z.string().min(1).max(50).optional(),
     persistedQuery: z.boolean().optional(),
     graphql: apiGraphqlSchema.optional(),
     // Names of auth token sources to attach to this call.

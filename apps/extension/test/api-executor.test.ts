@@ -325,6 +325,44 @@ describe("handleResponse — errorPath + projection", () => {
     const outcome = { status: 500, ok: false, text: JSON.stringify({ error: "server" }) };
     expect(() => handleResponse(redditApi.endpoints.me!, outcome)).toThrow(/HTTP 500/);
   });
+
+  it("strips a declared anti-XSSI prefix before parsing (Google Maps shape)", () => {
+    const googleApi = apiBlockSchema.parse({
+      baseUrl: "https://www.google.com",
+      endpoints: {
+        place: {
+          method: "GET",
+          path: "/maps/preview/place",
+          stripPrefix: ")]}'",
+          returns: "[6].{name: [11]}",
+        },
+      },
+    });
+    const payload = [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      [null, null, null, null, null, null, null, null, null, null, null, "Kamisama Ramen"],
+    ];
+    const outcome = { status: 200, ok: true, text: `)]}'\n${JSON.stringify(payload)}` };
+    const result = handleResponse(googleApi.endpoints.place!, outcome);
+    expect(result.content[0]?.text).toBe(JSON.stringify({ name: "Kamisama Ramen" }));
+  });
+
+  it("still parses when a declared prefix is absent from the body", () => {
+    const googleApi = apiBlockSchema.parse({
+      baseUrl: "https://www.google.com",
+      endpoints: {
+        place: { method: "GET", path: "/maps/preview/place", stripPrefix: ")]}'" },
+      },
+    });
+    const outcome = { status: 200, ok: true, text: JSON.stringify({ ok: true }) };
+    const result = handleResponse(googleApi.endpoints.place!, outcome);
+    expect(result.content[0]?.text).toBe(JSON.stringify({ ok: true }));
+  });
 });
 
 describe("executeApiTool — end to end with mocked fetch", () => {

@@ -108,9 +108,10 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - `ENGINE_VERSION` is **pegged at 1 until release** — change the format shape freely,
   don't bump it (`packages/schema/src/budgets.ts` says why).
 - Tier-1 `api` block: `returns` is a JMESPath expression; `extract`/`errorPath` are
-  locator arrays (`["json","errors"]`); `sendAs` is `{in, name}`; an endpoint declares
-  at most one of `graphql`/`form`/`body`. A `body` or `graphql.variables` leaf that is
-  exactly one `{{param}}` keeps its type.
+  locator arrays (`["json","errors"]`); `sendAs` is `{in, name}`; `stripPrefix` is a
+  literal response prefix removed before JSON parsing (Google's anti-XSSI `)]}'` —
+  Maps/Gmail); an endpoint declares at most one of `graphql`/`form`/`body`. A `body`
+  or `graphql.variables` leaf that is exactly one `{{param}}` keeps its type.
 - **Never add `jsonpath-plus`, `jsonpath`, or anything depending on `static-eval`** —
   they call `new Function`, which MV3's CSP rejects in the content script, and both
   carry RCE CVEs. Response projection is `@jmespath-community/jmespath` (no `eval`).

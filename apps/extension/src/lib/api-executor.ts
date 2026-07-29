@@ -319,7 +319,7 @@ async function resolveAuthToken(
   }
   let json: unknown;
   try {
-    json = JSON.parse(outcome.text);
+    json = parseJson(outcome.text, sourceEndpoint.stripPrefix);
   } catch {
     throw new Error(`Auth source "${name}" did not return JSON.`);
   }
@@ -338,9 +338,16 @@ async function resolveAuthToken(
 /** JSON.parse returns `any`. This is the one place that narrows it to the
  *  JSONValue the projection engine's types want — sound by construction, since
  *  JSON.parse cannot produce anything else, and it stops the `any` at this
- *  line instead of letting it spread. */
-function parseJson(text: string): JSONValue {
-  return JSON.parse(text);
+ *  line instead of letting it spread. Applies the endpoint's `stripPrefix`
+ *  first (Google's anti-XSSI `)]}'` on Maps/Gmail) — only when the body
+ *  actually starts with it, so a site dropping its own prefix is a no-op
+ *  rather than a newly-failing package. */
+function parseJson(text: string, stripPrefix?: string): JSONValue {
+  const body =
+    stripPrefix !== undefined && text.startsWith(stripPrefix)
+      ? text.slice(stripPrefix.length)
+      : text;
+  return JSON.parse(body);
 }
 
 /** Interpret a completed response: HTTP status, then `errorPath` (GraphQL
@@ -349,7 +356,7 @@ function parseJson(text: string): JSONValue {
 export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): McpResult {
   let json: JSONValue | undefined;
   try {
-    json = parseJson(outcome.text);
+    json = parseJson(outcome.text, endpoint.stripPrefix);
   } catch {
     json = undefined;
   }
