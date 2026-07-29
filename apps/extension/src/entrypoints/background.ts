@@ -239,8 +239,11 @@ async function buildPopupState(): Promise<PopupState> {
       fetchFn: (url) => fetch(url),
       origin: REGISTRY_ORIGIN,
     });
-    if (result.ok) suggestions = result.packages;
-    else suggestionsUnavailable = true;
+    // Never suggest what's already installed — redundant rows read as bugs.
+    if (result.ok) {
+      const installedIds = new Set(installs.map((install) => install.packageId));
+      suggestions = result.packages.filter((pkg) => !installedIds.has(pkg.packageId));
+    } else suggestionsUnavailable = true;
   }
 
   return {

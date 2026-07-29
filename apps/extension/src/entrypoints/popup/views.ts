@@ -113,6 +113,7 @@ function statusNodes(state: PopupState): Node[] {
         ];
       }
       const names = document.createElement("ul");
+      names.className = "tools";
       names.append(...status.toolNames.map((name) => li("", code(name))));
       return [el("h1", `${status.toolNames.length} tool(s) registered on this page`), names];
     }
@@ -144,23 +145,27 @@ function installList(installs: PopupInstall[], callbacks: ViewCallbacks): HTMLEl
   list.className = "installs";
   for (const install of installs) {
     const item = document.createElement("li");
+    item.className = "row";
 
     const line = document.createElement("div");
+    line.className = "row-title";
     line.append(el("strong", install.title), ` v${install.version} — ${install.domain}`);
     item.append(line);
 
     const detail = document.createElement("div");
+    detail.className = "row-detail";
     detail.append(stateBadge(install));
-    if (install.toolCount !== undefined) detail.append(` · ${install.toolCount} tool(s)`);
+    if (install.toolCount !== undefined) detail.append(`· ${install.toolCount} tool(s)`);
 
     const button = document.createElement("button");
     button.type = "button";
+    button.className = "btn btn-ghost";
     button.textContent = "Uninstall";
     button.addEventListener("click", () => {
       button.disabled = true;
       callbacks.onUninstall(install.packageId);
     });
-    detail.append(" · ", button);
+    detail.append(button);
     item.append(detail);
 
     list.append(item);
@@ -185,36 +190,61 @@ function suggestionsNodes(state: PopupState, callbacks: ViewCallbacks): Node[] {
   list.className = "suggestions";
   for (const suggestion of state.suggestions) {
     const item = document.createElement("li");
-    item.append(el("strong", suggestion.title), ` — ${suggestion.domain} `);
+    item.className = "row";
+
+    const line = document.createElement("div");
+    line.className = "row-title";
+    line.append(el("strong", suggestion.title));
+    item.append(line);
+
+    const detail = document.createElement("div");
+    detail.className = "row-detail";
+    detail.append(suggestion.domain);
 
     const button = document.createElement("button");
     button.type = "button";
+    button.className = "btn btn-primary";
     button.textContent = "Install";
     button.addEventListener("click", () => {
       button.disabled = true;
       callbacks.onInstallSuggestion(suggestion.packageId, suggestion.versionId);
     });
-    item.append(button);
+    detail.append(button);
+    item.append(detail);
 
     list.append(item);
   }
   return [el("h2", "Discover packages"), list];
 }
 
-function stateBadge(install: PopupInstall): HTMLElement {
+function stateBadge(install: PopupInstall): Node {
+  const pill = (classSuffix: string, text: string): HTMLElement => {
+    const node = el("span", text);
+    node.className = `badge badge-${classSuffix}`;
+    return node;
+  };
+  const fragment = document.createDocumentFragment();
   switch (install.state) {
     case "ok":
-      return el("span", "active");
+      fragment.append(pill("ok", "active"));
+      break;
     case "revoked":
-      return el(
-        "span",
-        `pulled by the registry${install.revokedReason ? `: ${install.revokedReason}` : ""}`,
+      fragment.append(
+        pill("revoked", "revoked"),
+        ` — pulled by the registry${install.revokedReason ? `: ${install.revokedReason}` : ""}`,
       );
+      break;
     case "broken":
-      return el("span", "broken — stored body unreadable; reinstall from the registry");
+      fragment.append(
+        pill("broken", "broken"),
+        " — stored body unreadable; reinstall from the registry",
+      );
+      break;
     case "engine-too-old":
-      return el("span", "needs a newer extension version");
+      fragment.append(pill("engine-too-old", "outdated"), " — needs a newer extension version");
+      break;
   }
+  return fragment;
 }
 
 function footerNote(): HTMLElement {

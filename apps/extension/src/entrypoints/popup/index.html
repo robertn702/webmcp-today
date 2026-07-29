@@ -6,14 +6,38 @@
     <style>
       :root {
         color-scheme: light dark;
+        --brand-from: #f59e0b;
+        --brand-to: #ea580c;
+        --ok: light-dark(#15803d, #4ade80);
+        --revoked: light-dark(#b91c1c, #f87171);
+        --broken: light-dark(#b45309, #fbbf24);
+        --muted-ink: light-dark(#525252, #b3b3b3);
+      }
+      * {
+        box-sizing: border-box;
       }
       body {
-        width: 300px;
+        width: 320px;
         margin: 0;
-        padding: 12px 14px;
         font:
           13px/1.45 system-ui,
           sans-serif;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        font-weight: 600;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+      }
+      .brand img {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+      }
+      main {
+        padding: 12px 14px;
       }
       h1 {
         margin: 0 0 6px;
@@ -21,20 +45,12 @@
         font-weight: 600;
       }
       h2 {
-        margin: 10px 0 4px;
-        font-size: 12px;
-        font-weight: 600;
-        opacity: 0.85;
-      }
-      ul.installs {
-        list-style: none;
-        padding-left: 0;
-      }
-      ul.installs li {
-        margin-bottom: 6px;
-      }
-      ul.installs button {
+        margin: 12px 0 6px;
         font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted-ink);
       }
       p {
         margin: 0 0 8px;
@@ -52,15 +68,125 @@
         overflow-wrap: anywhere;
         user-select: all;
       }
+
+      /* Install + suggestion rows */
+      ul.installs,
+      ul.suggestions {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 4px;
+      }
+      .row {
+        padding: 7px 0;
+        margin: 0;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+      }
+      .row:last-child {
+        border-bottom: none;
+      }
+      .row-title {
+        line-height: 1.35;
+      }
+      .row-detail {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 3px;
+        font-size: 12px;
+        color: var(--muted-ink);
+      }
+      .row-detail .btn {
+        margin-left: auto;
+      }
+
+      /* State pills */
+      .badge {
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .badge-ok {
+        color: var(--ok);
+        background: color-mix(in srgb, #22c55e 15%, transparent);
+      }
+      .badge-revoked {
+        color: var(--revoked);
+        background: color-mix(in srgb, #ef4444 15%, transparent);
+      }
+      .badge-broken {
+        color: var(--broken);
+        background: color-mix(in srgb, #f59e0b 18%, transparent);
+      }
+      .badge-engine-too-old {
+        color: var(--muted-ink);
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+
+      /* Buttons */
+      .btn {
+        font: inherit;
+        font-size: 12px;
+        padding: 3px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .btn-primary {
+        color: #381300;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+      }
+      .btn-primary:not(:disabled):hover {
+        filter: brightness(1.07);
+      }
+      .btn-ghost {
+        color: inherit;
+        background: transparent;
+        border-color: color-mix(in srgb, currentColor 25%, transparent);
+      }
+      .btn-ghost:not(:disabled):hover {
+        background: color-mix(in srgb, currentColor 7%, transparent);
+      }
+
+      /* Registered tool names */
+      ul.tools {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0;
+        margin: 4px 0 8px;
+      }
+      ul.tools li {
+        margin: 0;
+      }
+      ul.tools code {
+        font-size: 11.5px;
+        padding: 1px 7px;
+        border-radius: 5px;
+        background: color-mix(in srgb, currentColor 8%, transparent);
+      }
+
       footer {
-        margin-top: 10px;
+        margin-top: 12px;
         padding-top: 8px;
-        border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-        opacity: 0.75;
+        border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+        font-size: 11px;
+        color: var(--muted-ink);
       }
     </style>
   </head>
   <body>
+    <header class="brand">
+      <img src="icons/48.png" alt="" />
+      <span>WebMCP Today</span>
+    </header>
     <main id="status">Checking…</main>
     <script type="module" src="./main.ts"></script>
   </body>
