@@ -8,9 +8,7 @@ export const metadata: Metadata = {
     "What the WebMCP Today extension and website store, what they send, and what they never see.",
 };
 
-// NOTE(legal): unreviewed draft, same status as /terms. No contact mailbox
-// exists yet — contact is the public issue tracker (see the terms page TODO).
-const LAST_UPDATED = "28 July 2026";
+const LAST_UPDATED = "29 July 2026";
 
 export default function PrivacyPage() {
   return (
@@ -49,7 +47,9 @@ export default function PrivacyPage() {
         </ul>
         <p>
           Those requests carry no account, no identifier, no cookies, and no browsing data. The
-          extension has no analytics, no telemetry, and no error reporting.
+          extension has no analytics, no telemetry, and no error reporting. The one thing the
+          requests can&apos;t hide is your IP address — our hosting provider&apos;s servers see it,
+          as any web server does (see the processor list below).
         </p>
         <p>
           When an AI agent runs one of your installed tools on a page, the request goes from the
@@ -61,7 +61,10 @@ export default function PrivacyPage() {
       <Section n={2} title="The website">
         <p>
           Sign-in is GitHub OAuth or email and password. The site stores the profile GitHub hands
-          over (name, email, avatar) and your session.
+          over (name, email, avatar) and your session, kept alive by the only cookie the site sets.
+          If you sign in with GitHub, GitHub handles that sign-in under its own privacy policy. The
+          service isn&apos;t directed at children under 13, and GitHub sign-in requires you to be at
+          least 13.
         </p>
         <p>
           Publishing a package stores the package itself and its association with your account.
@@ -72,38 +75,75 @@ export default function PrivacyPage() {
           for what that means. Installing a package records an install row on your account, which is
           how the site serves you your pinned versions.
         </p>
+        <p>
+          We store all of this to run the service for you, which is the legal basis for processing
+          it. Account data is kept until you ask us to delete it.
+        </p>
         <p>The service runs on three processors:</p>
         <ul className="flex list-disc flex-col gap-2 pl-4">
-          <li>Vercel — hosting</li>
+          <li>Vercel — hosting; its servers log IP addresses, as any web server does</li>
           <li>Neon — database</li>
-          <li>Sentry — error monitoring on the web app only (not in the extension)</li>
+          <li>
+            Sentry — error monitoring on the web app only (not in the extension); an error report
+            can include your IP address, browser, and the page that failed
+          </li>
         </ul>
+        <p>
+          All three are US companies, so if you&apos;re in the EU or UK your data is processed in
+          the US.
+        </p>
       </Section>
 
       <Section n={3} title="What we don't collect">
         <p>
-          No browsing history, no page contents, no per-URL activity from the extension. Personal
-          data is not sold or shared with anyone beyond the processors listed above.
+          No browsing history, no page contents, no per-URL activity from the extension. We do not
+          sell or share your personal information, and nothing goes to anyone beyond the processors
+          listed above.
         </p>
       </Section>
 
-      <Section n={4} title="Changes">
+      <Section n={4} title="Your rights">
+        <p>
+          You can ask to see, correct, export, or delete the data tied to your account — email the
+          address below. Deleting your account removes your profile, sessions, and install pins.
+          Published packages are public under CC0 and stay public — see the terms.
+        </p>
+        <p>
+          If you&apos;re in the EU or UK, you also have the right to object to processing and to
+          complain to your local data protection authority.
+        </p>
+      </Section>
+
+      <Section n={5} title="Changes">
         <p>
           The date at the top is the version you&apos;re reading, and every edit is visible in the
-          repository&apos;s public history. If the extension&apos;s behavior ever changes in a way
-          this page doesn&apos;t cover, this page changes first.
+          repository&apos;s public history. Material changes get called out at the top of this page,
+          not just in the history. If the extension&apos;s behavior ever changes in a way this page
+          doesn&apos;t cover, this page changes first.
         </p>
       </Section>
 
-      <Section n={5} title="Contact">
+      <Section n={6} title="Contact">
         <p>
+          WebMCP Today is run by one person, not a company — the maintainer of the GitHub
+          repository.
+        </p>
+        <p>
+          Email{" "}
+          <a
+            href="mailto:privacy@webmcp.today"
+            className="text-foreground underline underline-offset-4"
+          >
+            privacy@webmcp.today
+          </a>{" "}
+          for anything about your data, or{" "}
           <a
             href="https://github.com/robertn702/webmcp-today/issues"
             className="text-foreground underline underline-offset-4"
           >
-            Open an issue on the repository
-          </a>
-          .
+            open an issue on the repository
+          </a>{" "}
+          for anything that isn&apos;t personal.
         </p>
       </Section>
     </div>
