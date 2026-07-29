@@ -1,6 +1,14 @@
 import { resolve } from "node:path";
 import { defineConfig } from "wxt";
-import { REGISTRY_MATCH_PATTERNS } from "./src/lib/registry-origins.js";
+import { registryMatchPatterns } from "./src/lib/registry-origins.js";
+
+// Dev builds (wxt dev) add `http://localhost/*` (match patterns have no port
+// component, so it covers any localhost port); production builds request only
+// https://webmcp.today — the store listing must not ask for localhost access.
+// WXT sets NODE_ENV before loading this config. registryMatchPatterns() is
+// the same function the background's origin allowlist derives from, so the
+// manifest and runtime check never drift.
+const matchPatterns = registryMatchPatterns(process.env.NODE_ENV !== "production");
 
 export default defineConfig({
   srcDir: "src",
@@ -34,16 +42,19 @@ export default defineConfig({
     // is a load error. The key pins the dev extension ID (see AGENTS.md).
     ...(process.env.WXT_EXTENSION_KEY ? { key: process.env.WXT_EXTENSION_KEY } : {}),
     permissions: ["storage", "alarms"],
+    // The 128 asset doubles as the Chrome Web Store icon.
+    icons: {
+      16: "icons/16.png",
+      32: "icons/32.png",
+      48: "icons/48.png",
+      128: "icons/128.png",
+    },
     // Registry origins the background script fetches configs from. Fixed at
-    // build time (manifest permissions can't read the runtime env var), so
-    // both the dev default and the production domain are listed. Match
-    // patterns have no port component — `http://localhost/*` (not `:3000`)
-    // matches any localhost port. REGISTRY_MATCH_PATTERNS is the same
-    // constant the background's origin allowlist checks against.
-    host_permissions: [...REGISTRY_MATCH_PATTERNS],
+    // build time (manifest permissions can't read the runtime env var).
+    host_permissions: [...matchPatterns],
     // Only the registry site may message the extension (the install bridge).
     // Declaring this without "ids" also stops OTHER extensions connecting —
     // intended.
-    externally_connectable: { matches: [...REGISTRY_MATCH_PATTERNS] },
+    externally_connectable: { matches: [...matchPatterns] },
   },
 });
