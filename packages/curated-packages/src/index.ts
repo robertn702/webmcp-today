@@ -1,6 +1,7 @@
 import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-today-schema";
 
 import rawGoogle from "../data/google.com.json";
+import rawHackerNews from "../data/news.ycombinator.com.json";
 import rawReddit from "../data/reddit.com.json";
 
 // Curated first-party WebMCP packages — the registry's seed source. Validated
@@ -19,4 +20,5 @@ function parse(raw: unknown, file: string): CreatePackageInput {
 export const curatedPackages: CreatePackageInput[] = [
   parse(rawReddit, "reddit.com.json"),
   parse(rawGoogle, "google.com.json"),
+  parse(rawHackerNews, "news.ycombinator.com.json"),
 ];

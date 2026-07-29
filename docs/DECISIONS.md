@@ -237,3 +237,14 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   (cost only grows after publish). The old domain stays registered as a
   redirect. Visual identity change was deliberately minimal: ☕→⚡ and copy
   swaps only — the landing's `cafe-*` CSS classes are internal and stayed.
+
+- 2026-07-28 — **HTML token extraction is a raw-text regex (`pattern`), not a
+  structured HTML extractor.** HN's write tokens live in HTML (hidden `hmac` input,
+  `auth=` vote href), so `extract`'s JSON locator can't reach them. Rejected: a
+  name/value hidden-input extractor or CSS-ish selector — each covers exactly one of
+  HN's two token shapes (input vs href), so both would have shipped anyway, and any
+  HTML parsing invites a full query language one "improvement" at a time. One regex
+  primitive covers every shape, keeps the executor parser-free, and fails loudly on
+  drift, which is the same rot philosophy as `returns`. Consequence: patterns are
+  interpolated RAW with `{{param}}` (nothing regex-escapes them) — params in patterns
+  must stay identifier-shaped; that constraint lives in the schema comments, not code.

@@ -138,10 +138,17 @@ Field semantics:
   GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
   `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along
   automatically (the executor runs in the page's origin, so the user's existing session
-  authenticates). `sendAs` is `{in, name}` — `in` has one member (`"header"`) today and
-  exists to reserve the axis. **`ttlSeconds`** caches a fetched token across tool calls;
-  omitting it re-fetches on every request, which is the safe default and was the only
-  behaviour before the field existed.
+  authenticates). Extraction is exactly one of: **`extract`** (a locator into a JSON
+  response) or **`pattern`** (a regex against the raw response text, capture group 1 =
+  the token — for sites like Hacker News whose tokens live in HTML: a hidden form input,
+  an `auth=` href). A `pattern` may carry `{{param}}` placeholders (interpolated raw —
+  keep them to identifier shapes). `sendAs` is `{in, name}` with `in` one of `"header"`
+  (Reddit's X-Modhash), `"form"` (HN's hmac — the endpoint must declare a `form` body),
+  or `"query"` (HN's vote auth). **`ttlSeconds`** caches a fetched token across tool
+  calls, keyed by the RESOLVED fetch URL + extraction spec — a parameterized source
+  (`/item?id={{itemId}}`) caches per param value, so item A's token never leaks into a
+  call about item B. Omitting it re-fetches on every request, which is the safe default
+  and was the only behaviour before the field existed.
 - **`path` / `query` / `body` / `form`** — `{{param}}` templates bound from the
   validated tool input (cross-validated at the schema level;
   placeholders may only name `inputSchema` properties). In a `body` or in

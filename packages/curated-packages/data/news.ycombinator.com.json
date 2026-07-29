@@ -1,0 +1,124 @@
+{
+  "domain": "news.ycombinator.com",
+  "urlPatterns": ["*://news.ycombinator.com/*"],
+  "title": "Hacker News (write tools)",
+  "description": "Comment, vote, and submit on Hacker News as the logged-in user — the write side HN's official read-only API has never offered. Tokens (hmac, vote auth, fnid) are extracted from HN's own HTML pages; a page-shape change fails loudly. Requires an active news.ycombinator.com login session.",
+  "minEngine": 1,
+  "changelog": "Initial version: hn_comment, hn_vote, hn_submit. First package to use HTML `pattern` token extraction and `form`/`query` sendAs targets.",
+  "api": {
+    "baseUrl": "https://news.ycombinator.com",
+    "auth": {
+      "hmac": {
+        "source": { "endpoint": "itemPage", "pattern": "name=\"hmac\" value=\"([^\"]+)\"" },
+        "sendAs": { "in": "form", "name": "hmac" },
+        "ttlSeconds": 300
+      },
+      "voteAuth": {
+        "source": {
+          "endpoint": "itemPage",
+          "pattern": "vote\\?id={{itemId}}&(?:amp;)?how={{how}}&(?:amp;)?auth=([^&\"]+)"
+        },
+        "sendAs": { "in": "query", "name": "auth" },
+        "ttlSeconds": 300
+      },
+      "fnid": {
+        "source": { "endpoint": "submitPage", "pattern": "name=\"fnid\" value=\"([^\"]+)\"" },
+        "sendAs": { "in": "form", "name": "fnid" },
+        "ttlSeconds": 300
+      }
+    },
+    "endpoints": {
+      "itemPage": {
+        "method": "GET",
+        "path": "/item",
+        "query": { "id": "{{itemId}}" }
+      },
+      "submitPage": {
+        "method": "GET",
+        "path": "/submit"
+      },
+      "comment": {
+        "method": "POST",
+        "path": "/comment",
+        "form": { "parent": "{{itemId}}", "text": "{{text}}" },
+        "auth": ["hmac"]
+      },
+      "vote": {
+        "method": "GET",
+        "path": "/vote",
+        "query": { "id": "{{itemId}}", "how": "{{how}}", "goto": "item?id={{itemId}}" },
+        "auth": ["voteAuth"]
+      },
+      "submit": {
+        "method": "POST",
+        "path": "/r",
+        "form": { "title": "{{title}}", "url": "{{url}}", "text": "{{text}}" },
+        "auth": ["fnid"]
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "hn_comment",
+      "description": "Post a comment on a Hacker News story, or reply to a comment, as the logged-in user. The item ID is the number in /item?id=... URLs. A successful post returns the thread page HTML.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Numeric ID of the story or comment to reply to, from /item?id=..."
+          },
+          "text": {
+            "type": "string",
+            "description": "Comment body (plain text; blank lines split paragraphs, links auto-link)"
+          }
+        },
+        "required": ["itemId", "text"]
+      },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true },
+      "execution": { "mode": "api", "endpoint": "comment" }
+    },
+    {
+      "name": "hn_vote",
+      "description": "Upvote (or retract an upvote on) a Hacker News story or comment, as the logged-in user. The item ID is the number in /item?id=... URLs. Fails loudly if the item is not votable (own post, expired, logged out).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Numeric ID of the story or comment to vote on, from /item?id=..."
+          },
+          "how": {
+            "type": "string",
+            "description": "up = upvote, un = retract a previous upvote",
+            "enum": ["up", "un"]
+          }
+        },
+        "required": ["itemId", "how"]
+      },
+      "annotations": { "readOnlyHint": false },
+      "execution": { "mode": "api", "endpoint": "vote" }
+    },
+    {
+      "name": "hn_submit",
+      "description": "Submit a new story to Hacker News as the logged-in user: a link post (title + url) or a text post like Ask HN (title + text). Provide exactly one of url or text. Duplicate URLs are resubmitted to the existing thread by HN.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Submission title (HN limit: 80 chars)" },
+          "url": {
+            "type": "string",
+            "description": "Link to submit; omit for a text post. Provide exactly one of url or text"
+          },
+          "text": {
+            "type": "string",
+            "description": "Body for a text post (Ask HN etc.); omit for a link post. Provide exactly one of url or text"
+          }
+        },
+        "required": ["title"]
+      },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true },
+      "execution": { "mode": "api", "endpoint": "submit" }
+    }
+  ]
+}
