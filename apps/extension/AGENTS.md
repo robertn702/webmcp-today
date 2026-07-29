@@ -89,8 +89,10 @@ key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
   `WXT_REGISTRY_API_URL` (default `https://webmcp.today`; polls only — page
   loads never fetch). Everything crossing a boundary is zod-validated.
 - The install bridge: `externally_connectable` (built from
-  `src/lib/registry-origins.ts`'s `REGISTRY_MATCH_PATTERNS` — the same constant
-  the runtime origin allowlist checks) lets ONLY the registry site reach
+  `src/lib/registry-origins.ts`'s `registryMatchPatterns()` — the same function
+  the runtime origin allowlist derives from; dev builds also trust
+  `http://localhost/*`, production builds only `https://webmcp.today/*`) lets
+  ONLY the registry site reach
   `runtime.onMessageExternal`. `src/lib/install-bridge.ts` handles
   ping/install/uninstall/list-installs (protocol:
   `packages/schema/src/bridge.ts` — both sides validate against it; never
