@@ -1,16 +1,16 @@
 {
-  "name": "@robertn702/webmcp-cafe-mcp",
+  "name": "@robertn702/webmcp-today-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the WebMCP Cafe registry — lookup, publish, install, and manage community WebMCP packages",
+  "description": "MCP server for the WebMCP Today registry — lookup, publish, install, and manage community WebMCP packages",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/robertn702/webmcp-cafe.git",
+    "url": "https://github.com/robertn702/webmcp-today.git",
     "directory": "packages/mcp"
   },
   "bin": {
-    "webmcp-cafe-mcp": "./dist/index.js"
+    "webmcp-today-mcp": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "@robertn702/webmcp-cafe-schema": "workspace:*",
+    "@robertn702/webmcp-today-schema": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

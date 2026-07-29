@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of service",
   description:
-    "The terms for using WebMCP Cafe, including the license you grant when you publish a tool package and the CC0 license every published package is offered under.",
+    "The terms for using WebMCP Today, including the license you grant when you publish a tool package and the CC0 license every published package is offered under.",
 };
 
 // TODO(legal): reviewed by a lawyer before launch. Known gaps: no governing-law
@@ -23,7 +23,7 @@ export default function TermsPage() {
       <p className="mt-2 font-mono text-xs text-muted-foreground">Last updated {LAST_UPDATED}</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        Using webmcp.cafe, its API, or its extension means you accept these terms. The part worth
+        Using webmcp.today, its API, or its extension means you accept these terms. The part worth
         your attention is what happens to a package once you publish it, in section 3.
       </p>
 
@@ -39,7 +39,7 @@ export default function TermsPage() {
 
       <Section n={1} title="What this is">
         <p>
-          WebMCP Cafe is a registry of tool packages written by the public. A package is a JSON
+          WebMCP Today is a registry of tool packages written by the public. A package is a JSON
           document that tells a browser extension how to register tools on a site the package&apos;s
           author doesn&apos;t control. Robert Niimi runs the registry. It isn&apos;t affiliated
           with, endorsed by, or operated with the involvement of any site a package targets.
@@ -122,7 +122,7 @@ export default function TermsPage() {
           The code that runs the registry is licensed separately, and split across the repository.
           The{" "}
           <a
-            href="https://github.com/robertn702/webmcp-cafe#license"
+            href="https://github.com/robertn702/webmcp-today#license"
             className="text-foreground underline underline-offset-4"
           >
             README
@@ -165,7 +165,7 @@ export default function TermsPage() {
         <p>
           To report a package or ask for a takedown,{" "}
           <a
-            href="https://github.com/robertn702/webmcp-cafe/issues"
+            href="https://github.com/robertn702/webmcp-today/issues"
             className="text-foreground underline underline-offset-4"
           >
             open an issue on the repository
@@ -210,7 +210,7 @@ export default function TermsPage() {
       <Section n={11} title="Contact">
         <p>
           <a
-            href="https://github.com/robertn702/webmcp-cafe/issues"
+            href="https://github.com/robertn702/webmcp-today/issues"
             className="text-foreground underline underline-offset-4"
           >
             Open an issue on the repository

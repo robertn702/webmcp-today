@@ -1,14 +1,14 @@
-// Thin REST client for the webmcp.cafe registry API.
+// Thin REST client for the webmcp.today registry API.
 
-export interface CafeClientOptions {
+export interface RegistryClientOptions {
   baseUrl: string;
   apiKey?: string | undefined;
 }
 
-export class CafeClient {
+export class RegistryClient {
   readonly baseUrl: string;
 
-  constructor(private readonly opts: CafeClientOptions) {
+  constructor(private readonly opts: RegistryClientOptions) {
     this.baseUrl = opts.baseUrl;
   }
 

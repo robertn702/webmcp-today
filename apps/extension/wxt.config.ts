@@ -7,7 +7,7 @@ export default defineConfig({
   imports: false,
   dev: {
     // Keep WXT's dev server off port 3000 — that's the registry web app's port.
-    // Background polls default to https://webmcp.cafe; set
+    // Background polls default to https://webmcp.today; set
     // WXT_REGISTRY_API_URL=http://localhost:3000 to poll a dev registry.
     server: { port: 5173 },
   },
@@ -28,7 +28,7 @@ export default defineConfig({
     keepProfileChanges: true,
   },
   manifest: {
-    name: "WebMCP Cafe",
+    name: "WebMCP Today",
     description: "Injects community WebMCP tool configs into sites you visit.",
     // Spread conditionally: an undefined `key` serialized into the manifest
     // is a load error. The key pins the dev extension ID (see AGENTS.md).

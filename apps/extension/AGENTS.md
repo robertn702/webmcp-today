@@ -48,7 +48,7 @@ key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
 - **Page loads never hit the network.** The background resolves every URL from
   `chrome.storage.local` (install index + bodies); the registry is only polled
   for revocations. Ground truth is the **page-console** line
-  `[webmcp-cafe] N installed package(s) matched this URL`. With an empty store
+  `[webmcp-today] N installed package(s) matched this URL`. With an empty store
   every page logs `0 installed package(s)` and registers nothing — that is the
   expected state, not a failure. An actual failure is the warn
   `Lookup failed — the extension background did not answer`.
@@ -86,7 +86,7 @@ key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
 - `src/entrypoints/background.ts` — resolves page-load lookups from LOCAL
   storage (`src/lib/local-lookup.ts` over the install index) and polls
   `GET /api/revocations` on a 6h `chrome.alarms` tick + startup/popup-open from
-  `WXT_REGISTRY_API_URL` (default `https://webmcp.cafe`; polls only — page
+  `WXT_REGISTRY_API_URL` (default `https://webmcp.today`; polls only — page
   loads never fetch). Everything crossing a boundary is zod-validated.
 - The install bridge: `externally_connectable` (built from
   `src/lib/registry-origins.ts`'s `REGISTRY_MATCH_PATTERNS` — the same constant
@@ -104,7 +104,7 @@ key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
 - E2E for the install path (replaces "did the registry fetch work"): `bun run
 dev` + web on :3000 → open `/packages/<id>` → click Install via
   chrome-devtools-mcp → popup lists it → navigate to the target site → page
-  console shows `[webmcp-cafe] 1 installed package(s) matched this URL` →
+  console shows `[webmcp-today] 1 installed package(s) matched this URL` →
   `list_webmcp_tools` shows the tools.
 - Storage lives in `chrome.storage.local` under four keys
   (`src/lib/store-schema.ts`): `schemaVersion`, `index` (install metadata),
@@ -125,7 +125,7 @@ dev` + web on :3000 → open `/packages/<id>` → click Install via
   tokens from `api.auth` sources, performs the same-origin fetch, checks
   `errorPath`, applies the `returns` JMESPath projection. `destructiveHint`
   tools gate on a blocking `window.confirm`.
-- The bundled fallback is gone: the `@webmcp-cafe/curated-packages` dependency was
+- The bundled fallback is gone: the `@webmcp-today/curated-packages` dependency was
   removed in step 5b (U7). The package remains the seed source for the registry
   (`apps/web/scripts/seed.ts`).
 - `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and

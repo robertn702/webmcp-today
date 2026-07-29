@@ -1,4 +1,4 @@
-import { domainLookupKeys, domainsResponseSchema } from "@robertn702/webmcp-cafe-schema";
+import { domainLookupKeys, domainsResponseSchema } from "@robertn702/webmcp-today-schema";
 import {
   DOMAINS_KEY,
   domainsDocSchema,

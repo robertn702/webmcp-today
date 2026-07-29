@@ -1,12 +1,12 @@
 {
-  "name": "@robertn702/webmcp-cafe-schema",
+  "name": "@robertn702/webmcp-today-schema",
   "version": "0.1.0",
-  "description": "Config format for WebMCP Cafe — zod schemas for community WebMCP tool configs",
+  "description": "Config format for WebMCP Today — zod schemas for community WebMCP tool configs",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/robertn702/webmcp-cafe.git",
+    "url": "https://github.com/robertn702/webmcp-today.git",
     "directory": "packages/schema"
   },
   "exports": {

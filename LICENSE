@@ -1,4 +1,4 @@
-WebMCP Cafe server — apps/web and packages/db
+WebMCP Today server — apps/web and packages/db
 Copyright (C) 2026 Robert Niimi
 
 This program is free software: you can redistribute it and/or modify it under
@@ -15,10 +15,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 The following parts of this repository are NOT covered by this license. They
 are licensed under the MIT License and each carries its own LICENSE file:
 
-  - packages/schema            @robertn702/webmcp-cafe-schema
-  - packages/mcp               @robertn702/webmcp-cafe-mcp
-  - packages/curated-packages  @webmcp-cafe/curated-packages
-  - apps/extension             @webmcp-cafe/extension
+  - packages/schema            @robertn702/webmcp-today-schema
+  - packages/mcp               @robertn702/webmcp-today-mcp
+  - packages/curated-packages  @webmcp-today/curated-packages
+  - apps/extension             @webmcp-today/extension
 
 The full text of the GNU Affero General Public License version 3 follows.
 

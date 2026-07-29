@@ -1,9 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { CafeClient } from "./client.js";
+import type { RegistryClient } from "./client.js";
 import { jsonResult } from "./result.js";
 
-export function registerReadTools(server: McpServer, client: CafeClient): void {
+export function registerReadTools(server: McpServer, client: RegistryClient): void {
   server.registerTool(
     "lookup_package",
     {

@@ -1,4 +1,4 @@
-import { revocationsResponseSchema } from "@robertn702/webmcp-cafe-schema";
+import { revocationsResponseSchema } from "@robertn702/webmcp-today-schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/revocations/route";
 
@@ -43,7 +43,7 @@ function revoked(id: number, versionId: string | null): (typeof state.rows)[numb
 }
 
 function get(query: string): Promise<Response> {
-  return GET(new Request("https://webmcp.cafe/api/revocations" + query));
+  return GET(new Request("https://webmcp.today/api/revocations" + query));
 }
 
 describe("GET /api/revocations", () => {

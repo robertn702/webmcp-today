@@ -1,4 +1,4 @@
-# WebMCP Cafe — Architecture
+# WebMCP Today — Architecture
 
 Community registry of third-party **WebMCP tool packages** injected into sites that
 haven't implemented WebMCP — "Greasyfork for the agentic web". This document is the
@@ -62,10 +62,10 @@ flowchart LR
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
   install packages without a browser. Thin client over the same REST API.
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
-  against; published as `@robertn702/webmcp-cafe-schema`.
+  against; published as `@robertn702/webmcp-today-schema`.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
 - **`packages/curated-packages`** — the curated first-party corpus
-  (`@webmcp-cafe/curated-packages`): the registry's seed source.
+  (`@webmcp-today/curated-packages`): the registry's seed source.
 
 ## Package dependency graph
 
@@ -123,7 +123,7 @@ Key behaviors:
 
 - **Page loads never hit the network.** The background resolves every URL from
   `chrome.storage.local` (install index + bodies); all logging lands in the **page
-  console**, with `[webmcp-cafe] N installed package(s) matched this URL` as the
+  console**, with `[webmcp-today] N installed package(s) matched this URL` as the
   ground-truth line.
 - **Fail-closed gate:** if the revocation list is missing (a fresh client that has
   never completed a poll), the worker registers nothing and reports
@@ -174,7 +174,7 @@ sequenceDiagram
     participant ST as chrome.storage.local
 
     C->>W: POST /api/packages (session cookie or Bearer API key)
-    W->>W: zod-validate against @robertn702/webmcp-cafe-schema
+    W->>W: zod-validate against @robertn702/webmcp-today-schema
     W->>D: insert packages + package_versions v1
     C->>W: POST /api/packages/:id/versions (owner only)
     W->>D: append version N+1 (never mutates N)
@@ -236,15 +236,15 @@ validated by zod in `packages/schema`:
 ## Repository & build topology
 
 ```
-webmcp-cafe/
+webmcp-today/
 ├── apps/
 │   ├── web/            # Next.js — registry UI + public REST API (port 3000)
 │   └── extension/      # WXT — package lookup + tool injection (dev port 5173, CDP 9222)
 ├── packages/
-│   ├── schema/            # @robertn702/webmcp-cafe-schema — zod package format (published)
+│   ├── schema/            # @robertn702/webmcp-today-schema — zod package format (published)
 │   ├── db/                # Drizzle + Neon — schema + client
-│   ├── curated-packages/  # @webmcp-cafe/curated-packages — curated first-party packages (registry seed source)
-│   └── mcp/               # @robertn702/webmcp-cafe-mcp — MCP server (published)
+│   ├── curated-packages/  # @webmcp-today/curated-packages — curated first-party packages (registry seed source)
+│   └── mcp/               # @robertn702/webmcp-today-mcp — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
 ```
 

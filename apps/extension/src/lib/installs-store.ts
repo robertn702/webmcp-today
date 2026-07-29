@@ -2,7 +2,7 @@ import {
   apiContentHash,
   webMcpPackageSchema,
   type WebMcpPackage,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import {
   INDEX_KEY,
   PKG_KEY_PREFIX,

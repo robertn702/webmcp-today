@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Provision a fresh Paseo worktree for webmcp-cafe. Idempotent — runs on every
+# Provision a fresh Paseo worktree for webmcp-today. Idempotent — runs on every
 # workspace creation. Paseo runs this from a bare, non-interactive shell, so
 # don't rely on inherited env vars.
 #
@@ -62,7 +62,7 @@ fi
 # 5. Install dependencies, then build the workspace packages that consumers
 #    resolve through dist/ (schema + mcp). dist/ is gitignored, so a fresh
 #    worktree has none and every consumer fails with "Failed to resolve entry
-#    for package @robertn702/webmcp-cafe-schema" until it is built. Scoped to
+#    for package @robertn702/webmcp-today-schema" until it is built. Scoped to
 #    ./packages/* on purpose: apps/web's build needs real env vars (t3-env
 #    validates at build) and is not needed to make the workspace usable.
 if command -v bun >/dev/null 2>&1; then

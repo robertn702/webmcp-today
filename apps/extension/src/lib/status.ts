@@ -9,10 +9,10 @@ import { z } from "zod";
  * injected tools (docs/DECISIONS.md 2026-07-24), so every user must set this. */
 export const WEBMCP_FLAG_URL = "chrome://flags/#enable-webmcp-testing";
 
-export const STATUS_MESSAGE_TYPE = "webmcp-cafe:page-status";
-export const POPUP_STATE_QUERY_TYPE = "webmcp-cafe:get-popup-state";
-export const UNINSTALL_MESSAGE_TYPE = "webmcp-cafe:uninstall";
-export const INSTALL_SUGGESTION_MESSAGE_TYPE = "webmcp-cafe:install-suggestion";
+export const STATUS_MESSAGE_TYPE = "webmcp-today:page-status";
+export const POPUP_STATE_QUERY_TYPE = "webmcp-today:get-popup-state";
+export const UNINSTALL_MESSAGE_TYPE = "webmcp-today:uninstall";
+export const INSTALL_SUGGESTION_MESSAGE_TYPE = "webmcp-today:install-suggestion";
 
 export const pageStatusSchema = z.discriminatedUnion("kind", [
   /** No installed package matches this URL — nothing to say, no badge. */

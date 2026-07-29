@@ -5,14 +5,14 @@ import Link from "next/link";
 // source offer AGPL section 13 wants network users to get.
 // TODO(extension): swap /extension for the Chrome Web Store listing once the
 // extension is published (also EXTENSION_HREF in app/page.tsx).
-const SOURCE_HREF = "https://github.com/robertn702/webmcp-cafe";
+const SOURCE_HREF = "https://github.com/robertn702/webmcp-today";
 
 export function SiteFooter() {
   return (
     <footer className="border-t">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
         <p className="font-mono text-xs text-muted-foreground">
-          ☕ webmcp.cafe · a community registry of WebMCP tool packages.
+          ⚡ webmcp.today · a community registry of WebMCP tool packages.
         </p>
         <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
           <Link href="/packages" className="hover:text-foreground hover:underline">

@@ -1,6 +1,6 @@
 # Platform risks
 
-What WebMCP Cafe depends on upstream, and how each dependency can break. Last
+What WebMCP Today depends on upstream, and how each dependency can break. Last
 reviewed 2026-07-24. Actionable items live in BACKLOG.md and point here; delete
 a section when its risk resolves.
 

@@ -1,6 +1,6 @@
 # Extension — Internal Architecture
 
-The delivery mechanism for WebMCP Cafe: injects registry packages' tools into sites
+The delivery mechanism for WebMCP Today: injects registry packages' tools into sites
 that haven't implemented WebMCP. This document maps the extension's internals — the
 three processes Chrome MV3 forces on us, the four flows every `src/lib/` file serves,
 and where to look when something breaks. System-level flows (registration, invocation,
@@ -14,7 +14,7 @@ messages. Every lib file exists to serve one of them:
 
 ```mermaid
 flowchart TB
-    subgraph Site["Registry site (webmcp.cafe)"]
+    subgraph Site["Registry site (webmcp.today)"]
         UI["Install button<br/>(apps/web/components/install-button.tsx)"]
     end
 
@@ -71,7 +71,7 @@ _The site says "install"; the background validates and stores._
 
 ```mermaid
 flowchart LR
-    SITE["webmcp.cafe"] --> BRIDGE["install-bridge.ts"]
+    SITE["webmcp.today"] --> BRIDGE["install-bridge.ts"]
     ORIGINS["registry-origins.ts<br/>(sender allowlist)"] --> BRIDGE
     GATE["engine-gate.ts<br/>(minEngine check)"] --> BRIDGE
     REV["revocations.ts<br/>(bootstrap safety list)"] --> BRIDGE

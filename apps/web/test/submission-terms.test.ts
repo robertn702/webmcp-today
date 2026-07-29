@@ -1,4 +1,4 @@
-import { curatedPackages } from "@webmcp-cafe/curated-packages";
+import { curatedPackages } from "@webmcp-today/curated-packages";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as postVersion } from "@/app/api/packages/[id]/versions/route";
 import { POST as postPackage } from "@/app/api/packages/route";
@@ -46,21 +46,21 @@ describe("publish routes — submission terms", () => {
   });
 
   it("returns the terms alongside a new package", async () => {
-    const response = await postPackage(post("https://webmcp.cafe/api/packages", pkg));
+    const response = await postPackage(post("https://webmcp.today/api/packages", pkg));
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
-      '<https://webmcp.cafe/terms>; rel="terms-of-service"',
+      '<https://webmcp.today/terms>; rel="terms-of-service"',
     );
-    expect(response.headers.get("Location")).toBe("https://webmcp.cafe/api/packages/pkg-1");
+    expect(response.headers.get("Location")).toBe("https://webmcp.today/api/packages/pkg-1");
     await expect(response.json()).resolves.toEqual({
       id: "pkg-1",
-      terms: "https://webmcp.cafe/terms",
+      terms: "https://webmcp.today/terms",
     });
   });
 
   it("returns the terms alongside a new version", async () => {
     const response = await postVersion(
-      post("https://webmcp.cafe/api/packages/pkg-1/versions", {
+      post("https://webmcp.today/api/packages/pkg-1/versions", {
         urlPatterns: pkg.urlPatterns,
         tools: pkg.tools,
         api: pkg.api,
@@ -69,15 +69,15 @@ describe("publish routes — submission terms", () => {
     );
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
-      '<https://webmcp.cafe/terms>; rel="terms-of-service"',
+      '<https://webmcp.today/terms>; rel="terms-of-service"',
     );
     expect(response.headers.get("Location")).toBe(
-      "https://webmcp.cafe/api/packages/pkg-1/versions/ver-2",
+      "https://webmcp.today/api/packages/pkg-1/versions/ver-2",
     );
     await expect(response.json()).resolves.toEqual({
       versionId: "ver-2",
       version: 2,
-      terms: "https://webmcp.cafe/terms",
+      terms: "https://webmcp.today/terms",
     });
   });
 

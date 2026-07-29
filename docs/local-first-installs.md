@@ -106,7 +106,7 @@ sequenceDiagram
 ```
 
 The matching logic already exists twice and moves wholesale to the client: `domainLookupKeys` +
-`rankPackagesByUrl` from `@robertn702/webmcp-cafe-schema` are what
+`rankPackagesByUrl` from `@robertn702/webmcp-today-schema` are what
 `apps/extension/src/lib/packages.ts:42` already does for the bundled set and what
 `apps/web/lib/lookup.ts:31` does server-side. No new matching code — the server-side copy simply
 stops being on the hot path.
@@ -140,7 +140,7 @@ message hop as today.
 The website's Install button reaches the extension over `externally_connectable`.
 
 ```json
-"externally_connectable": { "matches": ["https://webmcp.cafe/*", "http://localhost:3000/*"] }
+"externally_connectable": { "matches": ["https://webmcp.today/*", "http://localhost:3000/*"] }
 ```
 
 Verified against current MV3 docs
@@ -165,7 +165,7 @@ release cycles):
 holds host permission for (`apps/extension/wxt.config.ts:34`) and validates with
 `webMcpPackageSchema`. Otherwise a compromised or spoofed page could hand the extension a body
 that never came from the registry. This is attestation-by-origin, not cryptography — TLS to
-`webmcp.cafe` is the trust boundary; signing version bodies is a later question (§Open).
+`webmcp.today` is the trust boundary; signing version bodies is a later question (§Open).
 
 **New registry endpoint — `GET /api/packages/:id/versions/:versionId`** (public, unauthenticated),
 returning the same `webMcpPackageSchema` document at that exact version. Nothing version-scoped
@@ -260,7 +260,7 @@ signing.
 whenever the registry returns nothing. In a consent model that is the same consent gap in
 miniature, with a nicer curator.
 
-**Recommendation: delete the auto-registering fallback.** `@webmcp-cafe/curated-packages` stays the
+**Recommendation: delete the auto-registering fallback.** `@webmcp-today/curated-packages` stays the
 registry's seed source (`apps/web/scripts/seed.ts`) and becomes, in the extension, a **first-run
 suggestion list** in the popup: "packages ready to install", each installing through the same
 local path as any other package. One click, explicit, indistinguishable afterwards from a
@@ -276,7 +276,7 @@ fall back from.
 **The debugging convention changes with it.** `apps/extension/AGENTS.md:51` uses reddit's
 exclusion from the bundle as the signal that a registry lookup failed. With no lookup and no
 fallback, that signal is meaningless. Its replacement: the page-console ground truth becomes
-`[webmcp-cafe] N installed package(s) matched this URL`, and "did the registry work" is tested on
+`[webmcp-today] N installed package(s) matched this URL`, and "did the registry work" is tested on
 the **install** path (site Install → `pkg:<id>` key exists) rather than on page load. Update that
 file when the code lands, not before.
 
@@ -322,16 +322,16 @@ have — the landing copy says so explicitly at
 **Recommendation: keep the tool, re-scope the description, and add a handoff link.** The MCP
 package tools were freely renamed pre-publish (see `docs/DECISIONS.md` 2026-07-26) — nothing is
 on npm yet, so there is no "breaks saved agent prompts" cost to weigh here. That freedom won't
-last: once `@robertn702/webmcp-cafe-mcp` actually ships, a rename does break saved agent prompts,
+last: once `@robertn702/webmcp-today-mcp` actually ships, a rename does break saved agent prompts,
 so treat this as the last free rename. The description is what the model actually reads, so the
 description is what must stop lying:
 
-> `install_package` — Pin this package to a version **on your webmcp.cafe account**. This does not
+> `install_package` — Pin this package to a version **on your webmcp.today account**. This does not
 > install into your browser; the extension's installs are local to the browser. Returns a link
 > that installs this exact version there.
 
 **The handoff link** is the whole fix for Mode 01 in the meantime: `install_package` returns
-`https://webmcp.cafe/packages/<id>?install=<versionId>`. The agent prints it, the human clicks
+`https://webmcp.today/packages/<id>?install=<versionId>`. The agent prints it, the human clicks
 once, the site's Install button runs §3 against that exact `versionId`. That is a one-line
 server change plus a query-param branch on the package page, and it makes Mode 01 honest
 end-to-end with no sync: the agent finds or authors the package and pins it; the human's click

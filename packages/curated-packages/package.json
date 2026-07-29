@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp-cafe/curated-packages",
+  "name": "@webmcp-today/curated-packages",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@robertn702/webmcp-cafe-schema": "workspace:*"
+    "@robertn702/webmcp-today-schema": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

@@ -1,6 +1,6 @@
 # Third-party licences
 
-The WebMCP Cafe extension is MIT licensed (see `LICENSE`). Its build inlines the
+The WebMCP Today extension is MIT licensed (see `LICENSE`). Its build inlines the
 packages below into the shipped bundles, so they are distributed with it and are
 listed here with the licence they are distributed under and where to obtain their
 source.
@@ -27,7 +27,7 @@ Larger Work under §3.3, which MPL-2.0 permits us to license under our own terms
 
 ## Not bundled
 
-`@robertn702/webmcp-cafe-schema` (this repo, MIT) depends on `@noble/hashes` (MIT) and
+`@robertn702/webmcp-today-schema` (this repo, MIT) depends on `@noble/hashes` (MIT) and
 `canonicalize` (Apache-2.0), but neither reaches the shipped bundles: they are only
 used by `apiContentHash`, which the extension never calls, so the build tree-shakes
 them out. Verified by inspecting `.output/chrome-mv3/`. Add them here if that changes.

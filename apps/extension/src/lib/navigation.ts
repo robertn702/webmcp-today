@@ -55,7 +55,7 @@ export function startNavigationWatcher(options: NavigationWatcherOptions): () =>
         await run(url, signal);
       })
       .catch((err: unknown) => {
-        console.warn(`[webmcp-cafe] Registration pass failed for ${url}:`, err);
+        console.warn(`[webmcp-today] Registration pass failed for ${url}:`, err);
       });
   };
 

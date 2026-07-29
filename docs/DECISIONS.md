@@ -1,4 +1,4 @@
-# DECISIONS.md — WebMCP Cafe
+# DECISIONS.md — WebMCP Today
 
 Why the non-obvious calls were made, so they don't get relitigated or quietly undone.
 Inclusion bar and entry format: root `AGENTS.md` → "Decision log". This is deliberately
@@ -174,7 +174,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   `packages/db`; `scripts` was rejected because it contradicts the "packages are data,
   not code" claim the Chrome Web Store positioning rests on
   (`docs/api-execution-model.md`). Done now, pre-publish, because neither
-  `@robertn702/webmcp-cafe-schema` nor `@robertn702/webmcp-cafe-mcp` is on npm yet — the
+  `@robertn702/webmcp-today-schema` nor `@robertn702/webmcp-today-mcp` is on npm yet — the
   MCP tool names and wire fields are free to rename without breaking a saved agent
   prompt, which won't be true again.
 
@@ -204,13 +204,13 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   env var.** The bridge handler validates the sender against the closed
   `externally_connectable` allowlist, then fetches the version body from that same
   origin. One build works against dev (`http://localhost`) and prod
-  (`https://webmcp.cafe`), and the whole class of "installed from localhost, fetched
+  (`https://webmcp.today`), and the whole class of "installed from localhost, fetched
   from prod" bugs disappears. Attestation is unchanged: the origin set is still fixed
   at build time. Rejected: a build-time constant for the fetch origin — it would be
   wrong in exactly the environment we test in.
 
 - 2026-07-28 — **Popup suggestions come from `GET /api/packages?pageSize=6`, not a
-  bundled `@webmcp-cafe/curated-packages` fallback.** Bundled packages are
+  bundled `@webmcp-today/curated-packages` fallback.** Bundled packages are
   `CreatePackageInput` — no `id`/`versionId` — so routing them through the local
   install path would need synthetic ids that can never be revoked or updated. Fetching
   the registry's own browse endpoint leaks nothing (no URL is involved), shows real
@@ -225,3 +225,15 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   the feed exists to prevent. `latest` (max id, or 0) lets the client reset to 0 when
   `stored > latest`. Rejected: an epoch constant bumped on every wipe — more
   operational overhead, and the value already exists in the feed for free.
+
+- 2026-07-28 — **Renamed the project webmcp.cafe → webmcp.today before launch.**
+  The product thesis is immediacy ("use WebMCP today, without waiting for sites
+  to adopt it"), and the domain is the one-line pitch; "cafe" communicated
+  nothing. Done pre-launch because nothing is on npm and there are no users —
+  package names (`@webmcp-today/*`, `@robertn702/webmcp-today-*`), env vars
+  (`WEBMCP_TODAY_*`), and the extension log prefix (`[webmcp-today]`) all change
+  for free now and never again. Rejected: keeping "cafe" (clearer
+  community/not-official signal, but a worse pitch) and deferring the rename
+  (cost only grows after publish). The old domain stays registered as a
+  redirect. Visual identity change was deliberately minimal: ☕→⚡ and copy
+  swaps only — the landing's `cafe-*` CSS classes are internal and stayed.

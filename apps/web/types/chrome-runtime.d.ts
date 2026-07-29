@@ -4,14 +4,14 @@ export {};
 // no @types/chrome and bans `as`, so the one surface the bridge uses
 // (callback-form sendMessage + lastError) is declared here.
 declare global {
-  interface WebMcpCafeChromeRuntime {
+  interface WebMcpTodayChromeRuntime {
     lastError?: { message?: string };
     sendMessage(extensionId: string, message: unknown, callback: (response: unknown) => void): void;
   }
 
   interface Window {
-    chrome?: { runtime?: WebMcpCafeChromeRuntime };
+    chrome?: { runtime?: WebMcpTodayChromeRuntime };
   }
 
-  var chrome: { runtime?: WebMcpCafeChromeRuntime } | undefined;
+  var chrome: { runtime?: WebMcpTodayChromeRuntime } | undefined;
 }

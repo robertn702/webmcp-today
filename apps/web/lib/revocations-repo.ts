@@ -1,4 +1,4 @@
-import { revocations } from "@webmcp-cafe/db";
+import { revocations } from "@webmcp-today/db";
 import { asc, gt, sql } from "drizzle-orm";
 import { db } from "./db";
 

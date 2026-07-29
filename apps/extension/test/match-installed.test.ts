@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RevocationEntry } from "@robertn702/webmcp-cafe-schema";
+import type { RevocationEntry } from "@robertn702/webmcp-today-schema";
 import { findRevocation, matchInstalled } from "../src/lib/match-installed.js";
 import type { IndexEntry, InstallIndex } from "../src/lib/store-schema.js";
 
@@ -12,7 +12,7 @@ function entry(overrides: Partial<IndexEntry> & Pick<IndexEntry, "packageId">): 
     title: overrides.packageId,
     installedAt: "2026-07-27T00:00:00.000Z",
     source: "registry",
-    origin: "https://webmcp.cafe",
+    origin: "https://webmcp.today",
     ...overrides,
   };
 }

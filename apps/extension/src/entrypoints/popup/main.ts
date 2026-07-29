@@ -1,7 +1,7 @@
 import {
   bridgeInstallResponseSchema,
   type BridgeInstallResponse,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import { browser } from "wxt/browser";
 import {
   INSTALL_SUGGESTION_MESSAGE_TYPE,
@@ -79,5 +79,5 @@ async function installSuggestionAndRerender(
 }
 
 function reportInstallResult(result: BridgeInstallResponse): void {
-  if (!result.ok) console.warn(`[webmcp-cafe] Suggestion install failed: ${result.reason}`);
+  if (!result.ok) console.warn(`[webmcp-today] Suggestion install failed: ${result.reason}`);
 }

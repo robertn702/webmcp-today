@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // list; both are stubbed per test. env.ts validates at import and no other
 // web test imports it, so the required server vars are stubbed here too.
 
-type SendMessage = WebMcpCafeChromeRuntime["sendMessage"];
+type SendMessage = WebMcpTodayChromeRuntime["sendMessage"];
 
 const PING_OK = {
   ok: true,

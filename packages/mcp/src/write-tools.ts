@@ -2,13 +2,13 @@ import {
   createPackageSchema,
   publishVersionSchema,
   updatePackageMetaSchema,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import type { CafeClient } from "./client.js";
+import type { RegistryClient } from "./client.js";
 import { jsonResult } from "./result.js";
 
-// Write tools require WEBMCP_CAFE_API_KEY (created at webmcp.cafe/settings).
+// Write tools require WEBMCP_TODAY_API_KEY (created at webmcp.today/settings).
 
 const installResultSchema = z.object({
   ok: z.literal(true),
@@ -16,12 +16,12 @@ const installResultSchema = z.object({
   version: z.number(),
 });
 
-export function registerWriteTools(server: McpServer, client: CafeClient): void {
+export function registerWriteTools(server: McpServer, client: RegistryClient): void {
   server.registerTool(
     "publish_package",
     {
       description:
-        "Publish a new WebMCP package to the registry as a fresh package + version 1 (validated against @robertn702/webmcp-cafe-schema). Requires an API key.",
+        "Publish a new WebMCP package to the registry as a fresh package + version 1 (validated against @robertn702/webmcp-today-schema). Requires an API key.",
       inputSchema: { package: createPackageSchema.describe("The package to publish") },
     },
     async ({ package: pkg }) => jsonResult(await client.create(pkg)),
@@ -57,7 +57,7 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
     "install_package",
     {
       description:
-        "Pin a package to its latest version, or a given versionId, on your webmcp.cafe account — creates the pin if absent, moves it if present (also how rollback works: pass an older versionId). This does not install into your browser; the extension's installs are local to the browser. Returns a link that installs this exact version there. Requires an API key.",
+        "Pin a package to its latest version, or a given versionId, on your webmcp.today account — creates the pin if absent, moves it if present (also how rollback works: pass an older versionId). This does not install into your browser; the extension's installs are local to the browser. Returns a link that installs this exact version there. Requires an API key.",
       inputSchema: {
         id: z.string().describe("Package id"),
         versionId: z.string().optional().describe("Pin to this version instead of latest"),
@@ -76,7 +76,7 @@ export function registerWriteTools(server: McpServer, client: CafeClient): void 
     "uninstall_package",
     {
       description:
-        "Remove the caller's install pin on your webmcp.cafe account. This does not affect the extension's local install in your browser. Requires an API key.",
+        "Remove the caller's install pin on your webmcp.today account. This does not affect the extension's local install in your browser. Requires an API key.",
       inputSchema: { id: z.string().describe("Package id") },
     },
     async ({ id }) => jsonResult(await client.uninstall(id)),

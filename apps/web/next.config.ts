@@ -2,7 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@webmcp-cafe/db"],
+  transpilePackages: ["@webmcp-today/db"],
 };
 
 export default withSentryConfig(nextConfig, {

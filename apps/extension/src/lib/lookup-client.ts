@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { webMcpPackageSchema } from "@robertn702/webmcp-cafe-schema";
+import { webMcpPackageSchema } from "@robertn702/webmcp-today-schema";
 import { browser } from "wxt/browser";
 import { lookupBlockedSchema } from "./local-lookup.js";
 
@@ -7,7 +7,7 @@ import { lookupBlockedSchema } from "./local-lookup.js";
 // background resolves the URL against LOCAL storage (local-lookup.ts) — no
 // registry request is ever made on navigation.
 
-export const LOOKUP_MESSAGE_TYPE = "webmcp-cafe:lookup-packages";
+export const LOOKUP_MESSAGE_TYPE = "webmcp-today:lookup-packages";
 
 export const lookupMessageSchema = z.object({
   type: z.literal(LOOKUP_MESSAGE_TYPE),
@@ -42,7 +42,7 @@ export async function requestLocalLookup(url: string): Promise<LookupResponse | 
 
   const parsed = lookupResponseSchema.safeParse(response);
   if (!parsed.success) {
-    console.warn("[webmcp-cafe] Local lookup response failed validation:", parsed.error.message);
+    console.warn("[webmcp-today] Local lookup response failed validation:", parsed.error.message);
     return undefined;
   }
   return parsed.data;

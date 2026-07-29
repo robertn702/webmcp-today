@@ -66,7 +66,7 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   t3-env (`env.ts`) validates at build time — `next build` fails without them.
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
-- `scripts/seed.ts` seeds the curated packages from `@webmcp-cafe/curated-packages`
+- `scripts/seed.ts` seeds the curated packages from `@webmcp-today/curated-packages`
   (currently just the tier-1 Reddit package).
 - Sentry (error monitoring only — no tracing/replay/logs) is wired via
   `instrumentation{,-client}.ts` + `sentry.{server,edge}.config.ts`. The repo is

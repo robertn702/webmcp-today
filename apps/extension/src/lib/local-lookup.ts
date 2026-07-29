@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { WebMcpPackage } from "@robertn702/webmcp-cafe-schema";
+import type { WebMcpPackage } from "@robertn702/webmcp-today-schema";
 import type { InstallsStore } from "./installs-store.js";
 import { findRevocation, matchInstalled } from "./match-installed.js";
 import { readRevokedDoc } from "./revocations.js";

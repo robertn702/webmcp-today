@@ -1,4 +1,4 @@
-import { schema } from "@webmcp-cafe/db";
+import { schema } from "@webmcp-today/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { apiKey } from "@better-auth/api-key";
@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { db } from "./db";
 
 export const auth = betterAuth({
-  appName: "WebMCP Cafe",
+  appName: "WebMCP Today",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema }),

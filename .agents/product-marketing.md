@@ -184,7 +184,7 @@ split to remember.
 | Registration    | The extension calling `registerTool` so a page's agent can see a tool                |
 | DOM mode        | Execution via declarative steps (navigate/click/fill/extract/…) — no `evaluate`      |
 | API mode        | Execution via the site's own HTTP API, locked to the package's origin                 |
-| From your terminal | Agent outside the browser using the Cafe MCP server                              |
+| From your terminal | Agent outside the browser using the registry MCP server                          |
 | In the browser  | Browser's own agent using tools the extension injected                              |
 
 ## Brand Voice
@@ -212,7 +212,7 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 ## Proof Points
 
 **Metrics:** None yet (pre-launch; registry counters on the landing page are live
-but small — just the curated seed packages from `@webmcp-cafe/curated-packages`).
+but small — just the curated seed packages from `@webmcp-today/curated-packages`).
 **Customers:** None.
 **Testimonials:** None. Do not invent.
 **Value themes:**

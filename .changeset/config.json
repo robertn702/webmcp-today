@@ -5,5 +5,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@webmcp-cafe/web", "@webmcp-cafe/extension", "@webmcp-cafe/db"]
+  "ignore": ["@webmcp-today/web", "@webmcp-today/extension", "@webmcp-today/db"]
 }

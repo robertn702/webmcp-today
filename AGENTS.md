@@ -1,11 +1,11 @@
-# AGENTS.md — WebMCP Cafe
+# AGENTS.md — WebMCP Today
 
 Community registry of third-party WebMCP tool packages injected into sites that haven't
 implemented WebMCP — "Greasyfork for the agentic web".
 
 ## Status: PRE-PRODUCTION (delete this section on launch)
 
-- Deployed to prod (Vercel + `webmcp.cafe`) but pre-launch — no real users or
+- Deployed to prod (Vercel + `webmcp.today`) but pre-launch — no real users or
   data. Skip production concerns (zero-downtime migrations, backfills, API
   backwards compat).
 - DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
@@ -20,10 +20,10 @@ implemented WebMCP — "Greasyfork for the agentic web".
 ```
 apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — package lookup + tool injection
-packages/schema/            @robertn702/webmcp-cafe-schema — zod package format (not yet published to npm); keystone, all consumers validate against it
+packages/schema/            @robertn702/webmcp-today-schema — zod package format (not yet published to npm); keystone, all consumers validate against it
 packages/db/                Drizzle + Neon — schema + client
-packages/curated-packages/  @webmcp-cafe/curated-packages — curated first-party packages (registry seed source)
-packages/mcp/               @robertn702/webmcp-cafe-mcp — MCP server (not yet published to npm)
+packages/curated-packages/  @webmcp-today/curated-packages — curated first-party packages (registry seed source)
+packages/mcp/               @robertn702/webmcp-today-mcp — MCP server (not yet published to npm)
 ```
 
 ## Commands
@@ -40,7 +40,7 @@ packages/mcp/               @robertn702/webmcp-cafe-mcp — MCP server (not yet 
 
 ## Deploy, domain & DNS
 
-- Hosting: Vercel project `webmcp-cafe`, team `robert-1554` (orgId
+- Hosting: Vercel project `webmcp-today`, team `robertniimi` (orgId
   `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. The GitHub
   integration auto-deploys — Production on every push to `main`, a Preview per PR;
   `vercel --prod` from the repo root is the manual override, not the normal path.
@@ -50,18 +50,26 @@ packages/mcp/               @robertn702/webmcp-cafe-mcp — MCP server (not yet 
   fails at "Collecting page data" (t3-env validates on import). Set with
   `vercel env add <NAME> production`; local source of truth is `apps/web/.env`
   (override `BETTER_AUTH_URL` to the prod origin for Production).
-- Domain `webmcp.cafe`: registered at **Namecheap**, DNS on **Cloudflare** (zone
-  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud). Records:
-  `A @ → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`; www 308→apex. Going live
-  needs the Namecheap nameservers switched to the two Cloudflare NS
-  (`diva`/`patrick.ns.cloudflare.com`). CF API token: 1Password robertn702 →
-  Private, "Cloudflare API Token (webmcp-cafe)".
+- Domain `webmcp.today`: registered at **Namecheap**, DNS on **Cloudflare** (zone
+  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud; nameservers pointed
+  at `diva`/`patrick.ns.cloudflare.com`). Records: `A @ → 76.76.21.21`,
+  `CNAME www → cname.vercel-dns.com`; www 308→apex. CF API token: 1Password
+  robertn702 → Private, "Cloudflare API Token (webmcp-today)" (the item may still
+  be labeled "webmcp-cafe" — label only).
+- Renamed from `webmcp.cafe` on 2026-07-28 (docs/DECISIONS.md) — keep the old
+  domain registered and attached in Vercel as a redirect to `webmcp.today`.
 - Vercel token/scope quirks (which token to use, the `robertniimi` 403 trap):
   global `~/.config/opencode/AGENTS.md` "Vercel". Vercel refuses
   `vercel domains add` while the latest prod deploy is errored — fix the deploy
   first, then attach the domain.
-- GitHub OAuth prod sign-in needs `https://webmcp.cafe/api/auth/callback/github`
-  added to the OAuth app's authorized callbacks.
+- GitHub OAuth uses **two apps** (an OAuth App allows exactly one callback URL):
+  `WebMCP Today (dev)` → `http://localhost:3000/api/auth/callback/github`, and
+  `WebMCP Today` (prod, github.com/settings/applications/3759220) →
+  `https://webmcp.today/api/auth/callback/github`. Prod creds are Vercel env vars;
+  dev creds live in `apps/web/.env`.
+- Set Vercel env vars via the **API** (`POST /v10/projects/<name>/env?upsert=true`),
+  not `vercel env add` — CLI 54.x silently stores **empty** values when the value
+  is piped via stdin (this is why prod vars were empty placeholders originally).
 
 ## Stack (decided — do not relitigate)
 
