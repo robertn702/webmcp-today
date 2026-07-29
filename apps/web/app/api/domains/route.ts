@@ -1,4 +1,4 @@
-import type { DomainsResponse } from "@robertn702/webmcp-cafe-schema";
+import type { DomainsResponse } from "@robertn702/webmcp-today-schema";
 import { NextResponse } from "next/server";
 import { getDomainsVersion, listDistinctDomains } from "@/lib/domains-repo";
 

@@ -1,4 +1,4 @@
-import { BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-cafe-schema";
+import { BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-today-schema";
 import { defineBackground } from "wxt/utils/define-background";
 import { browser } from "wxt/browser";
 import {
@@ -35,7 +35,7 @@ import { INDEX_KEY, indexSchema, type InstallIndex } from "../lib/store-schema.j
 // Page loads resolve against LOCAL storage only (local-lookup.ts); the env-var
 // origin is used exclusively by background polls. The install path (step 4)
 // fetches from the validated sender origin instead.
-const REGISTRY_ORIGIN: string = import.meta.env.WXT_REGISTRY_API_URL ?? "https://webmcp.cafe";
+const REGISTRY_ORIGIN: string = import.meta.env.WXT_REGISTRY_API_URL ?? "https://webmcp.today";
 
 const store = createInstallsStore(localStorageArea);
 

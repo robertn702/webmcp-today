@@ -44,13 +44,13 @@ const packageAtV1 = {
 };
 
 function readVersion(id: string, versionId: string): Promise<Response> {
-  return getVersion(new Request("https://webmcp.cafe/api/packages/x/versions/y"), {
+  return getVersion(new Request("https://webmcp.today/api/packages/x/versions/y"), {
     params: Promise.resolve({ id, versionId }),
   });
 }
 
 function readVersionList(id: string): Promise<Response> {
-  return getVersionList(new Request("https://webmcp.cafe/api/packages/x/versions"), {
+  return getVersionList(new Request("https://webmcp.today/api/packages/x/versions"), {
     params: Promise.resolve({ id }),
   });
 }

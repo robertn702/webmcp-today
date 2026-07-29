@@ -1,9 +1,9 @@
-# WebMCP Cafe extension
+# WebMCP Today extension
 
 WXT extension that injects community WebMCP tool packages into sites that haven't
 implemented WebMCP themselves. It fetches each package's latest published
-version for the current page from the webmcp.cafe registry API, falling back to
-the bundled curated packages (`@webmcp-cafe/curated-packages`) when the registry has
+version for the current page from the webmcp.today registry API, falling back to
+the bundled curated packages (`@webmcp-today/curated-packages`) when the registry has
 nothing for the domain or is unreachable.
 
 The DOM executor is ported from Joakim Selemyr's MIT-licensed
@@ -22,7 +22,7 @@ logged-in page.
   page CSP `connect-src` restrictions rather than fighting them. The content
   script asks for packages via `browser.runtime.sendMessage`.
 - The response is validated at that boundary with the zod schemas from
-  `@robertn702/webmcp-cafe-schema` (`webMcpPackageSchema`); anything that
+  `@robertn702/webmcp-today-schema` (`webMcpPackageSchema`); anything that
   fails to parse, along with network errors and non-2xx responses, falls
   back to the bundled curated packages.
 - The lookup endpoint serves each package's latest published version; the
@@ -33,7 +33,7 @@ logged-in page.
   `WXT_`-prefixed var into `import.meta.env` at build time (Vite's env
   handling), so it's not available in `process.env` at runtime.
 - `host_permissions` in `wxt.config.ts` lists both the dev
-  (`http://localhost:3000/*`) and production (`https://webmcp.cafe/*`)
+  (`http://localhost:3000/*`) and production (`https://webmcp.today/*`)
   origins, since manifest permissions are fixed at build time and can't read
   the env var.
 
@@ -122,7 +122,7 @@ ends up injected as a tool in a live page.
    (e.g. an `en.wikipedia.org` article) and check the Inspector lists the
    tool(s) from step 3. Check the background service worker's console
    (`chrome://extensions` → the extension's "service worker" link) for
-   `[webmcp-cafe]` logs confirming a registry hit vs. bundled fallback.
+   `[webmcp-today]` logs confirming a registry hit vs. bundled fallback.
 7. Invoke a read-only tool and confirm the output.
 
 ## Manual verification (bundled packages only, no registry)

@@ -1,4 +1,4 @@
-import { packages } from "@webmcp-cafe/db";
+import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";

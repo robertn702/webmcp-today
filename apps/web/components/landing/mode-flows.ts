@@ -19,8 +19,8 @@ export const llmFirstNodes: readonly FlowNode[] = [
   {
     id: "mcp",
     kicker: "Package",
-    label: "Cafe MCP server",
-    detail: "webmcp-cafe-mcp · stdio",
+    label: "Registry MCP server",
+    detail: "webmcp-today-mcp · stdio",
     col: 3,
     row: 1,
   },
@@ -62,7 +62,7 @@ export const llmFirstSteps: readonly FlowStep[] = [
     from: "agent",
     to: "mcp",
     title: "The agent checks the registry before improvising",
-    body: "`@robertn702/webmcp-cafe-mcp` runs over stdio beside the agent and exposes `lookup_package`, `list_packages`, `publish_package` and `install_package`.",
+    body: "`@robertn702/webmcp-today-mcp` runs over stdio beside the agent and exposes `lookup_package`, `list_packages`, `publish_package` and `install_package`.",
   },
   {
     from: "mcp",
@@ -81,7 +81,7 @@ export const llmFirstSteps: readonly FlowStep[] = [
     from: "api",
     to: "ext",
     title: "Installing pins you to one exact version",
-    body: "`install_package` writes an `installs` row on your webmcp.cafe account and returns a handoff link. Opening that link drives the install bridge into the extension: the body is fetched, `apiContentHash` is re-verified, and it lands atomically in `chrome.storage.local`. A new upstream version never arrives on its own — moving the pin is a fresh click.",
+    body: "`install_package` writes an `installs` row on your webmcp.today account and returns a handoff link. Opening that link drives the install bridge into the extension: the body is fetched, `apiContentHash` is re-verified, and it lands atomically in `chrome.storage.local`. A new upstream version never arrives on its own — moving the pin is a fresh click.",
   },
   {
     from: "ext",

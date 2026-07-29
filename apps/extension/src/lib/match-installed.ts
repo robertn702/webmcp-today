@@ -2,7 +2,7 @@ import {
   domainLookupKeys,
   rankPackagesByUrl,
   type RevocationEntry,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import type { IndexEntry, InstallIndex } from "./store-schema.js";
 
 // Pure page-load matching over the local install index — no storage, no

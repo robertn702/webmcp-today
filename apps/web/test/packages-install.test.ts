@@ -62,7 +62,7 @@ vi.mock("@/lib/mutations", () => ({
 
 function put(id: string, body: unknown): Promise<Response> {
   return PUT(
-    new Request(`https://webmcp.cafe/api/packages/${id}/install`, {
+    new Request(`https://webmcp.today/api/packages/${id}/install`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -73,7 +73,7 @@ function put(id: string, body: unknown): Promise<Response> {
 
 function del(id: string): Promise<Response> {
   return DELETE(
-    new Request(`https://webmcp.cafe/api/packages/${id}/install`, { method: "DELETE" }),
+    new Request(`https://webmcp.today/api/packages/${id}/install`, { method: "DELETE" }),
     {
       params: Promise.resolve({ id }),
     },

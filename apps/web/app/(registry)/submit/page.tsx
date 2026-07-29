@@ -17,7 +17,7 @@ export default function SubmitPage() {
         <code className="font-mono text-xs">
           domain, urlPatterns[], title, description, tools[]
         </code>
-        . It&apos;s validated against @robertn702/webmcp-cafe-schema before upload and published as
+        . It&apos;s validated against @robertn702/webmcp-today-schema before upload and published as
         a new package at version 1. There is no review queue. It goes live when it validates.
       </p>
 

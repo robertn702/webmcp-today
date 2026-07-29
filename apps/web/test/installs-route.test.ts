@@ -17,7 +17,7 @@ vi.mock("@/lib/packages-repo", () => ({
 }));
 
 function get(): Promise<Response> {
-  return GET(new Request("https://webmcp.cafe/api/installs"));
+  return GET(new Request("https://webmcp.today/api/installs"));
 }
 
 describe("GET /api/installs", () => {

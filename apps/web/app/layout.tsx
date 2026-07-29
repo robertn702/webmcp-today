@@ -24,8 +24,8 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "WebMCP Cafe · MCP tools for any site",
-    template: "%s · WebMCP Cafe",
+    default: "WebMCP Today · MCP tools for any site",
+    template: "%s · WebMCP Today",
   },
   description:
     "Install community-written MCP tool packages on sites that never shipped any. The extension registers them on the page, so your agent calls named tools instead of guessing.",
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2">
                 <MobileNav />
                 <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
-                  ☕ webmcp.cafe
+                  ⚡ webmcp.today
                 </Link>
               </div>
               {/* One shared gap-2 rhythm across links + utilities so the

@@ -1,4 +1,4 @@
-# WebMCP Cafe — Build Spec (Handoff Document)
+# WebMCP Today — Build Spec (Handoff Document)
 
 > This file is the complete handoff brief for the agent scaffolding and building this
 > project. It was written after a full investigation session. Everything you need is
@@ -14,13 +14,13 @@
 
 ## What this project is
 
-**WebMCP Cafe** is a community registry of third-party **WebMCP tool configs** that are
+**WebMCP Today** is a community registry of third-party **WebMCP tool configs** that are
 injected into websites that haven't implemented WebMCP themselves. Think "Greasyfork for
 the agentic web": community members (humans and agents) author declarative configs that
 teach AI agents how to operate a site — fill its forms, navigate its flows, extract its
 data — and any agent visiting that site gets those tools instantly.
 
-Pitch: **agents teaching agents.** Domain: `webmcp.cafe` (purchased).
+Pitch: **agents teaching agents.** Domain: `webmcp.today` (purchased).
 
 ### Background: WebMCP state (July 2026)
 
@@ -91,19 +91,19 @@ definitions.
 
 ## Repo & packages
 
-- GitHub repo to create: `robertn702/webmcp-cafe` (public)
-- Local path: `~/git/robertn702/webmcp-cafe`
+- GitHub repo to create: `robertn702/webmcp-today` (public)
+- Local path: `~/git/robertn702/webmcp-today`
 - npm scope: `@robertn702` (all published packages)
 
 ```
-webmcp-cafe/
+webmcp-today/
 ├── apps/
 │   ├── web/            # Next.js — registry UI + public REST API
 │   └── extension/      # WXT — config lookup + tool injection
 ├── packages/
-│   ├── schema/         # @robertn702/webmcp-cafe-schema — zod config format (published)
+│   ├── schema/         # @robertn702/webmcp-today-schema — zod config format (published)
 │   ├── db/             # Drizzle + Neon — schema + client
-│   └── mcp/            # @robertn702/webmcp-cafe-mcp — MCP server (published)
+│   └── mcp/            # @robertn702/webmcp-today-mcp — MCP server (published)
 └── (turbo + bun workspaces)
 ```
 
@@ -151,7 +151,7 @@ directly useful for config authoring.)
 
 1. **Scaffold** — git init, bun + turbo workspace, tsconfig base, ESLint/Prettier,
    skills (above), CI (GitHub Actions: typecheck + lint + test), initial commit, `gh repo
-   create robertn702/webmcp-cafe --public --source . --push`. Write `AGENTS.md` capturing
+   create robertn702/webmcp-today --public --source . --push`. Write `AGENTS.md` capturing
    the essentials of this spec for future agents.
 2. **packages/schema** — config format v1: zod schemas, input-schema derivation from
    field defs, urlPattern matching, validation tests. No `evaluate` step.

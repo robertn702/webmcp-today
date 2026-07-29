@@ -1,5 +1,5 @@
-import { publishVersionSchema } from "@robertn702/webmcp-cafe-schema";
-import { packages } from "@webmcp-cafe/db";
+import { publishVersionSchema } from "@robertn702/webmcp-today-schema";
+import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";

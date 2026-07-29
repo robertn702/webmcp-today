@@ -20,7 +20,7 @@ const ENTRY = {
   title: "Wikipedia article",
   installedAt: "2026-07-27T12:00:00.000Z",
   source: "registry",
-  origin: "https://webmcp.cafe",
+  origin: "https://webmcp.today",
 };
 
 describe("store-schema", () => {

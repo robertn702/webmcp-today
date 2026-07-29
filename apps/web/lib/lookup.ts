@@ -2,8 +2,8 @@ import {
   domainLookupKeys,
   rankPackagesByUrl,
   type WebMcpPackage,
-} from "@robertn702/webmcp-cafe-schema";
-import { packages } from "@webmcp-cafe/db";
+} from "@robertn702/webmcp-today-schema";
+import { packages } from "@webmcp-today/db";
 import { inArray } from "drizzle-orm";
 import { db } from "./db";
 import { hydratePackages } from "./packages-repo";

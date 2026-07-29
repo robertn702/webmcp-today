@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Get the extension",
   description:
-    "Build and load the WebMCP Cafe browser extension from source. It registers tools from packages you've installed on the page you're on, so an agent can call them.",
+    "Build and load the WebMCP Today browser extension from source. It registers tools from packages you've installed on the page you're on, so an agent can call them.",
 };
 
 // TODO(extension): replace this stub with the Chrome Web Store listing (and
@@ -24,14 +24,14 @@ export default function ExtensionPage() {
         <li>
           <p className="text-sm font-semibold">Clone and install</p>
           <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-            git clone https://github.com/robertn702/webmcp-cafe{"\n"}cd webmcp-cafe &amp;&amp; bun
+            git clone https://github.com/robertn702/webmcp-today{"\n"}cd webmcp-today &amp;&amp; bun
             install
           </pre>
         </li>
         <li>
           <p className="text-sm font-semibold">Build it against the live registry</p>
           <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-            WXT_REGISTRY_API_URL=https://webmcp.cafe bun run build --filter=@webmcp-cafe/extension
+            WXT_REGISTRY_API_URL=https://webmcp.today bun run build --filter=@webmcp-today/extension
           </pre>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             That variable controls where the extension polls for the revocation feed and the domain
@@ -71,7 +71,7 @@ export default function ExtensionPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Open a page one of your installed packages matches and look at the page console.{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              [webmcp-cafe] N installed package(s) matched this URL
+              [webmcp-today] N installed package(s) matched this URL
             </code>{" "}
             means a match registered. With nothing installed, every page logs{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">

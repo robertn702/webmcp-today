@@ -1,4 +1,4 @@
-import { domainsResponseSchema } from "@robertn702/webmcp-cafe-schema";
+import { domainsResponseSchema } from "@robertn702/webmcp-today-schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/domains/route";
 
@@ -16,7 +16,7 @@ vi.mock("@/lib/domains-repo", () => ({
 }));
 
 function get(headers?: HeadersInit): Promise<Response> {
-  return GET(new Request("https://webmcp.cafe/api/domains", { headers }));
+  return GET(new Request("https://webmcp.today/api/domains", { headers }));
 }
 
 describe("GET /api/domains", () => {

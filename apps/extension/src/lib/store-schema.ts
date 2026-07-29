@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { revocationEntrySchema } from "@robertn702/webmcp-cafe-schema";
+import { revocationEntrySchema } from "@robertn702/webmcp-today-schema";
 
 // Everything the extension persists in chrome.storage.local, and nothing else.
 // Pure module — no wxt/browser import — so tests can exercise the real schemas

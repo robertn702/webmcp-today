@@ -9,7 +9,7 @@ import {
   type BridgeListInstallsResponse,
   type BridgePingResponse,
   type BridgeUninstallResponse,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import { env } from "@/env";
 
 // Page side of the install bridge (packages/schema/src/bridge.ts is the

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { webMcpPackageSchema, type WebMcpPackage } from "@robertn702/webmcp-cafe-schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@robertn702/webmcp-today-schema";
 import { fetchSuggestions } from "../src/lib/suggestions.js";
 
 const ORIGIN = "https://registry.test";

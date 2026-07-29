@@ -1,4 +1,4 @@
-import { ENGINE_VERSION } from "@robertn702/webmcp-cafe-schema";
+import { ENGINE_VERSION } from "@robertn702/webmcp-today-schema";
 import { executeApiTool } from "./api-executor.js";
 import { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
 import type { PageLoadPackages } from "./local-lookup.js";
@@ -53,7 +53,7 @@ export async function runRegistrationPass(
   const mc = deps.getModelContext();
   if (!mc) {
     console.warn(
-      `[webmcp-cafe] ${packages.length} package(s) match this page, but Chrome's WebMCP API is unavailable, so no tools were registered.\n` +
+      `[webmcp-today] ${packages.length} package(s) match this page, but Chrome's WebMCP API is unavailable, so no tools were registered.\n` +
         `Enable it: open ${WEBMCP_FLAG_URL}, set "WebMCP for testing" to Enabled, then relaunch Chrome. Needs Chrome 149+.`,
     );
     deps.reportStatus({ kind: "webmcp-unavailable", packageCount: packages.length });
@@ -69,7 +69,7 @@ export async function runRegistrationPass(
     // too-new package must not silently register inert/mis-executed tools.
     if (!supportsPackageEngine(pkg)) {
       console.warn(
-        `[webmcp-cafe] Skipping package "${pkg.title}" — needs engine level ${requiredEngineLevel(pkg)}, but this extension is level ${ENGINE_VERSION}. Update the extension.`,
+        `[webmcp-today] Skipping package "${pkg.title}" — needs engine level ${requiredEngineLevel(pkg)}, but this extension is level ${ENGINE_VERSION}. Update the extension.`,
       );
       continue;
     }
@@ -85,7 +85,7 @@ export async function runRegistrationPass(
       const endpoint = api?.endpoints[execution.endpoint];
       if (!api || !endpoint) {
         console.warn(
-          `[webmcp-cafe] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the package's api block.`,
+          `[webmcp-today] Skipping tool "${tool.name}" — api endpoint "${execution.endpoint}" is missing from the package's api block.`,
         );
         continue;
       }
@@ -96,7 +96,7 @@ export async function runRegistrationPass(
       if (seen.has(tool.name)) continue;
       if (declarativeNames.has(tool.name)) {
         console.warn(
-          `[webmcp-cafe] Skipping tool "${tool.name}" — collides with a site-declared tool`,
+          `[webmcp-today] Skipping tool "${tool.name}" — collides with a site-declared tool`,
         );
         continue;
       }
@@ -118,20 +118,20 @@ export async function runRegistrationPass(
           { signal },
         );
         registered.push(tool.name);
-        console.info(`[webmcp-cafe] Registered tool "${tool.name}"`);
+        console.info(`[webmcp-today] Registered tool "${tool.name}"`);
       } catch (err) {
         // `Permissions-Policy: tools=()` throws SecurityError — the SITE
         // blocks WebMCP, so retrying the remaining tools is pointless and the
         // status must not read as "package broken".
         if (err instanceof DOMException && err.name === "SecurityError") {
           console.warn(
-            `[webmcp-cafe] This site blocks WebMCP (Permissions-Policy: tools=()) — no tools can be registered here.`,
+            `[webmcp-today] This site blocks WebMCP (Permissions-Policy: tools=()) — no tools can be registered here.`,
           );
           deps.reportStatus({ kind: "site-blocked", packageCount: packages.length });
           return;
         }
         console.warn(
-          `[webmcp-cafe] Skipping tool "${tool.name}" — registerTool rejected (name collision with a site-registered tool?):`,
+          `[webmcp-today] Skipping tool "${tool.name}" — registerTool rejected (name collision with a site-registered tool?):`,
           err,
         );
       }

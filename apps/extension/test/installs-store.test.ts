@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiContentHash } from "@robertn702/webmcp-cafe-schema";
+import { apiContentHash } from "@robertn702/webmcp-today-schema";
 import {
   createInstallsStore,
   type InstallOptions,
@@ -8,7 +8,7 @@ import {
 import { INDEX_KEY, SCHEMA_VERSION_KEY, pkgKey } from "../src/lib/store-schema.js";
 import { createFakeStorageArea } from "./fake-storage-area.js";
 
-const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.cafe" };
+const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.today" };
 
 const API_BLOCK = {
   baseUrl: "https://en.wikipedia.org",
@@ -66,7 +66,7 @@ describe("installs-store", () => {
         domain: "en.wikipedia.org",
         title: "Wikipedia article",
         source: "registry",
-        origin: "https://webmcp.cafe",
+        origin: "https://webmcp.today",
       });
       expect(await store.loadPackage("pkg-wiki")).toMatchObject({ status: "ok" });
     });

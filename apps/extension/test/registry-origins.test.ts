@@ -3,7 +3,7 @@ import { isAllowedRegistryOrigin } from "../src/lib/registry-origins.js";
 
 describe("isAllowedRegistryOrigin", () => {
   it.each([
-    "https://webmcp.cafe",
+    "https://webmcp.today",
     "http://localhost",
     "http://localhost:3000",
     "http://localhost:5173",
@@ -16,17 +16,17 @@ describe("isAllowedRegistryOrigin", () => {
     "https://localhost",
     "https://localhost:3000",
     // prod registry over plain http, and any subdomain of it
-    "http://webmcp.cafe",
-    "https://www.webmcp.cafe",
-    "https://evil.webmcp.cafe",
+    "http://webmcp.today",
+    "https://www.webmcp.today",
+    "https://evil.webmcp.today",
     // lookalikes
     "http://localhost.evil.com",
-    "https://webmcp.cafe.evil.com",
+    "https://webmcp.today.evil.com",
     "https://evil.com",
     // junk
     "not a url",
     "",
-    "webmcp.cafe",
+    "webmcp.today",
   ])("rejects %s", (origin) => {
     expect(isAllowedRegistryOrigin(origin)).toBe(false);
   });

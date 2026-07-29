@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiBlockSchema, type ApiBlock } from "@robertn702/webmcp-cafe-schema";
+import { apiBlockSchema, type ApiBlock } from "@robertn702/webmcp-today-schema";
 import {
   applyProjection,
   buildRequest,

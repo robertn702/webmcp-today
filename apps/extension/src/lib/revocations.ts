@@ -1,7 +1,7 @@
 import {
   revocationsResponseSchema,
   type RevocationsResponse,
-} from "@robertn702/webmcp-cafe-schema";
+} from "@robertn702/webmcp-today-schema";
 import {
   REVOKED_KEY,
   revokedDocSchema,

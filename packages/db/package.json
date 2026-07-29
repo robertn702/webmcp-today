@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp-cafe/db",
+  "name": "@webmcp-today/db",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
-    "@robertn702/webmcp-cafe-schema": "workspace:*",
+    "@robertn702/webmcp-today-schema": "workspace:*",
     "drizzle-orm": "^0.44.4"
   },
   "devDependencies": {

@@ -148,7 +148,7 @@ export default async function LandingPage() {
             <FlowDiagram
               nodes={llmFirstNodes}
               steps={llmFirstSteps}
-              label="From your terminal, an agent uses the Cafe MCP server to find, publish and install packages, which the extension then registers on the target site."
+              label="From your terminal, an agent uses the registry MCP server to find, publish and install packages, which the extension then registers on the target site."
             />
           </ModeCard>
 
@@ -209,7 +209,7 @@ export default async function LandingPage() {
 
           <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
             <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
-              <a href="https://github.com/robertn702/webmcp-cafe">
+              <a href="https://github.com/robertn702/webmcp-today">
                 Read the source
                 <ArrowRight className="size-4" />
               </a>

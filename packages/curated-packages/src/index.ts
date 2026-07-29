@@ -1,4 +1,4 @@
-import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-today-schema";
 
 import rawGoogle from "../data/google.com.json";
 import rawReddit from "../data/reddit.com.json";
@@ -10,7 +10,7 @@ import rawReddit from "../data/reddit.com.json";
 function parse(raw: unknown, file: string): CreatePackageInput {
   const parsed = createPackageSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new Error(`[webmcp-cafe] Invalid curated package ${file}: ${parsed.error.message}`);
+    throw new Error(`[webmcp-today] Invalid curated package ${file}: ${parsed.error.message}`);
   }
   return parsed.data;
 }

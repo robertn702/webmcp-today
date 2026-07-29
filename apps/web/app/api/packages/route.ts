@@ -1,4 +1,4 @@
-import { createPackageSchema } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema } from "@robertn702/webmcp-today-schema";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
 import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Hero visual: what an agent sees once a package is injected, laid out like a
- * cafe menu board. Illustrative — the tool names are the ones from the Reddit
+ * menu board. Illustrative — the tool names are the ones from the Reddit
  * tier-1 package in docs/api-execution-model.md.
  */
 
@@ -61,8 +61,8 @@ export function ToolMenu() {
 
       <div className="border-t px-5 py-3">
         <p className="font-mono text-[11px] text-muted-foreground">
-          <span className="text-brand">●</span> injected by webmcp.cafe · community package · pinned
-          v1
+          <span className="text-brand">●</span> injected by webmcp.today · community package ·
+          pinned v1
         </p>
       </div>
     </div>

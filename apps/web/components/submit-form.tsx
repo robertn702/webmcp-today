@@ -1,6 +1,6 @@
 "use client";
 
-import { createPackageSchema } from "@robertn702/webmcp-cafe-schema";
+import { createPackageSchema } from "@robertn702/webmcp-today-schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

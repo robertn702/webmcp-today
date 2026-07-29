@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp-cafe/extension",
+  "name": "@webmcp-today/extension",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@jmespath-community/jmespath": "1.3.0",
-    "@robertn702/webmcp-cafe-schema": "workspace:*",
+    "@robertn702/webmcp-today-schema": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

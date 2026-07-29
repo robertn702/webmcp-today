@@ -1,4 +1,4 @@
-import { packageListResponseSchema } from "@robertn702/webmcp-cafe-schema";
+import { packageListResponseSchema } from "@robertn702/webmcp-today-schema";
 
 // Popup discovery suggestions, replacing the old bundled-fallback package
 // list: these are real registry packages with ids/versionIds, so a

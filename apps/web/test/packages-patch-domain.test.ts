@@ -48,7 +48,7 @@ vi.mock("@/lib/mutations", () => ({
 
 function patch(body: unknown): Promise<Response> {
   return PATCH(
-    new Request("https://webmcp.cafe/api/packages/pkg-1", {
+    new Request("https://webmcp.today/api/packages/pkg-1", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),

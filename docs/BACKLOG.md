@@ -5,7 +5,7 @@ item — detail lives at the linked doc, not here. Rules: an item with no pointe
 to detail gets deleted on sight; whoever completes an item deletes it in the
 same PR. Not a wishlist.
 
-**Launch (MVP) =** public announcement of `webmcp.cafe` to a developer audience
+**Launch (MVP) =** public announcement of `webmcp.today` to a developer audience
 — WebMCP is flag/origin-trial gated through Chrome 156, so every early user runs
 Chrome with `#enable-webmcp-testing` and drives tools from the Tool Inspector or
 their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
@@ -39,9 +39,6 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   identity, privacy policy page. The tiers 2–3 "no remote code" answer can
   follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
-- **Switch Namecheap nameservers to Cloudflare** — the last step before
-  `webmcp.cafe` resolves; Robert's action, then propagation time.
-  (AGENTS.md → Deploy, domain & DNS)
 - **Email service** (password reset, verification) — pick a provider (needs
   Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip

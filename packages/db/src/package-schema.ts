@@ -1,4 +1,4 @@
-import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-cafe-schema";
+import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-today-schema";
 import {
   bigserial,
   index,

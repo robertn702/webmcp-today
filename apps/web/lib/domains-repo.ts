@@ -1,4 +1,4 @@
-import { packages } from "@webmcp-cafe/db";
+import { packages } from "@webmcp-today/db";
 import { asc, sql } from "drizzle-orm";
 import { db } from "./db";
 

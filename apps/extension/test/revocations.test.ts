@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RevocationEntry } from "@robertn702/webmcp-cafe-schema";
+import type { RevocationEntry } from "@robertn702/webmcp-today-schema";
 import { pollRevocations, readRevokedDoc } from "../src/lib/revocations.js";
 import { REVOKED_KEY, type RevokedDoc } from "../src/lib/store-schema.js";
 import { createFakeStorageArea } from "./fake-storage-area.js";

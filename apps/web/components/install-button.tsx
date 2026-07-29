@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { InstallFailure, InstallState } from "@robertn702/webmcp-cafe-schema";
+import type { InstallFailure, InstallState } from "@robertn702/webmcp-today-schema";
 import { Button } from "@/components/ui/button";
 import {
   installPackage,

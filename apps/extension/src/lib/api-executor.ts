@@ -1,5 +1,5 @@
 import { search, type JSONValue } from "@jmespath-community/jmespath";
-import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@robertn702/webmcp-cafe-schema";
+import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@robertn702/webmcp-today-schema";
 import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./model-context.js";
 
@@ -395,7 +395,7 @@ export async function executeApiTool(
     return await executeApiToolInner(toolName, api, endpointName, params, annotations);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[webmcp-cafe] API tool "${toolName}" failed:`, err);
+    console.error(`[webmcp-today] API tool "${toolName}" failed:`, err);
     return mcpResult(`Error executing "${toolName}": ${msg}`);
   }
 }
