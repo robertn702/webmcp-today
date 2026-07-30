@@ -56,20 +56,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               aria-label="Main"
               className="mx-auto flex max-w-5xl items-center justify-between gap-x-4 px-4 py-3"
             >
-              {/* Wayfinding (menu + logo) on the left, utilities on the right —
-                  the Material/shadcn mobile idiom. */}
+              {/* Wayfinding (menu + logo + links) anchored left; only
+                  state-dependent utilities on the right, so the right cluster
+                  changing width (avatar ↔ sign-in/sign-up buttons) never
+                  shifts the nav. */}
               <div className="flex items-center gap-2">
                 <MobileNav />
                 <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
                   ⚡ webmcp.today
                 </Link>
+                <DesktopNavLinks />
               </div>
               {/* One shared gap-2 rhythm across links + utilities so the
                   spacing reads even — each item carries equivalent optical
                   padding (links px-2, ghost icon buttons, avatar p-1). */}
               <div className="flex items-center gap-2">
-                {/* Below md the links collapse into MobileNav's sheet. */}
-                <DesktopNavLinks />
                 <ThemeToggle />
                 <UserButton size="icon" align="end" />
               </div>

@@ -9,7 +9,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   sequences (`components/landing/mode-flows.ts`); if those flows change, change the copy.
 - Everything else lives in the `app/(registry)/` route group, whose layout supplies the
   shared `max-w-5xl` container. Route groups don't affect URLs — `/packages`, `/submit`,
-  `/settings`, `/auth` are unchanged. Browse is `/packages` (it used to be `/`).
+  `/settings` are unchanged. Browse is `/packages` (it used to be `/`).
+- `app/auth/[path]` (sign-in/sign-up) sits **outside** the registry group like the
+  landing page, so its atmosphere/grid background is full-bleed instead of clipped
+  by the `max-w-5xl` container.
 - `/extension` is a stub until the extension is published; the landing CTA points at it
   and both carry a `TODO(extension)` marker for the Web Store swap.
 - `components/site-footer.tsx` renders once from the **root** layout (not the registry
@@ -18,9 +21,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   on `201` (`terms` field + `Link: …; rel="terms-of-service"`) via `acceptedSubmission`
   in `lib/http.ts` — API publishers never see the notice on `/submit`. Unreviewed draft;
   the `TODO(legal)` in the page lists what a lawyer still has to add.
-- Landing-only treatments: the atmosphere/grid layers, `cafe-*` animations, and
-  `bg-brand` CTA buttons. `--font-display` (Instrument Serif) and the `--brand` amber
-  are also used by the interior page-header pattern — see Design language.
+- The atmosphere/grid layers, `cafe-*` animations, and `bg-brand` CTA buttons are
+  landing treatments, also reused by the full-bleed `/auth/[path]` sign-in/sign-up
+  pages. `--font-display` (Instrument Serif) and the `--brand` amber are also used
+  by the interior page-header pattern — see Design language.
 
 ## Design language
 
@@ -47,7 +51,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   with `text-brand` + `aria-current` — brand amber always means "active".
 - Header lives in `app/layout.tsx` (server component); interactive parts are client
   islands: `desktop-nav.tsx`, `mobile-nav.tsx` (sheet), `theme-toggle.tsx`. Link list +
-  active-route check are shared in `lib/nav-links.ts`.
+  active-route check are shared in `lib/nav-links.ts`. Wayfinding (sheet trigger +
+  logo + links) is anchored **left**; the right cluster holds only state-dependent
+  utilities (theme toggle, UserButton) so the avatar ↔ sign-in/sign-up button-pair
+  width change on auth resolution never shifts the nav.
 
 ## Registry model (the served truth)
 
