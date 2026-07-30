@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "domain": "reddit.com",
   "urlPatterns": ["*://*.reddit.com/*"],
   "title": "Reddit (JSON API)",

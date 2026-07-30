@@ -5,6 +5,7 @@ import { createPackageSchema, publishVersionSchema } from "../src/index.js";
 // the csrf modhash token source) + a GraphQL endpoint exercising errorPath,
 // persistedQuery, and an @documents reference. Cloned + mutated per failure test.
 const base = {
+  version: 1,
   domain: "reddit.com",
   urlPatterns: ["*://*.reddit.com/*"],
   title: "Reddit API tools",
@@ -139,6 +140,7 @@ describe("api block cross-validation", () => {
 
   it("scans body templates (rejects unknown, accepts valid)", () => {
     const withBody = (body: Record<string, string>) => ({
+      version: 1,
       domain: "example.com",
       urlPatterns: ["*://example.com/*"],
       title: "x",
@@ -275,6 +277,7 @@ describe("api block cross-validation", () => {
     // An HN-shaped config: the auth source regexes the vote token out of an
     // HTML page that is never bound to a tool directly.
     const hnLike = {
+      version: 1,
       domain: "news.ycombinator.com",
       urlPatterns: ["*://news.ycombinator.com/*"],
       title: "HN write tools",
@@ -332,6 +335,7 @@ describe("api block cross-validation", () => {
 
   it("rejects a tool whose execution.mode is an unknown discriminator", () => {
     const result = createPackageSchema.safeParse({
+      version: 1,
       domain: "reddit.com",
       urlPatterns: ["*://*.reddit.com/*"],
       title: "x",
@@ -353,7 +357,7 @@ describe("api block cross-validation", () => {
   });
 
   it("runs the same api cross-validation on publishVersionSchema", () => {
-    const version = { urlPatterns: base.urlPatterns, tools: base.tools, api: base.api };
+    const version = { version: 2, urlPatterns: base.urlPatterns, tools: base.tools, api: base.api };
     expect(publishVersionSchema.safeParse(version).success).toBe(true);
     const broken = structuredClone(version);
     const tool = broken.tools[0];

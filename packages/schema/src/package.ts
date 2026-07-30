@@ -56,6 +56,16 @@ const toolsArraySchema = z
  * `createPackageSchema` wraps it with the api cross-validation.
  */
 export const createPackageObjectSchema = z.object({
+  /**
+   * Author-declared positive-integer version: `1` on create, exactly
+   * `max(version)+1` on publish, equality-checked server-side (409 on
+   * mismatch — docs/DECISIONS.md 2026-07-29). Not semver, same philosophy as
+   * `minEngine`: the format has no patch releases, so semver's extra
+   * dimensions are meaningless. Declared rather than server-assigned so a
+   * publish based on a stale snapshot conflicts loudly instead of silently
+   * superseding a version the author never saw.
+   */
+  version: z.number().int().min(1),
   domain: domainSchema,
   urlPatterns: z.array(urlPatternSchema).min(1).max(20),
   pageType: z.string().max(100).optional(),
@@ -87,7 +97,14 @@ export const createPackageSchema = createPackageObjectSchema.superRefine((pkg, c
 
 /** Metadata-only edits (packages row) — excludes versioned fields. */
 export const updatePackageMetaSchema = createPackageObjectSchema
-  .omit({ urlPatterns: true, tools: true, api: true, changelog: true, minEngine: true })
+  .omit({
+    version: true,
+    urlPatterns: true,
+    tools: true,
+    api: true,
+    changelog: true,
+    minEngine: true,
+  })
   .partial();
 
 /** A new version of an existing package (package_versions row) — append-only.
@@ -95,7 +112,14 @@ export const updatePackageMetaSchema = createPackageObjectSchema
  * `minEngine` is also version-scoped: it describes what a specific version's
  * content requires, not the package as a whole. */
 export const publishVersionSchema = createPackageObjectSchema
-  .pick({ urlPatterns: true, tools: true, api: true, changelog: true, minEngine: true })
+  .pick({
+    version: true,
+    urlPatterns: true,
+    tools: true,
+    api: true,
+    changelog: true,
+    minEngine: true,
+  })
   .superRefine((pkg, ctx) => {
     for (const issue of collectApiIssues(pkg)) {
       ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
