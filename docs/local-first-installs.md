@@ -338,8 +338,7 @@ end-to-end with no sync: the agent finds or authors the package and pins it; the
 is the consent step, which is where consent belongs anyway.
 
 Landing copy to rewrite **when the code lands**: `mode-flows.ts:83`–`:90` (the `api → ext` step
-describing the install pin), `:163` (bundled-fallback line), and `:152`/`:157` (per-page
-content-script lookup).
+describing the install pin).
 
 ## 9. Dropping `<all_urls>`
 
@@ -423,8 +422,8 @@ when the matching step ships:
   `installs`-pin story), plus "Trust = install count" (`:214`).
 - `docs/erd.md` reading notes — the derived-trust note (`:138`) and the `installs` double-duty
   claim (`:140`).
-- `apps/web/components/landing/mode-flows.ts:83`–`:90`, `:152`, `:157`, `:163`; and the two
-  TrustFacts at `apps/web/app/page.tsx:194`, `:198` — which step 3+4 finally make true, so they
+- `apps/web/components/landing/mode-flows.ts:83`–`:90`; and the two TrustFacts at
+  `apps/web/app/page.tsx:174`, `:178` — which step 3+4 finally make true, so they
   stop being aspirational rather than getting deleted.
 - `apps/extension/AGENTS.md` — the silent-fallback trap, the reddit-exclusion debugging signal
   (`:51`), and the structure notes describing the background fetch (`:60`).

@@ -2,12 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, Download } from "lucide-react";
 import { FlowDiagram } from "@/components/landing/flow-diagram";
-import {
-  inBrowserNodes,
-  inBrowserSteps,
-  llmFirstNodes,
-  llmFirstSteps,
-} from "@/components/landing/mode-flows";
+import { llmFirstNodes, llmFirstSteps } from "@/components/landing/mode-flows";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
 import { listPackages } from "@/lib/packages-repo";
@@ -131,38 +126,22 @@ export default async function LandingPage() {
           <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
             How it runs
           </p>
-          <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">Two ways in.</h2>
+          <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
+            From your terminal.
+          </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Same registry, same packages, same execution engine. The difference is where the agent
-            sits. It can run outside the browser and talk to the registry over MCP, or run inside
-            the page on tools the extension already injected. Step through each one.
+            An agent outside the browser, like Claude Code or any other MCP client, searches the
+            registry, publishes what&apos;s missing, and pins an install. The extension delivers
+            that exact version into the page. Step through it.
           </p>
         </div>
 
-        <div className="mt-14 flex flex-col gap-14">
-          <ModeCard
-            index="Mode 01"
-            title="From your terminal"
-            summary="An agent outside the browser, like Claude Code or any other MCP client, searches the registry, publishes what's missing, and pins an install. The extension delivers that exact version into the page."
-          >
-            <FlowDiagram
-              nodes={llmFirstNodes}
-              steps={llmFirstSteps}
-              label="From your terminal, an agent uses the registry MCP server to find, publish and install packages, which the extension then registers on the target site."
-            />
-          </ModeCard>
-
-          <ModeCard
-            index="Mode 02"
-            title="In the browser"
-            summary="No terminal, no API key. Packages you've installed live in the extension's local storage; on each page load the extension matches them against the URL and registers their tools, and the browser's own agent picks them up as if the site had shipped them."
-          >
-            <FlowDiagram
-              nodes={inBrowserNodes}
-              steps={inBrowserSteps}
-              label="In the browser, the extension reads installed packages from local storage, matches them against the current URL, and registers their tools on document.modelContext, where the browser's agent invokes them."
-            />
-          </ModeCard>
+        <div className="mt-14 rounded-2xl border bg-card px-5 py-8 sm:px-8 sm:py-10">
+          <FlowDiagram
+            nodes={llmFirstNodes}
+            steps={llmFirstSteps}
+            label="From your terminal, an agent uses the registry MCP server to find, publish and install packages, which the extension then registers on the target site."
+          />
         </div>
       </section>
 
@@ -270,29 +249,6 @@ function Reason({ index, title, body }: { index: string; title: string; body: st
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
       <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
-  );
-}
-
-function ModeCard({
-  index,
-  title,
-  summary,
-  children,
-}: {
-  index: string;
-  title: string;
-  summary: string;
-  children: ReactNode;
-}) {
-  return (
-    <article className="rounded-2xl border bg-card px-5 py-8 sm:px-8 sm:py-10">
-      <header className="max-w-2xl border-b pb-6">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">{index}</p>
-        <h3 className="mt-3 font-display text-3xl tracking-tight">{title}</h3>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{summary}</p>
-      </header>
-      <div className="pt-10">{children}</div>
-    </article>
   );
 }
 
