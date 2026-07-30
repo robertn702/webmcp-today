@@ -1,6 +1,6 @@
 # ⚡ WebMCP Today
 
-Community registry of **WebMCP tool packages** injected into sites that haven't
+Community registry of **WebMCP packages** injected into sites that haven't
 implemented WebMCP themselves — Greasyfork for the agentic web. Humans and agents
 author declarative packages that teach AI agents how to operate a site; an
 extension (or MCP server) delivers them. **Agents teaching agents.**
