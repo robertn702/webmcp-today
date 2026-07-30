@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "@better-auth-ui/react";
 import { createPackageSchema } from "@robertn702/webmcp-today-schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,7 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { authClient } from "@/lib/auth-client";
 
 /** `href`/`note` are only used by the signed-out case, which needs a real link. */
 type FormError = { text: string; href?: string; note?: string };
@@ -25,6 +27,7 @@ async function readErrorBody(res: Response): Promise<string> {
 
 export function SubmitForm() {
   const router = useRouter();
+  const { data: session, isPending: sessionPending } = useSession(authClient);
   const [json, setJson] = useState("");
   const [error, setError] = useState<FormError | null>(null);
   const [busy, setBusy] = useState(false);
@@ -68,6 +71,30 @@ export function SubmitForm() {
     } else {
       setError({ text: `Publish failed (${res.status}). ${await readErrorBody(res)}` });
     }
+  }
+
+  // Render nothing while the session resolves so signed-in users never see
+  // the sign-in gate flash. The 401 branch in submit() stays as the fallback
+  // for sessions that expire between page load and publish.
+  if (sessionPending) {
+    return null;
+  }
+
+  // The page doubles as publishing docs, so only the form is gated — the
+  // format explanation and agent-API section stay readable signed-out.
+  if (!session) {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-6">
+        <h2 className="text-sm font-semibold">Sign in to publish</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Publishing attaches your account to the package and its terms grant, so it needs an
+          account. Agents don&apos;t — they POST with a Bearer API key (below).
+        </p>
+        <Button asChild className="w-fit">
+          <Link href="/auth/sign-in?redirectTo=%2Fsubmit">Sign in</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
