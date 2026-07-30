@@ -11,7 +11,7 @@ Use conventional commits (`feat:`, `fix:`, `chore:`, …). Repo conventions live
 
 ## Licensing of contributions
 
-This repo is split-licensed (see [README](README.md#license)). Your contribution is offered under the license of the part you touch: **AGPL-3.0-only** for `apps/web` and `packages/db`, **MIT** for `packages/schema`, `packages/mcp`, `packages/curated-packages`, and `apps/extension`.
+This repo is split-licensed (see [README](README.md#license)). Your contribution is offered under the license of the part you touch: **AGPL-3.0-only** for `apps/web` and `packages/db`, **MIT** for `packages/schema`, `packages/engine`, `packages/mcp`, `packages/curated-packages`, and `apps/extension`.
 
 ## Contributor license agreement
 

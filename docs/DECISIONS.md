@@ -261,3 +261,15 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   precondition header (a second version source of truth outside the document;
   the declared field is the document). The DB is unchanged —
   `uq_package_versions_package_version` is now just the race backstop.
+
+- 2026-07-30 — **Executor extracted from the extension into `packages/engine`
+  (MIT) for license separation, not code reuse.** Schema + engine are the MIT
+  open-source half of the repo (the package format and the runtime that
+  executes it); the extension and web app stay source-available. Nothing else
+  consumes the engine today — the boundary is the license, so the split lands
+  before launch even with a single consumer. Consequence: `ENGINE_VERSION`
+  stays in `packages/schema` (it is format contract, read by the
+  registry/publish side for `minEngine` validation) and the dependency is
+  one-way engine → schema; `McpResult`/`McpTextContent` moved with the engine
+  (`result.ts`) while `model-context.ts`'s DOM feature detection stays in the
+  extension as host code.

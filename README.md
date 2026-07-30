@@ -12,13 +12,14 @@ and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
 
 ## Packages
 
-| Path              | What                                                                     |
-| ----------------- | ------------------------------------------------------------------------ |
+| Path              | What                                                                      |
+| ----------------- | ------------------------------------------------------------------------- |
 | `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (published)        |
-| `packages/db`     | Drizzle + Neon schema and client                                         |
+| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (published)      |
+| `packages/db`     | Drizzle + Neon schema and client                                          |
 | `packages/mcp`    | `@robertn702/webmcp-today-mcp` — MCP server over the REST API (published) |
-| `apps/web`        | Next.js registry UI + public REST API                                    |
-| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                    |
+| `apps/web`        | Next.js registry UI + public REST API                                     |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                     |
 
 ## Quickstart
 
@@ -87,7 +88,7 @@ bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:se
 Split, so the pieces worth adopting stay permissive:
 
 - **AGPL-3.0-only** — the server: `apps/web` and `packages/db` (root `LICENSE`). Run a modified copy as a network service and you owe your users the source.
-- **MIT** — everything built to be adopted freely: `packages/schema` (package format), `packages/mcp` (MCP server), `packages/curated-packages` (curated packages), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
+- **MIT** — everything built to be adopted freely: `packages/schema` (package format), `packages/engine` (execution engine), `packages/mcp` (MCP server), `packages/curated-packages` (curated packages), and `apps/extension` (browser extension). Each carries its own `LICENSE`.
 
 Community-submitted packages are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.today/terms) (`apps/web/app/(registry)/terms`). `packages/curated-packages` is the first-party exception: it ships as MIT source.
 

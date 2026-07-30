@@ -2,14 +2,9 @@
 // navigator.modelContext to document.modelContext (Chrome 150 deprecates the
 // navigator location) — always check document first.
 
-export interface McpTextContent {
-  type: "text";
-  text: string;
-}
+import type { McpResult } from "@robertn702/webmcp-today-engine";
 
-export interface McpResult {
-  content: McpTextContent[];
-}
+export type { McpResult, McpTextContent } from "@robertn702/webmcp-today-engine";
 
 export interface ToolRegistration {
   name: string;

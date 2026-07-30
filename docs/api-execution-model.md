@@ -1,7 +1,7 @@
 # API-Backed Tools — Execution Model
 
 > Status: **tier 1 is built and shipping** (`packages/schema/src/api.ts`,
-> `apps/extension/src/lib/api-executor.ts`, `packages/curated-packages/data/reddit.com.json`);
+> `packages/engine/src/api-executor.ts`, `packages/curated-packages/data/reddit.com.json`);
 > tiers 2–3 remain proposals. Where this doc and the code disagree, the code wins.
 > Related: `SPEC.md` (package format v1), `docs/erd.md` (installs/version pinning),
 > `packages/schema/src/` (execution descriptors).
@@ -418,6 +418,6 @@ data — so it is buildable today and is not blocked on the spike.
   it (`packages/schema/src/budgets.ts`). The extension refuses a too-new package _whole_
   rather than
   registering tools it cannot run — `supportsPackageEngine`
-  (`apps/extension/src/lib/engine-gate.ts`), applied per package in `register-tools.ts`.
+  (`packages/engine/src/engine-gate.ts`), applied per package in `register-tools.ts`.
   What remains is UX, not correctness: the gate fires at registration, so a user can
   install a package their build cannot run and sees only a page-console warning.

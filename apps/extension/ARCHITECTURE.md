@@ -33,7 +33,7 @@ flowchart TB
         PKG["packages.ts · lookup-client.ts"]
         REG["register-tools.ts"]
         NAV["navigation.ts"]
-        EXEC["executor.ts · api-executor.ts"]
+        EXEC["@robertn702/webmcp-today-engine<br/>(packages/engine)"]
         PKG --> REG
         NAV --> REG
         REG --> EXEC
@@ -73,7 +73,7 @@ _The site says "install"; the background validates and stores._
 flowchart LR
     SITE["webmcp.today"] --> BRIDGE["install-bridge.ts"]
     ORIGINS["registry-origins.ts<br/>(sender allowlist)"] --> BRIDGE
-    GATE["engine-gate.ts<br/>(minEngine check)"] --> BRIDGE
+    GATE["engine-gate (packages/engine)<br/>(minEngine check)"] --> BRIDGE
     REV["revocations.ts<br/>(bootstrap safety list)"] --> BRIDGE
     BRIDGE --> STORE["installs-store.ts<br/>(atomic body+index write)"]
     STORE --> ST[("chrome.storage.local")]
@@ -105,7 +105,7 @@ flowchart TB
     LL --> MATCH["match-installed.ts<br/>(URL match + specificity rank)"]
     LL --> REV["revocations.ts<br/>(kill-list check — fail-closed)"]
     LL --> REG["register-tools.ts (content script)"]
-    GATE["engine-gate.ts"] --> REG
+    GATE["engine-gate (packages/engine)"] --> REG
     MODEL["model-context.ts<br/>(document ?? navigator.modelContext probe)"] --> REG
     REG -- "registerTool() per surviving tool" --> MC["WebMCP API"]
     REG --> STATUS["status.ts<br/>(registered / skipped /<br/>site-blocked / broken)"]
@@ -125,11 +125,13 @@ _What happens when the in-page LLM invokes a registered tool._
 
 ```mermaid
 flowchart TB
-    CB["registerTool execute callback"] --> API["api-executor.ts<br/>(same-origin fetch, auth tokens,<br/>JMESPath projection,<br/>destructiveHint confirm)"]
-    API --> RESULT["mcp-result.ts<br/>(text → WebMCP result shape)"]
+    CB["registerTool execute callback"] --> API["api-executor (packages/engine)<br/>(same-origin fetch, auth tokens,<br/>JMESPath projection,<br/>destructiveHint confirm)"]
+    API --> RESULT["mcp-result (packages/engine)<br/>(text → WebMCP result shape)"]
 ```
 
-`api-executor.ts` is the only executor — DOM mode was cut pre-launch
+`api-executor` (in `packages/engine/src/api-executor.ts`, MIT — extracted from
+`src/lib/` for license separation, `docs/DECISIONS.md` 2026-07-30) is the only
+executor — DOM mode was cut pre-launch
 (`docs/DECISIONS.md` 2026-07-28). It binds `{{param}}` templates from validated
 input, acquires tokens from the package's `api.auth` sources, performs the
 same-origin fetch, checks `errorPath`, and applies the `returns` projection.
@@ -155,16 +157,16 @@ messages).
 
 ## Where to look when something breaks
 
-| Symptom                                          | Start at                                                                           |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| A package won't install                          | `install-bridge.ts` → `installs-store.ts`                                          |
-| Tools didn't show up on a page                   | `register-tools.ts` → `local-lookup.ts` → `match-installed.ts`                     |
-| Page console shows `0 installed package(s)`      | expected with an empty store — not a failure                                       |
-| "Paused, waiting on the safety list" / `!` badge | `revocations.ts` (fail-closed gate; no poll has ever succeeded)                    |
-| A tool call fails or returns weird data          | `api-executor.ts` (`returns` JMESPath projection, `errorPath`, auth token sources) |
-| SPA navigation doesn't re-register tools         | `navigation.ts`                                                                    |
-| What's actually in chrome.storage                | `store-schema.ts` (`schemaVersion`, `index`, `pkg:<id>`, `revoked`)                |
-| Popup shows the wrong state                      | `status.ts` (message shapes) → `background.ts` badge logic                         |
+| Symptom                                          | Start at                                                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| A package won't install                          | `install-bridge.ts` → `installs-store.ts`                                                              |
+| Tools didn't show up on a page                   | `register-tools.ts` → `local-lookup.ts` → `match-installed.ts`                                         |
+| Page console shows `0 installed package(s)`      | expected with an empty store — not a failure                                                           |
+| "Paused, waiting on the safety list" / `!` badge | `revocations.ts` (fail-closed gate; no poll has ever succeeded)                                        |
+| A tool call fails or returns weird data          | `packages/engine/src/api-executor.ts` (`returns` JMESPath projection, `errorPath`, auth token sources) |
+| SPA navigation doesn't re-register tools         | `navigation.ts`                                                                                        |
+| What's actually in chrome.storage                | `store-schema.ts` (`schemaVersion`, `index`, `pkg:<id>`, `revoked`)                                    |
+| Popup shows the wrong state                      | `status.ts` (message shapes) → `background.ts` badge logic                                             |
 
 ## Why `src/lib/` is flat
 

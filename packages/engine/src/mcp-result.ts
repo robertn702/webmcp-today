@@ -1,4 +1,4 @@
-import type { McpResult } from "./model-context.js";
+import type { McpResult } from "./result.js";
 
 // Shared output wrapper for both the DOM and API executors. Returns the text
 // as-is. The ~1.5K tool-output cap (TOOL_OUTPUT_MAX) was removed for v1: verbose

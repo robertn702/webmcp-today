@@ -10,7 +10,7 @@ import {
   interpolateDeep,
   isNonEmpty,
   resolveDocument,
-} from "../src/lib/api-executor.js";
+} from "../src/api-executor.js";
 
 // A Reddit-shaped api block exercising REST read/write, an auth token source,
 // query/path/form templates, a projection, and a GraphQL endpoint.

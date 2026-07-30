@@ -1,6 +1,9 @@
+import {
+  executeApiTool,
+  requiredEngineLevel,
+  supportsPackageEngine,
+} from "@robertn702/webmcp-today-engine";
 import { ENGINE_VERSION } from "@robertn702/webmcp-today-schema";
-import { executeApiTool } from "./api-executor.js";
-import { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
 import type { PageLoadPackages } from "./local-lookup.js";
 import type { McpResult, ModelContextLike } from "./model-context.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "./status.js";
