@@ -18,13 +18,25 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   on `201` (`terms` field + `Link: …; rel="terms-of-service"`) via `acceptedSubmission`
   in `lib/http.ts` — API publishers never see the notice on `/submit`. Unreviewed draft;
   the `TODO(legal)` in the page lists what a lawyer still has to add.
-- Landing typography/colour: `--font-display` (Instrument Serif) and the `--brand` amber
-  are defined in `globals.css` and used only by the landing page.
+- Landing-only treatments: the atmosphere/grid layers, `cafe-*` animations, and
+  `bg-brand` CTA buttons. `--font-display` (Instrument Serif) and the `--brand` amber
+  are also used by the interior page-header pattern — see Design language.
 
 ## Design language
 
 - Flat + hairline: surfaces are `rounded-2xl border bg-card` with no shadow; overlays
   (dropdown, popover, sheet) all use `shadow-md ring-1 ring-foreground/10`.
+- Interior page-header pattern (follow `/extension`, `/privacy`, `/terms`): a
+  `max-w-2xl` wrapper; mono uppercase eyebrow
+  (`font-mono text-[11px] tracking-[0.2em] uppercase text-brand`); h1 in
+  `mt-3 font-display text-4xl tracking-tight`; optional metadata line
+  (`font-mono text-xs text-muted-foreground`); lede
+  `text-sm leading-relaxed text-muted-foreground`. Structured blocks can sit on a
+  branded rail (`border-l-2 border-brand/30 pl-5`); section titles are
+  `text-sm font-semibold`. Inline code is a chip
+  (`rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground`); code
+  blocks are `rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs`; links
+  are `text-foreground underline underline-offset-4`.
 - Header utility controls follow the shadcn site-header idiom: ghost icon buttons
   (`variant="ghost"`, `size="icon"`) + bare circular avatar — button chrome is
   reserved for CTAs. The whole header row shares one `gap-2` rhythm, and every item
