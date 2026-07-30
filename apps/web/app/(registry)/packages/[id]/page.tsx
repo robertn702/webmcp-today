@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { InstallButton } from "@/components/install-button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { getPackageById, getVersionById } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
@@ -40,14 +39,15 @@ export default async function PackagePage({
   const targetVersion = installTarget?.version ?? pkg.version;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">{pkg.title}</h1>
-      <p className="mt-1 font-mono text-sm text-muted-foreground">{pkg.urlPatterns.join(", ")}</p>
-      <p className="mt-3 text-sm text-muted-foreground">{pkg.description}</p>
-      <p className="mt-2 text-xs text-muted-foreground">
+    <div className="max-w-2xl">
+      <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">{pkg.domain}</p>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">{pkg.title}</h1>
+      <p className="mt-2 font-mono text-xs text-muted-foreground">
         by {pkg.contributor} · v{pkg.version} · updated{" "}
         {new Date(pkg.updatedAt).toLocaleDateString()}
       </p>
+      <p className="mt-4 font-mono text-sm text-muted-foreground">{pkg.urlPatterns.join(", ")}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{pkg.description}</p>
       {pkg.changelog && (
         <p className="mt-2 text-xs text-muted-foreground">
           <span className="font-semibold">What changed in v{pkg.version}:</span> {pkg.changelog}
@@ -60,12 +60,12 @@ export default async function PackagePage({
           version={targetVersion}
           autoFocus={installTarget !== null}
         />
-        <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           Installing saves v{targetVersion} in your browser — nothing is tied to your account. The
           extension registers its tools whenever you&apos;re on a matching page, and you stay on v
           {targetVersion} until you update.
         </p>
-        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           Needs the extension on Chrome 149+ with the WebMCP testing flag.{" "}
           <Link href="/extension" className="text-foreground underline underline-offset-4">
             Get the extension →
@@ -73,31 +73,27 @@ export default async function PackagePage({
         </p>
       </div>
 
-      <h2 className="mt-8 mb-3 text-lg font-semibold">Tools ({pkg.tools.length})</h2>
-      <ul className="flex flex-col gap-4">
+      <h2 className="mt-10 text-sm font-semibold">Tools ({pkg.tools.length})</h2>
+      <ul className="mt-4 flex flex-col gap-4">
         {pkg.tools.map((tool) => (
-          <li key={tool.name}>
-            <Card>
-              <CardContent>
-                <div className="flex items-baseline gap-2">
-                  <code className="font-semibold">{tool.name}</code>
-                  {tool.annotations?.readOnlyHint && <Badge variant="success">read-only</Badge>}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-muted-foreground">
-                    Show input schema and execution
-                  </summary>
-                  <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 font-mono text-xs">
-                    {JSON.stringify(
-                      { inputSchema: tool.inputSchema, execution: tool.execution },
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </details>
-              </CardContent>
-            </Card>
+          <li key={tool.name} className="rounded-2xl border bg-card p-4">
+            <div className="flex items-baseline gap-2">
+              <code className="font-semibold">{tool.name}</code>
+              {tool.annotations?.readOnlyHint && <Badge variant="success">read-only</Badge>}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{tool.description}</p>
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs text-muted-foreground">
+                Show input schema and execution
+              </summary>
+              <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/50 p-3 font-mono text-xs">
+                {JSON.stringify(
+                  { inputSchema: tool.inputSchema, execution: tool.execution },
+                  null,
+                  2,
+                )}
+              </pre>
+            </details>
           </li>
         ))}
       </ul>
