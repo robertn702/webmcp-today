@@ -5,7 +5,7 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 ## Routes
 
 - `app/page.tsx` is the **public landing page** — full-bleed, outside any container.
-  Its two staged diagrams are derived from `ARCHITECTURE.md`'s runtime/data flow
+  Its staged diagram is derived from `ARCHITECTURE.md`'s runtime/data flow
   sequences (`components/landing/mode-flows.ts`); if those flows change, change the copy.
 - Everything else lives in the `app/(registry)/` route group, whose layout supplies the
   shared `max-w-5xl` container. Route groups don't affect URLs — `/packages`, `/submit`,

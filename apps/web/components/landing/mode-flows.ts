@@ -1,9 +1,9 @@
 import type { FlowNode, FlowStep } from "./flow-diagram";
 
 /**
- * The two ways a package actually reaches an agent. Both sequences are taken
- * from ARCHITECTURE.md ("Runtime flow — tool registration/invocation" and
- * "Data flow — publish, install, serve"); keep them in step with that doc.
+ * How a package actually reaches an agent. The sequence is taken from
+ * ARCHITECTURE.md ("Runtime flow — tool registration/invocation" and
+ * "Data flow — publish, install, serve"); keep it in step with that doc.
  */
 
 export const llmFirstNodes: readonly FlowNode[] = [
@@ -88,103 +88,5 @@ export const llmFirstSteps: readonly FlowStep[] = [
     to: "site",
     title: "And the tools appear on the page",
     body: "The extension registers each pinned tool with `document.modelContext.registerTool()`. Your agent now calls `reddit_comment` instead of hunting for a textarea.",
-  },
-];
-
-export const inBrowserNodes: readonly FlowNode[] = [
-  {
-    id: "site",
-    kicker: "Target",
-    label: "The site",
-    detail: "no WebMCP of its own",
-    col: 1,
-    row: 1,
-  },
-  {
-    id: "cs",
-    kicker: "Extension",
-    label: "Content script",
-    detail: "document_idle",
-    col: 2,
-    row: 1,
-  },
-  {
-    id: "bg",
-    kicker: "Extension",
-    label: "Background worker",
-    detail: "MV3 service worker",
-    col: 3,
-    row: 1,
-  },
-  {
-    id: "mc",
-    kicker: "The page",
-    label: "document.modelContext",
-    detail: "injected tools",
-    col: 2,
-    row: 2,
-  },
-  {
-    id: "store",
-    kicker: "Extension",
-    label: "Local installs",
-    detail: "chrome.storage.local",
-    col: 3,
-    row: 2,
-  },
-  { id: "you", kicker: "You", label: "A chat box", col: 1, row: 3 },
-  {
-    id: "agent",
-    kicker: "Agent",
-    label: "The browser's agent",
-    detail: "in-page / built-in",
-    col: 2,
-    row: 3,
-  },
-];
-
-export const inBrowserSteps: readonly FlowStep[] = [
-  {
-    from: "site",
-    to: "cs",
-    title: "You open a page",
-    body: "At `document_idle` the extension's content script wakes up on whatever site you're on. You're signed in, cookies and all.",
-  },
-  {
-    from: "cs",
-    to: "bg",
-    title: "The content script hands the URL off",
-    body: "The background worker holds the install index and the revocation check, so `browser.runtime.sendMessage` passes the URL to the worker rather than each frame reading storage directly.",
-  },
-  {
-    from: "bg",
-    to: "store",
-    title: "Match against your installed packages",
-    body: "The worker reads the install index from local storage and matches the URL with `domainLookupKeys` + `rankPackagesByUrl`. Only packages you've explicitly installed register — nothing auto-discovers — and revoked versions are dropped at registration time.",
-  },
-  {
-    from: "store",
-    to: "mc",
-    title: "Matching tools get registered",
-    body: "A package whose `minEngine` outranks the extension is skipped whole, never half-registered. The rest go in tool by tool via `registerTool()`. Any name the site already claimed is left alone.",
-  },
-  {
-    from: "you",
-    to: "agent",
-    title: "You ask the browser's agent",
-    body: "No terminal, no API key, no MCP config. Installing the extension is the entire setup.",
-  },
-  {
-    from: "agent",
-    to: "mc",
-    title: "It sees injected tools as ordinary page tools",
-    body: "WebMCP tools carry no provenance today, so a community package is indistinguishable from one the site shipped itself.",
-  },
-  {
-    from: "mc",
-    to: "site",
-    elbow: "horizontal",
-    title: "The executor does the work",
-    body: "A same-origin API call riding the cookies you already have — no DOM selectors, no scraping. Anything flagged `destructiveHint` stops for a confirm dialog.",
   },
 ];
