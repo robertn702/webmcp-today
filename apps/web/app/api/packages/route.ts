@@ -1,7 +1,13 @@
 import { createPackageSchema } from "@robertn702/webmcp-today-schema";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
-import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";
+import {
+  acceptedSubmission,
+  jsonError,
+  parseBody,
+  VersionConflictError,
+  versionConflict,
+} from "@/lib/http";
 import { insertPackage } from "@/lib/mutations";
 import { listPackages } from "@/lib/packages-repo";
 
@@ -29,6 +35,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   const body = await parseBody(request, createPackageSchema);
   if (!body.ok) return body.response;
 
-  const { packageId } = await insertPackage(body.data, userId);
-  return acceptedSubmission(request, { id: packageId }, `/api/packages/${packageId}`);
+  try {
+    const { packageId } = await insertPackage(body.data, userId);
+    return acceptedSubmission(request, { id: packageId }, `/api/packages/${packageId}`);
+  } catch (err) {
+    if (err instanceof VersionConflictError) return versionConflict(err);
+    throw err;
+  }
 }

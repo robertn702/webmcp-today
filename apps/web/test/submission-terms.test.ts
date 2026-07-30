@@ -61,6 +61,7 @@ describe("publish routes — submission terms", () => {
   it("returns the terms alongside a new version", async () => {
     const response = await postVersion(
       post("https://webmcp.today/api/packages/pkg-1/versions", {
+        version: 2,
         urlPatterns: pkg.urlPatterns,
         tools: pkg.tools,
         api: pkg.api,

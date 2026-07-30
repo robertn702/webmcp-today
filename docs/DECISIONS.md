@@ -248,3 +248,16 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   drift, which is the same rot philosophy as `returns`. Consequence: patterns are
   interpolated RAW with `{{param}}` (nothing regex-escapes them) — params in patterns
   must stay identifier-shaped; that constraint lives in the schema comments, not code.
+
+- 2026-07-29 — **Versions are author-declared positive integers in the package
+  definition, validated `=== max(version)+1` at publish.** Registry-assigned
+  versions meant a publish couldn't fail on staleness: two authors' agents (or
+  one agent working from a cached snapshot) would both succeed, and the second
+  silently superseded content the author never saw. Declaring the number makes
+  the stale-snapshot case a 409 carrying `expectedVersion` — the same shape as
+  the concurrent-publish race, so callers handle one conflict path. Rejected:
+  semver (the format has no patch releases — same reasoning as `minEngine`,
+  2026-07-24) and keeping server-side assignment with an `If-Match`-style
+  precondition header (a second version source of truth outside the document;
+  the declared field is the document). The DB is unchanged —
+  `uq_package_versions_package_version` is now just the race backstop.

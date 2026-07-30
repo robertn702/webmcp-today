@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createPackageSchema } from "../src/index.js";
+import {
+  createPackageSchema,
+  publishVersionSchema,
+  updatePackageMetaSchema,
+} from "../src/index.js";
 
 const baseTool = {
   name: "search",
@@ -12,6 +16,7 @@ const baseTool = {
 };
 
 const baseConfig = {
+  version: 1,
   domain: "Example.com",
   urlPatterns: ["*://example.com/search*"],
   title: "Example search",
@@ -23,6 +28,35 @@ describe("createPackageSchema", () => {
   it("normalizes domain (lowercase, strips www.)", () => {
     const parsed = createPackageSchema.parse({ ...baseConfig, domain: "WWW.Example.com" });
     expect(parsed.domain).toBe("example.com");
+  });
+
+  it("requires an author-declared positive-integer version", () => {
+    const noVersion: Record<string, unknown> = { ...baseConfig };
+    delete noVersion.version;
+    expect(createPackageSchema.safeParse(noVersion).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, version: 0 }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, version: 1.5 }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, version: "1.0.0" }).success).toBe(false);
+    expect(createPackageSchema.safeParse({ ...baseConfig, version: 2 }).success).toBe(true);
+  });
+
+  it("carries version into publishVersionSchema but not updatePackageMetaSchema", () => {
+    expect(
+      publishVersionSchema.safeParse({
+        version: 2,
+        urlPatterns: baseConfig.urlPatterns,
+        tools: baseConfig.tools,
+      }).success,
+    ).toBe(true);
+    expect(
+      publishVersionSchema.safeParse({
+        urlPatterns: baseConfig.urlPatterns,
+        tools: baseConfig.tools,
+      }).success,
+    ).toBe(false);
+    // Meta edits never create versions, so a declared version is stripped, not kept.
+    const meta = updatePackageMetaSchema.parse({ title: "New title", version: 7 });
+    expect("version" in meta).toBe(false);
   });
 
   it("rejects urlPatterns that aren't valid match patterns", () => {

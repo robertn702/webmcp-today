@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "domain": "news.ycombinator.com",
   "urlPatterns": ["*://news.ycombinator.com/*"],
   "title": "Hacker News (write tools)",

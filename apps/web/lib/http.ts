@@ -57,3 +57,25 @@ export function acceptedSubmission(
 export function isUniqueViolation(err: unknown): boolean {
   return err instanceof Error && err.message.includes("duplicate key value");
 }
+
+/**
+ * The declared `version` didn't match what publish requires (1 on create,
+ * `max(version)+1` on a new version) — either the author based their change
+ * on a stale snapshot or two publishes raced. Thrown by the mutation layer,
+ * mapped to a 409 by the route handlers; `expectedVersion` tells the caller
+ * what to declare on retry.
+ */
+export class VersionConflictError extends Error {
+  constructor(public readonly expectedVersion: number) {
+    super(`Declared version does not match; expected version ${expectedVersion}`);
+    this.name = "VersionConflictError";
+  }
+}
+
+/** 409 body for a VersionConflictError — carries the expected number so the caller can retry. */
+export function versionConflict(err: VersionConflictError): NextResponse {
+  return NextResponse.json(
+    { error: err.message, expectedVersion: err.expectedVersion },
+    { status: 409 },
+  );
+}

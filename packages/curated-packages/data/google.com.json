@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "domain": "google.com",
   "urlPatterns": ["*://www.google.com/maps/*", "*://google.com/maps/*"],
   "title": "Google Maps (internal web API)",

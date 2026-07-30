@@ -38,7 +38,7 @@ for (const input of curatedPackages) {
   }
   await db.insert(packageVersions).values({
     packageId: pkg.id,
-    version: 1,
+    version: input.version,
     urlPatterns: input.urlPatterns,
     tools: input.tools,
     api: input.api,

@@ -106,8 +106,11 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## Package format
 
-- `{ domain, urlPatterns[], title, description, tools[], changelog? }`; `urlPatterns` is
+- `{ version, domain, urlPatterns[], title, description, tools[], changelog? }`; `urlPatterns` is
   Chrome `@match`-style (`scheme://host/path`), versioned alongside `tools`.
+- `version`: author-declared positive integer (not semver) — `1` on create, exactly
+  `max(version)+1` on publish, or the API 409s with `expectedVersion`
+  (docs/DECISIONS.md 2026-07-29).
 - Tool `execution` is `api`-mode only: the tool binds to an entry in the
   package-level `api.endpoints` block by name. (DOM execution was cut
   pre-launch — `docs/DECISIONS.md` 2026-07-28.)

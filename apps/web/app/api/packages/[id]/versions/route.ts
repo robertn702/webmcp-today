@@ -4,7 +4,13 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
 import { db } from "@/lib/db";
-import { acceptedSubmission, jsonError, parseBody } from "@/lib/http";
+import {
+  acceptedSubmission,
+  jsonError,
+  parseBody,
+  VersionConflictError,
+  versionConflict,
+} from "@/lib/http";
 import { publishVersion } from "@/lib/mutations";
 import { listVersions } from "@/lib/packages-repo";
 
@@ -53,10 +59,15 @@ export async function POST(
   const body = await parseBody(request, publishVersionSchema);
   if (!body.ok) return body.response;
 
-  const { versionId, version } = await publishVersion(id, body.data);
-  return acceptedSubmission(
-    request,
-    { versionId, version },
-    `/api/packages/${id}/versions/${versionId}`,
-  );
+  try {
+    const { versionId, version } = await publishVersion(id, body.data);
+    return acceptedSubmission(
+      request,
+      { versionId, version },
+      `/api/packages/${id}/versions/${versionId}`,
+    );
+  } catch (err) {
+    if (err instanceof VersionConflictError) return versionConflict(err);
+    throw err;
+  }
 }

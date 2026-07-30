@@ -7,7 +7,7 @@ import {
 import { installs, packages, packageVersions } from "@webmcp-today/db";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { isUniqueViolation } from "./http";
+import { isUniqueViolation, VersionConflictError } from "./http";
 
 // neon-http has no transactions; inserts are sequential. Acceptable for v1 —
 // a failed version insert leaves a package with no versions, invisible to
@@ -17,6 +17,9 @@ export async function insertPackage(
   input: CreatePackageInput,
   contributorId: string,
 ): Promise<{ packageId: string; versionId: string }> {
+  // Versions are author-declared: a new package must declare version 1.
+  if (input.version !== 1) throw new VersionConflictError(1);
+
   const [pkg] = await db
     .insert(packages)
     .values({
@@ -33,7 +36,7 @@ export async function insertPackage(
     .insert(packageVersions)
     .values({
       packageId: pkg.id,
-      version: 1,
+      version: input.version,
       urlPatterns: input.urlPatterns,
       tools: input.tools,
       api: input.api,
@@ -56,60 +59,63 @@ export async function updatePackageMeta(
   await db.update(packages).set(meta).where(eq(packages.id, packageId));
 }
 
-/** Append-only: insert the next version for an existing package.
+/** Append-only: insert the author-declared next version for an existing package.
  *
- * neon-http has no transactions, so `max(version)+1` and the insert are separate
- * round-trips: two concurrent publishes can read the same max and race for
- * `uq_package_versions_package_version`. The loser hits a unique violation
- * rather than a 500 — re-read the max and retry the next number. */
-const PUBLISH_MAX_ATTEMPTS = 3;
-
+ * The declared version must equal `max(version)+1` exactly — a mismatch means
+ * the author based their change on a stale snapshot (optimistic concurrency).
+ * neon-http has no transactions, so the max read and the insert are separate
+ * round-trips: two concurrent publishes can both declare the same number and
+ * race for `uq_package_versions_package_version`. The loser's unique
+ * violation maps to the same conflict as a stale declaration. */
 export async function publishVersion(
   packageId: string,
   input: PublishVersionInput,
 ): Promise<{ versionId: string; version: number }> {
-  // Depends only on the api block, so it survives a collision retry unchanged.
   const contentHash = input.api ? apiContentHash(input.api) : null;
 
-  for (let attempt = 1; attempt <= PUBLISH_MAX_ATTEMPTS; attempt++) {
-    const [row] = await db
-      .select({ maxVersion: sql<number>`coalesce(max(${packageVersions.version}), 0)` })
-      .from(packageVersions)
-      .where(eq(packageVersions.packageId, packageId));
-    const nextVersion = (row?.maxVersion ?? 0) + 1;
+  const maxVersion = await readMaxVersion(packageId);
+  const expectedVersion = maxVersion + 1;
+  if (input.version !== expectedVersion) throw new VersionConflictError(expectedVersion);
 
-    let version: { id: string } | undefined;
-    try {
-      [version] = await db
-        .insert(packageVersions)
-        .values({
-          packageId,
-          version: nextVersion,
-          urlPatterns: input.urlPatterns,
-          tools: input.tools,
-          api: input.api,
-          apiContentHash: contentHash,
-          minEngine: input.minEngine,
-          changelog: input.changelog,
-        })
-        .returning({ id: packageVersions.id });
-    } catch (err) {
-      // A concurrent publish took this number; re-read the max and try again.
-      if (isUniqueViolation(err) && attempt < PUBLISH_MAX_ATTEMPTS) continue;
-      throw err;
+  let version: { id: string } | undefined;
+  try {
+    [version] = await db
+      .insert(packageVersions)
+      .values({
+        packageId,
+        version: input.version,
+        urlPatterns: input.urlPatterns,
+        tools: input.tools,
+        api: input.api,
+        apiContentHash: contentHash,
+        minEngine: input.minEngine,
+        changelog: input.changelog,
+      })
+      .returning({ id: packageVersions.id });
+  } catch (err) {
+    // A concurrent publish took this number between our max read and insert.
+    if (isUniqueViolation(err)) {
+      throw new VersionConflictError((await readMaxVersion(packageId)) + 1);
     }
-    if (!version) throw new Error("Version insert returned no row");
-
-    // Deliberate touch (not a redundant write): bumps the parent row so browse
-    // ordering (orderBy(desc(packages.updatedAt)) in packages-repo.ts) surfaces
-    // newly-versioned packages. The mdt_packages trigger overwrites this value
-    // with now() anyway; an empty SET would be invalid SQL, so this stays.
-    await db.update(packages).set({ updatedAt: new Date() }).where(eq(packages.id, packageId));
-
-    return { versionId: version.id, version: nextVersion };
+    throw err;
   }
-  // Unreachable: the loop returns on success and throws on the final attempt.
-  throw new Error("publishVersion: exhausted version-collision retries");
+  if (!version) throw new Error("Version insert returned no row");
+
+  // Deliberate touch (not a redundant write): bumps the parent row so browse
+  // ordering (orderBy(desc(packages.updatedAt)) in packages-repo.ts) surfaces
+  // newly-versioned packages. The mdt_packages trigger overwrites this value
+  // with now() anyway; an empty SET would be invalid SQL, so this stays.
+  await db.update(packages).set({ updatedAt: new Date() }).where(eq(packages.id, packageId));
+
+  return { versionId: version.id, version: input.version };
+}
+
+async function readMaxVersion(packageId: string): Promise<number> {
+  const [row] = await db
+    .select({ maxVersion: sql<number>`coalesce(max(${packageVersions.version}), 0)` })
+    .from(packageVersions)
+    .where(eq(packageVersions.packageId, packageId));
+  return row?.maxVersion ?? 0;
 }
 
 /**

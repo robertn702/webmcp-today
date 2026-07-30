@@ -21,7 +21,7 @@ export function registerWriteTools(server: McpServer, client: RegistryClient): v
     "publish_package",
     {
       description:
-        "Publish a new WebMCP package to the registry as a fresh package + version 1 (validated against @robertn702/webmcp-today-schema). Requires an API key.",
+        "Publish a new WebMCP package to the registry as a fresh package whose version field must declare 1 (validated against @robertn702/webmcp-today-schema). Requires an API key.",
       inputSchema: { package: createPackageSchema.describe("The package to publish") },
     },
     async ({ package: pkg }) => jsonResult(await client.create(pkg)),
@@ -44,10 +44,12 @@ export function registerWriteTools(server: McpServer, client: RegistryClient): v
     "publish_package_version",
     {
       description:
-        "Publish the next version of a package you contributed (urlPatterns + tools + optional api, minEngine, changelog) — owner only, append-only. Installed users stay pinned until they move their install pin. Requires an API key.",
+        "Publish the next version of a package you contributed (urlPatterns + tools + optional api, minEngine, changelog) — owner only, append-only. The version field is author-declared and must equal the current latest version + 1 exactly (query the package first to see it); a 409 response returns the expectedVersion to declare on retry. Installed users stay pinned until they move their install pin. Requires an API key.",
       inputSchema: {
         id: z.string().describe("Package id"),
-        version: publishVersionSchema.describe("The new version's urlPatterns, tools, changelog"),
+        version: publishVersionSchema.describe(
+          "The new version's declared version number (latest + 1), urlPatterns, tools, changelog",
+        ),
       },
     },
     async ({ id, version }) => jsonResult(await client.publishVersion(id, version)),
