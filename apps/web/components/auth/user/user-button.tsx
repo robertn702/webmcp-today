@@ -1,10 +1,10 @@
 "use client";
 
 import { useAuth, useSession, useSetActiveSession } from "@better-auth-ui/react";
-import { ChevronsUpDown, LogIn, LogOut, Settings, UserPlus2 } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import {
   DropdownMenu,
@@ -96,6 +96,23 @@ export function UserButton({
   const { isPending: settingActiveSession } = useSetActiveSession(authClient);
   const { data: session, isPending: sessionPending } = useSession(authClient);
 
+  const isUnauthenticated = !session && !sessionPending && !settingActiveSession;
+
+  if (isUnauthenticated) {
+    return (
+      <Button
+        className={cn(className)}
+        onClick={() =>
+          navigate({
+            to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
+          })
+        }
+      >
+        {localization.auth.signIn}
+      </Button>
+    );
+  }
+
   const userLinks = links?.flatMap((link, index) => {
     if (!isValidElement(link)) {
       const visibility = link.visibility ?? "always";
@@ -122,17 +139,7 @@ export function UserButton({
           <UserAvatar className="size-6" />
         ) : (
           <>
-            {session || sessionPending || settingActiveSession ? (
-              <UserView isPending={!!settingActiveSession} />
-            ) : (
-              <>
-                <UserAvatar />
-
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  {localization.auth.account}
-                </div>
-              </>
-            )}
+            <UserView isPending={!!settingActiveSession} />
 
             <ChevronsUpDown className="ml-auto size-4" />
           </>
@@ -144,91 +151,49 @@ export function UserButton({
         sideOffset={sideOffset}
         align={align}
       >
-        {session && (
-          <>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-sm font-normal">
-                <UserView hideAvatar />
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-sm font-normal">
+            <UserView hideAvatar />
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
-          </>
+        <DropdownMenuSeparator />
+
+        {userLinks}
+
+        {!hideSettings && (
+          <DropdownMenuItem
+            onClick={() =>
+              navigate({
+                to: `${basePaths.settings}/${viewPaths.settings.account}`,
+              })
+            }
+          >
+            <Settings className="text-muted-foreground" />
+
+            {localization.settings.settings}
+          </DropdownMenuItem>
         )}
 
-        {session ? (
-          <>
-            {userLinks}
-
-            {!hideSettings && (
-              <DropdownMenuItem
-                onClick={() =>
-                  navigate({
-                    to: `${basePaths.settings}/${viewPaths.settings.account}`,
-                  })
-                }
-              >
-                <Settings className="text-muted-foreground" />
-
-                {localization.settings.settings}
-              </DropdownMenuItem>
-            )}
-
-            {plugins.flatMap((plugin) =>
-              plugin.userMenuItems?.map((Item, index) => (
-                <Item key={`${plugin.id}-${index.toString()}`} />
-              )),
-            )}
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signOut}`,
-                })
-              }
-            >
-              <LogOut className="text-muted-foreground" />
-
-              {localization.auth.signOut}
-            </DropdownMenuItem>
-          </>
-        ) : (
-          <>
-            {userLinks}
-
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
-                })
-              }
-            >
-              <LogIn className="text-muted-foreground" />
-
-              {localization.auth.signIn}
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signUp}`,
-                })
-              }
-            >
-              <UserPlus2 className="text-muted-foreground" />
-
-              {localization.auth.signUp}
-            </DropdownMenuItem>
-
-            {plugins.flatMap((plugin) =>
-              plugin.userMenuItems?.map((Item, index) => (
-                <Item key={`${plugin.id}-${index.toString()}`} />
-              )),
-            )}
-          </>
+        {plugins.flatMap((plugin) =>
+          plugin.userMenuItems?.map((Item, index) => (
+            <Item key={`${plugin.id}-${index.toString()}`} />
+          )),
         )}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={() =>
+            navigate({
+              to: `${basePaths.auth}/${viewPaths.auth.signOut}`,
+            })
+          }
+        >
+          <LogOut className="text-muted-foreground" />
+
+          {localization.auth.signOut}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
