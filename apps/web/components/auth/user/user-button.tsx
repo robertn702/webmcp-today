@@ -99,17 +99,31 @@ export function UserButton({
   const isUnauthenticated = !session && !sessionPending && !settingActiveSession;
 
   if (isUnauthenticated) {
+    // Vercel/Linear pattern: sign-up is the emphasized CTA for new visitors,
+    // sign-in stays as a quiet secondary action beside it.
     return (
-      <Button
-        className={cn(className)}
-        onClick={() =>
-          navigate({
-            to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
-          })
-        }
-      >
-        {localization.auth.signIn}
-      </Button>
+      <>
+        <Button
+          variant="ghost"
+          onClick={() =>
+            navigate({
+              to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
+            })
+          }
+        >
+          {localization.auth.signIn}
+        </Button>
+        <Button
+          className={cn(className)}
+          onClick={() =>
+            navigate({
+              to: `${basePaths.auth}/${viewPaths.auth.signUp}`,
+            })
+          }
+        >
+          {localization.auth.signUp}
+        </Button>
+      </>
     );
   }
 

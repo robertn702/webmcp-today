@@ -14,7 +14,8 @@ export function DesktopNavLinks() {
   const pathname = usePathname();
 
   return (
-    <div className="hidden items-center gap-2 md:flex">
+    // ml-2 widens the logo→links gap so wayfinding reads as two groups.
+    <div className="ml-2 hidden items-center gap-2 md:flex">
       {NAV_LINKS.map((link) => {
         const isActive = isNavLinkActive(pathname, link.href);
         return (
