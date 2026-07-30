@@ -21,6 +21,7 @@ implemented WebMCP — "Greasyfork for the agentic web".
 apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — package lookup + tool injection
 packages/schema/            @robertn702/webmcp-today-schema — zod package format (not yet published to npm); keystone, all consumers validate against it
+packages/engine/            @robertn702/webmcp-today-engine — API execution engine (not yet published to npm); MIT, consumed by the extension
 packages/db/                Drizzle + Neon — schema + client
 packages/curated-packages/  @webmcp-today/curated-packages — curated first-party packages (registry seed source)
 packages/mcp/               @robertn702/webmcp-today-mcp — MCP server (not yet published to npm)

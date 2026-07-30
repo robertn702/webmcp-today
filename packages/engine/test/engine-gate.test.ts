@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ENGINE_VERSION } from "@robertn702/webmcp-today-schema";
-import { requiredEngineLevel, supportsPackageEngine } from "../src/lib/engine-gate.js";
+import { requiredEngineLevel, supportsPackageEngine } from "../src/engine-gate.js";
 
 describe("engine-gate", () => {
   it("defaults a package without minEngine to level 1", () => {

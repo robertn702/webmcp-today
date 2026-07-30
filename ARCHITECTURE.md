@@ -63,6 +63,11 @@ flowchart LR
   install packages without a browser. Thin client over the same REST API.
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
   against; published as `@robertn702/webmcp-today-schema`.
+- **`packages/engine`** — the execution engine
+  (`@robertn702/webmcp-today-engine`, MIT): turns a package's declarative `api`
+  block into same-origin HTTP requests, plus the `minEngine` gate. Extracted from
+  the extension for license separation (`docs/DECISIONS.md` 2026-07-30); the
+  extension is its only consumer today.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
 - **`packages/curated-packages`** — the curated first-party corpus
   (`@webmcp-today/curated-packages`): the registry's seed source.
@@ -72,6 +77,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     schema["packages/schema<br/>(published)"]
+    engine["packages/engine<br/>(published)"]
     db["packages/db"]
     defs["packages/curated-packages"]
     web["apps/web"]
@@ -82,6 +88,8 @@ flowchart TD
     web --> db
     web --> defs
     ext --> schema
+    ext --> engine
+    engine --> schema
     mcp --> schema
     defs --> schema
 ```

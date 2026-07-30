@@ -83,7 +83,7 @@ Revisit if a single package approaches ~100 KB.
 Migrate in `runtime.onInstalled` (`reason === "update"`) **and** check defensively at worker
 start. If the stored version is **newer** than the build (downgrade, profile sync), treat storage
 as unreadable and register nothing rather than guessing — the same invariant `minEngine` already
-enforces for package content (`apps/extension/src/lib/engine-gate.ts:16`): never half-run content
+enforces for package content (`packages/engine/src/engine-gate.ts:16`): never half-run content
 a build doesn't understand. Migrations are pure functions over the parsed object, unit-testable
 without a browser.
 

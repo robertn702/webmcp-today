@@ -125,7 +125,7 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   (docs/api-execution-model.md → "MV3 constraints + spike plan", build-order 4)
 - **APQ / `persistedQuery` support** — executor currently throws on it; needs
   hash + retry + cross-call cache. Blocks any real GraphQL package (e.g. Reddit
-  shreddit search). (apps/extension/src/lib/api-executor.ts TODO;
+  shreddit search). (packages/engine/src/api-executor.ts TODO;
   docs/api-execution-model.md → "GraphQL support")
 
 ### Design questions (need a decision before building)

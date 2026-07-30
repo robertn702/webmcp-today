@@ -1,7 +1,7 @@
 import { search, type JSONValue } from "@jmespath-community/jmespath";
 import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@robertn702/webmcp-today-schema";
 import { mcpResult } from "./mcp-result.js";
-import type { McpResult } from "./model-context.js";
+import type { McpResult } from "./result.js";
 
 // Tier-1 "derived-call engine": turns a package's declarative `api` block plus a
 // tool's `execution: { mode: "api", endpoint }` into an actual HTTP request,
