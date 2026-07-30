@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Browse packages",
-  description: "Community WebMCP tool packages, newest version of each.",
+  description: "Community WebMCP packages, newest version of each.",
 };
 
 export default async function PackagesPage() {

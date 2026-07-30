@@ -8,7 +8,7 @@ export function registerReadTools(server: McpServer, client: RegistryClient): vo
     "lookup_package",
     {
       description:
-        "Look up WebMCP tool packages for a page URL, at each package's latest version. Returns matches most-specific-pattern first.",
+        "Look up WebMCP packages for a page URL, at each package's latest version. Returns matches most-specific-pattern first.",
       inputSchema: {
         url: z.string().describe("Full page URL, e.g. https://news.ycombinator.com/item?id=1"),
       },

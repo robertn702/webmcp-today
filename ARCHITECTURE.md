@@ -1,6 +1,6 @@
 # WebMCP Today — Architecture
 
-Community registry of third-party **WebMCP tool packages** injected into sites that
+Community registry of third-party **WebMCP packages** injected into sites that
 haven't implemented WebMCP — "Greasyfork for the agentic web". This document is the
 map of how the pieces fit together. Companion docs:
 

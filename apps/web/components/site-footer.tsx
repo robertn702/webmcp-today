@@ -12,7 +12,7 @@ export function SiteFooter() {
     <footer className="border-t">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8">
         <p className="font-mono text-xs text-muted-foreground">
-          ⚡ webmcp.today · a community registry of WebMCP tool packages.
+          ⚡ webmcp.today · a community registry of WebMCP packages.
         </p>
         <div className="flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
           <Link href="/packages" className="hover:text-foreground hover:underline">

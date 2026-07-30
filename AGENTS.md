@@ -1,6 +1,6 @@
 # AGENTS.md — WebMCP Today
 
-Community registry of third-party WebMCP tool packages injected into sites that haven't
+Community registry of third-party WebMCP packages injected into sites that haven't
 implemented WebMCP — "Greasyfork for the agentic web".
 
 ## Status: PRE-PRODUCTION (delete this section on launch)

@@ -1,6 +1,6 @@
 # WebMCP Today extension
 
-WXT extension that injects community WebMCP tool packages into sites that haven't
+WXT extension that injects community WebMCP packages into sites that haven't
 implemented WebMCP themselves. It fetches each package's latest published
 version for the current page from the webmcp.today registry API, falling back to
 the bundled curated packages (`@webmcp-today/curated-packages`) when the registry has
