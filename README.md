@@ -63,7 +63,7 @@ bun install
 cp apps/web/.env.example apps/web/.env   # then fill real values
 ```
 
-`apps/web/.env` needs `DATABASE_URL` (Neon), `BETTER_AUTH_SECRET` (`openssl rand -base64 32`), `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` (GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`), and `BETTER_AUTH_URL=http://localhost:3000`.
+`apps/web/.env` needs `DATABASE_URL` (Neon), a per-environment `BETTER_AUTH_SECRET` (`openssl rand -base64 32`), a shared `OAUTH_PROXY_SECRET` for local/Preview/Production (`openssl rand -base64 32`), the development GitHub OAuth App credentials (callback `http://localhost:3000/api/auth/callback/github`), and `BETTER_AUTH_URL=http://localhost:3000`. Leave `OAUTH_PROXY_PRODUCTION_URL` unset locally; in Vercel Preview and Production it is `https://webmcp.today` and routes OAuth through the production GitHub OAuth App callback.
 
 ```bash
 bun run --filter @webmcp-today/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon

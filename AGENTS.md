@@ -89,7 +89,7 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - Once a package is published to npm, its `files` array must list `LICENSE`.
 - `CLAUDE.md` symlinks to `AGENTS.md` (pre-commit auto-creates) — never diverge them.
 - Env: `apps/web/.env.example` lists required vars (`DATABASE_URL`, GitHub OAuth,
-  `BETTER_AUTH_SECRET`).
+  `BETTER_AUTH_SECRET`, `OAUTH_PROXY_SECRET`, `OAUTH_PROXY_PRODUCTION_URL`).
 
 ## WebMCP essentials (July 2026)
 

@@ -4,6 +4,8 @@
     "DATABASE_URL",
     "DATABASE_URL_UNPOOLED",
     "BETTER_AUTH_SECRET",
+    "OAUTH_PROXY_SECRET",
+    "OAUTH_PROXY_PRODUCTION_URL",
     "BETTER_AUTH_URL",
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
@@ -19,6 +21,7 @@
     "SENTRY_ORG",
     "SENTRY_PROJECT"
   ],
+  "globalPassThroughEnv": ["VERCEL_URL", "VERCEL_BRANCH_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
