@@ -17,3 +17,15 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun run test
+
+      # Unsigned (no WXT_EXTENSION_KEY): a random per-profile ID, so the
+      # install bridge on webmcp.today won't answer. This artifact is for
+      # eyeballing a build, not for testing installs — cut a tag for that.
+      - name: Build extension ZIP
+        run: bun run --filter @webmcp-today/extension zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-unsigned-${{ github.sha }}
+          path: apps/extension/.output/*.zip
+          if-no-files-found: error
+          retention-days: 14

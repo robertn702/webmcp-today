@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "mkdir -p .wxt/chrome-profile && wxt",
     "build": "wxt build",
+    "zip": "wxt zip",
     "postinstall": "wxt prepare",
     "typecheck": "wxt prepare && tsc --noEmit",
     "test": "vitest run"

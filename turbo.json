@@ -24,6 +24,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", ".output/**"]
     },
+    "zip": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"]
     },

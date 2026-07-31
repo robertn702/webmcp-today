@@ -37,6 +37,34 @@ CWS-assigned ID joins the list after first store upload). **NEVER commit
 `key.pem` or the key value** — both stay in untracked local config only. A new
 key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
 
+## Self-hosted GitHub releases (while CWS is in review)
+
+`.github/workflows/release-extension.yml` builds and publishes the ZIP; CI
+uploads an unsigned ZIP artifact per commit for eyeballing a build only.
+
+- Cut a release: bump `apps/extension/package.json` version, merge, then
+  `git tag extension-v<version> && git push origin extension-v<version>`.
+  The workflow fails if the tag and package version disagree, re-runs
+  typecheck/lint/test (a tag can come off any commit), and attaches the ZIP
+  plus `SHA256SUMS`. `workflow_dispatch` with an existing tag re-runs it.
+- **Release keypair ≠ dev keypair.** The release `key.pem` lives in 1Password
+  (robertn702 → Private, "WebMCP Today extension release key"); the base64
+  public key is the repo **variable** `WXT_EXTENSION_KEY` (a variable, not a
+  secret — it ships inside `manifest.json`, and secrets would be masked in
+  logs for no gain). Release extension ID:
+  `lldklnhkedjeiggmdfligbcpdebgaaji` — it must be in Vercel's
+  `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS` or install buttons report the extension
+  absent. Losing `key.pem` is not fatal (the manifest only carries the public
+  half) but changing the key changes the ID and orphans every existing install.
+- The workflow hard-fails when the variable is unset rather than shipping an
+  unpinned build: without a manifest `key` an unpacked extension's ID derives
+  from its directory path, so every user gets a different ID and the install
+  bridge never answers.
+- Off-store distribution is ZIP + **Load unpacked** only. Branded Chrome
+  refuses `.crx` sideloads outside enterprise policy, so there are no
+  auto-updates — users re-download, and Chrome nags about developer-mode
+  extensions each launch.
+
 ## Gotchas (hard-won 2026-07-23)
 
 - **One dev instance only.** A second `bun run dev` crashes on the Chrome profile

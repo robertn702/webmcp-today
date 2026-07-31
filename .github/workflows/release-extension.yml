@@ -1,0 +1,93 @@
+name: Release extension
+
+# Tag-triggered, decoupled from the web app's Vercel deploys. Cut a release
+# with:
+#   git tag extension-v1.0.1 && git push origin extension-v1.0.1
+# The tag version must equal apps/extension/package.json's version — the guard
+# below fails the run rather than publishing a mislabeled ZIP.
+on:
+  push:
+    tags: ["extension-v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing extension-v* tag to re-release
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+
+      - name: Check tag matches package version
+        id: version
+        run: |
+          tag="${{ inputs.tag || github.ref_name }}"
+          pkg=$(node -p "require('./apps/extension/package.json').version")
+          if [ "$tag" != "extension-v$pkg" ]; then
+            echo "::error::tag $tag does not match apps/extension/package.json version $pkg (expected extension-v$pkg)"
+            exit 1
+          fi
+          echo "version=$pkg" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # A tag can be cut from any commit, so re-run the gates rather than
+      # trusting main's green run.
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+
+      # WXT_EXTENSION_KEY pins the extension ID across releases. Without it
+      # Chrome derives the ID from the unpacked directory path — a different ID
+      # per user — and the install bridge on webmcp.today never answers, since
+      # apps/web/lib/extension-bridge.ts probes a fixed ID allowlist. The public
+      # key is not a secret (it ships inside manifest.json), hence a repo
+      # variable; the matching key.pem is off-repo in 1Password.
+      - name: Build release ZIP
+        env:
+          NODE_ENV: production
+          WXT_EXTENSION_KEY: ${{ vars.WXT_EXTENSION_KEY }}
+        run: |
+          if [ -z "$WXT_EXTENSION_KEY" ]; then
+            echo "::error::repo variable WXT_EXTENSION_KEY is unset — the build would ship an unpinned extension ID"
+            exit 1
+          fi
+          bun run --filter @webmcp-today/extension zip
+
+      - name: Checksums
+        working-directory: apps/extension/.output
+        run: sha256sum *.zip > SHA256SUMS
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Extension v${{ steps.version.outputs.version }}
+          files: |
+            apps/extension/.output/*.zip
+            apps/extension/.output/SHA256SUMS
+          body: |
+            Self-hosted build of the WebMCP Today extension, for use while the
+            Chrome Web Store listing is in review.
+
+            ## Install
+
+            1. Download `webmcp-today-${{ steps.version.outputs.version }}-chrome.zip` below and unzip it.
+            2. Open `chrome://extensions`, enable **Developer mode**.
+            3. **Load unpacked** → select the unzipped folder.
+            4. Enable WebMCP at `chrome://flags/#enable-webmcp-testing` and restart Chrome.
+
+            Chrome does not auto-update extensions installed this way — grab a
+            new release manually. Chrome will also prompt about developer-mode
+            extensions on each launch; that is expected for off-store installs.
+
+            Verify the download against `SHA256SUMS`.
