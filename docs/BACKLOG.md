@@ -14,12 +14,6 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 
 ### Blocking
 
-- **Landing page** — marketing `/` ("Greasyfork for the agentic web" pitch);
-  decide what happens to the current root browse view (move to /packages?).
-  Needs a content/design call first. (AGENTS.md → What this is)
-- **Docs page** — package format, publishing guide, extension install guide;
-  source content exists in docs/ + apps/extension/README.md to adapt.
-  (docs/api-execution-model.md, packages/schema)
 - **Chrome Web Store submission — in review** (2026-07-29): went with CWS at
   launch. v1.0.0 ZIP uploaded (prod-only `https://webmcp.today/*` host perms,
   dev `key` stripped, all four icons), store icon + publisher contact email

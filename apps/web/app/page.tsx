@@ -1,18 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
-import { FlowDiagram } from "@/components/landing/flow-diagram";
-import { llmFirstNodes, llmFirstSteps } from "@/components/landing/mode-flows";
+import { ArrowRight } from "lucide-react";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
 import { listPackages } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
-
-// TODO(extension): swap /extension for the Chrome Web Store listing once the
-// extension is published. Until then the stub page explains how to run it from
-// source — nothing on this site works without the extension installed.
-const EXTENSION_HREF = "/extension";
 
 type Stats = { packages: number; tools: number; domains: number };
 
@@ -48,20 +41,21 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-5xl gap-12 px-4 pt-16 pb-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-center lg:gap-14 lg:pt-24 lg:pb-28">
           <div>
             <p className="cafe-rise font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
-              WebMCP tool registry
+              Community WebMCP registry
             </p>
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
-              Install the tools a site <em className="text-brand not-italic">never shipped</em>.
+              Give your agent real tools for sites that shipped
+              <em className="text-brand not-italic"> none</em>.
             </h1>
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
-              Agents guess at the DOM because almost no site publishes real tools. Install a package
-              here and the extension registers its tools on the page, so your agent calls{" "}
+              Install a small, inspectable JSON package. The extension registers its tools on the
+              matching site, so your agent can call{" "}
               <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-                reddit_comment
+                reddit_subreddit_hot
               </code>{" "}
-              instead of hunting for the reply box.
+              through Reddit&apos;s own API instead of scraping the page or guessing where to click.
             </p>
 
             <div className="cafe-rise mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
@@ -69,21 +63,21 @@ export default async function LandingPage() {
                 asChild
                 className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
               >
-                <Link href={EXTENSION_HREF}>
-                  <Download className="size-4" />
-                  Get the extension
+                <Link href="/docs">
+                  Make your first tool call
+                  <ArrowRight data-icon="inline-end" />
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
                 <Link href="/packages">
                   Browse the registry
-                  <ArrowRight className="size-4" />
+                  <ArrowRight data-icon="inline-end" />
                 </Link>
               </Button>
             </div>
 
             <p className="cafe-rise mt-4 font-mono text-xs text-muted-foreground [animation-delay:280ms]">
-              Requires Chrome 149+ with the WebMCP testing flag enabled
+              Early preview: Chrome 149+, WebMCP enabled, unpacked extension
             </p>
 
             {stats ? (
@@ -104,18 +98,18 @@ export default async function LandingPage() {
         <div className="mx-auto grid max-w-5xl divide-y px-4 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-0">
           <Reason
             index="01"
-            title="Sites won't do this for you"
-            body="WebMCP is a live W3C proposal and adoption is roughly zero. The sites you use every day won't be first. They'd never ship the tools you actually want anyway."
+            title="Stop making the model hunt"
+            body="A named tool tells the agent what it does, which inputs it needs, and what it returns. No selector archaeology, coordinate guessing, or replayed click script."
           />
           <Reason
             index="02"
-            title="Scraping rots quietly"
-            body="A selector breaks the day a class name changes, and the failure is silent. A package built on the site's public API fails with a status code you can see."
+            title="Read the whole capability first"
+            body="Packages are data, not remote code. The page shows every tool, same-origin endpoint, parameter, and response projection before you install it."
           />
           <Reason
             index="03"
-            title="Agents can write packages"
-            body="A package is data. URL patterns, tool descriptions, and an API block declaring the site's own HTTP endpoints. Publishing is one API call. The agent that needed the tool can be the one that contributes it."
+            title="Keep the version you approved"
+            body="The extension stores one immutable version in your browser. A new publish cannot change what your agent can do until you choose to update."
           />
         </div>
       </section>
@@ -124,24 +118,42 @@ export default async function LandingPage() {
       <section className="mx-auto max-w-5xl px-4 py-20 lg:py-28">
         <div className="max-w-2xl">
           <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
-            How it runs
+            First run
           </p>
           <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-            From your terminal
+            One browser, three steps
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            An agent outside the browser, like Claude Code or any other MCP client, searches the
-            registry, publishes what&apos;s missing, and pins an install. The extension delivers
-            that exact version into the page. The diagram below walks through each step.
+            Download the extension, start a WebMCP-enabled Chrome, then install the suggested Reddit
+            package and call it. The verified path exposes six tools and returns live subreddit
+            data.
           </p>
         </div>
 
-        <div className="mt-14 rounded-2xl border bg-card px-5 py-8 sm:px-8 sm:py-10">
-          <FlowDiagram
-            nodes={llmFirstNodes}
-            steps={llmFirstSteps}
-            label="From your terminal, an agent uses the registry MCP server to find, publish and install packages, which the extension then registers on the target site."
-          />
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          <RunStep number="1" title="Download the extension">
+            Download and extract the current signed release ZIP, then load the extracted folder in
+            Chrome&apos;s Developer mode.
+          </RunStep>
+          <RunStep number="2" title="Start and connect Chrome">
+            Launch a WebMCP-enabled Chrome profile, load the extension there, and connect Chrome
+            DevTools MCP to that same browser.
+          </RunStep>
+          <RunStep number="3" title="Install and call a package">
+            Open Reddit, approve its suggested package, reload, and call the read-only tool for live
+            results. No webmcp.today account is required.
+          </RunStep>
+        </div>
+        <div className="mt-8">
+          <Button
+            asChild
+            className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
+          >
+            <Link href="/docs">
+              Follow the verified quickstart
+              <ArrowRight data-icon="inline-end" />
+            </Link>
+          </Button>
         </div>
       </section>
 
@@ -189,7 +201,7 @@ export default async function LandingPage() {
             <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
               <a href="https://github.com/robertn702/webmcp-today">
                 Read the source
-                <ArrowRight className="size-4" />
+                <ArrowRight data-icon="inline-end" />
               </a>
             </Button>
           </div>
@@ -201,10 +213,11 @@ export default async function LandingPage() {
         <div className="flex flex-col items-start gap-8 rounded-2xl border bg-card px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
             <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
-              Nothing runs without the extension.
+              Go from no tools to a live result.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Install it once, add a package, and the tools are there next time you open the site.
+              The quickstart gives you copyable setup commands and one prompt that walks you through
+              the Reddit install, lists its tools, and calls one.
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
@@ -212,15 +225,15 @@ export default async function LandingPage() {
               asChild
               className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
             >
-              <Link href={EXTENSION_HREF}>
-                <Download className="size-4" />
-                Get the extension
+              <Link href="/docs">
+                Make your first tool call
+                <ArrowRight data-icon="inline-end" />
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
               <Link href="/submit">
                 Publish a package
-                <ArrowRight className="size-4" />
+                <ArrowRight data-icon="inline-end" />
               </Link>
             </Button>
           </div>
@@ -255,6 +268,24 @@ function TrustFact({ title, children }: { title: string; children: ReactNode }) 
   return (
     <div className="border-l-2 border-brand/30 pl-5">
       <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</p>
+    </div>
+  );
+}
+
+function RunStep({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border bg-card p-5">
+      <p className="font-mono text-[11px] tracking-[0.18em] text-brand uppercase">Step {number}</p>
+      <h3 className="mt-3 text-base font-semibold">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</p>
     </div>
   );

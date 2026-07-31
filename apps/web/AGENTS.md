@@ -5,16 +5,15 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 ## Routes
 
 - `app/page.tsx` is the **public landing page** — full-bleed, outside any container.
-  Its staged diagram is derived from `ARCHITECTURE.md`'s runtime/data flow
-  sequences (`components/landing/mode-flows.ts`); if those flows change, change the copy.
+  Its three-step first-run summary must stay aligned with the task-oriented `/docs` flow.
 - Everything else lives in the `app/(registry)/` route group, whose layout supplies the
   shared `max-w-5xl` container. Route groups don't affect URLs — `/packages`, `/submit`,
   `/settings` are unchanged. Browse is `/packages` (it used to be `/`).
 - `app/auth/[path]` (sign-in/sign-up) sits **outside** the registry group like the
   landing page, so its atmosphere/grid background is full-bleed instead of clipped
   by the `max-w-5xl` container.
-- `/extension` is a stub until the extension is published; the landing CTA points at it
-  and both carry a `TODO(extension)` marker for the Web Store swap.
+- `/extension` is the source-install leaf until the extension is published; the landing CTA points
+  at `/docs`, which links extension setup into the full first-tool-call flow.
 - `components/site-footer.tsx` renders once from the **root** layout (not the registry
   group), so `/terms` and the AGPL §13 source offer appear on the landing page too.
 - `/terms` is the submission grant + the corpus's CC0 offer. Both publish routes echo it
@@ -25,10 +24,12 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   landing treatments, also reused by the full-bleed `/auth/[path]` sign-in/sign-up
   pages. `--font-display` (Instrument Serif) and the `--brand` amber are also used
   by the interior page-header pattern — see Design language.
-- `/docs/package-format` is the publisher-facing format reference; its worked example is
-  drift-guarded by `apps/web/test/package-format-example.test.ts`. There is deliberately
-  no `/docs` index — the header "Docs" link points straight at the leaf — so add an
-  index before adding a second docs page.
+- `/docs` is the task-oriented quickstart (extension → Chrome DevTools MCP → first tool
+  call → package creation/publish prompts). Its first-run claim was manually verified from an
+  empty extension store against Reddit: popup suggestion install → six registered tools → live
+  `reddit_subreddit_hot` result. `/docs/package-format` is the publisher-facing reference; its
+  worked example is drift-guarded by
+  `apps/web/test/package-format-example.test.ts`.
 
 ## Design language
 

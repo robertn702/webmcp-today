@@ -1,58 +1,64 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CopyBlock } from "@/components/copy-block";
+
+const RELEASE_ZIP_URL =
+  "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip";
+
+const INSTALL_PROMPT = `Install the latest WebMCP Today extension release for me.
+
+Download and extract ${RELEASE_ZIP_URL}.
+- Do not clone or build the repository, and do not use a per-commit CI artifact.
+- Tell me to open chrome://extensions, enable Developer mode, choose Load unpacked, and select the extracted folder. Chrome cannot install the ZIP directly.
+- Tell me that WebMCP requires Chrome 149+ and chrome://flags/#enable-webmcp-testing (or an equivalent --enable-features launch flag).
+- Remind me that off-store extensions do not update automatically and Chrome may show a developer-mode warning at launch.
+- Wait for me to confirm Chrome loaded it.`;
 
 export const metadata: Metadata = {
   title: "Get the extension",
   description:
-    "Build and load the WebMCP Today browser extension from source. It registers tools from packages you've installed on the page you're on, so an agent can call them.",
+    "Download and load the latest WebMCP Today browser extension release, then install a package and register its tools on a matching page.",
 };
 
-// TODO(extension): replace this stub with the Chrome Web Store listing (and
-// update EXTENSION_HREF in app/page.tsx) once the extension is published.
 export default function ExtensionPage() {
   return (
     <div className="max-w-2xl">
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">The extension</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Run it from source</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">Load the preview</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        The extension isn&apos;t in the Chrome Web Store yet, so you build it yourself. It registers
-        tools from packages you&apos;ve installed on the page you&apos;re on, so an agent can call
-        them. You&apos;ll need Bun and Chrome 149+.
+        The extension isn&apos;t in the Chrome Web Store yet, so download the latest signed release
+        ZIP, extract it, and load the extracted folder. It stores the package versions you approve
+        and registers their tools on matching pages. You need Chrome 149+. The complete browser and
+        MCP setup is in the{" "}
+        <Link href="/docs" className="text-foreground underline underline-offset-4">
+          quickstart
+        </Link>
+        .
       </p>
+
+      <CopyBlock label="Copy install prompt">{INSTALL_PROMPT}</CopyBlock>
 
       <ol className="mt-8 flex flex-col gap-5 border-l-2 border-brand/30 pl-5">
         <li>
-          <p className="text-sm font-semibold">Clone and install</p>
-          <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-            git clone https://github.com/robertn702/webmcp-today{"\n"}cd webmcp-today &amp;&amp; bun
-            install
-          </pre>
-        </li>
-        <li>
-          <p className="text-sm font-semibold">Build it against the live registry</p>
-          <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-            WXT_REGISTRY_API_URL=https://webmcp.today bun run build --filter=@webmcp-today/extension
-          </pre>
+          <p className="text-sm font-semibold">Download and extract the latest release</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            That variable controls where the extension polls for the revocation feed and the domain
-            list. Page loads never hit the network, since they read from{" "}
-            <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              chrome.storage.local
-            </code>
-            , so leaving it off just means those polls target localhost:3000. Leave it set to the
-            live registry in production.
+            <a href={RELEASE_ZIP_URL} className="text-foreground underline underline-offset-4">
+              Download the latest release ZIP
+            </a>{" "}
+            and extract it to a folder you can keep. Chrome cannot install the ZIP directly; it
+            loads the extracted folder. This release has the fixed extension ID required for the
+            registry install bridge.
           </p>
         </li>
         <li>
-          <p className="text-sm font-semibold">Load it</p>
+          <p className="text-sm font-semibold">Load the extracted folder</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
               chrome://extensions
             </code>{" "}
-            → Developer mode → Load unpacked →{" "}
-            <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              apps/extension/.output/chrome-mv3
-            </code>
+            → Developer mode → Load unpacked → select the extracted folder. Off-store installs do
+            not update automatically: download and load a newer release yourself. Chrome may also
+            show a developer-mode warning each time it starts.
           </p>
         </li>
         <li>
@@ -63,31 +69,51 @@ export default function ExtensionPage() {
               chrome://flags/#enable-webmcp-testing
             </code>{" "}
             and restart. Chrome 149+. Sites we inject into don&apos;t serve an origin-trial token on
-            our behalf, so anyone running the extension has to turn it on.
+            our behalf, so anyone running the extension has to turn it on. If you use the launch
+            command in the quickstart instead, its{" "}
+            <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
+              --enable-features
+            </code>{" "}
+            argument enables the same preview directly.
+          </p>
+        </li>
+        <li>
+          <p className="text-sm font-semibold">Install your first package</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Open{" "}
+            <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
+              reddit.com
+            </code>
+            , click the extension icon, and inspect the Reddit package under Discover packages.
+            Click Install and reload the page.
           </p>
         </li>
         <li>
           <p className="text-sm font-semibold">Check it worked</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Open a page one of your installed packages matches and look at the page console.{" "}
+            The badge should show{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              [webmcp-today] N installed package(s) matched this URL
+              6
             </code>{" "}
-            means a match registered. With nothing installed, every page logs{" "}
+            for the current Reddit package. The page console also logs{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-              0 installed package(s)
+              [webmcp-today] 1 installed package(s) matched this URL
             </code>
-            . That is the expected empty state, not a failure.
+            .
           </p>
         </li>
       </ol>
 
       <p className="mt-10 text-sm text-muted-foreground">
-        In the meantime,{" "}
+        Next, follow the{" "}
+        <Link href="/docs" className="text-foreground underline underline-offset-4">
+          quickstart to connect Chrome DevTools MCP and make a tool call
+        </Link>
+        , or{" "}
         <Link href="/packages" className="text-foreground underline underline-offset-4">
           browse the registry
         </Link>{" "}
-        to see what packages exist, or{" "}
+        to see what packages exist. You can also{" "}
         <Link href="/submit" className="text-foreground underline underline-offset-4">
           publish one
         </Link>
