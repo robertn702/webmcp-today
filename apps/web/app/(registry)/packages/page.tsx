@@ -15,13 +15,13 @@ export default async function PackagesPage() {
   return (
     <div className="max-w-2xl">
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">Registry</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Browse packages.</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">Browse packages</h1>
       <p className="mt-2 font-mono text-xs text-muted-foreground">
         {total} package{total === 1 ? "" : "s"}
       </p>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        Each one adds tools to a site that never shipped any. Install one and the extension
-        registers it on matching pages.
+        Each package adds named tools to a specific site. Install one and the extension registers
+        its tools on matching pages.
       </p>
 
       {packages.length === 0 ? (

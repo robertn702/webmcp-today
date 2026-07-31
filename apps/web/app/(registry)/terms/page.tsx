@@ -19,12 +19,12 @@ export default function TermsPage() {
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">
         Terms of service
       </p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">What you&apos;re agreeing to.</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">What you&apos;re agreeing to</h1>
       <p className="mt-2 font-mono text-xs text-muted-foreground">Last updated {LAST_UPDATED}</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        Using webmcp.today, its API, or its extension means you accept these terms. The part worth
-        your attention is what happens to a package once you publish it, in section 3.
+        Using webmcp.today, its API, or its extension means you accept these terms. Section 3 is the
+        one to read closely. It covers what happens to a package once you publish it.
       </p>
 
       <div className="mt-8 border-l-2 border-brand/30 pl-5">
@@ -74,10 +74,10 @@ export default function TermsPage() {
           use anywhere else, under any terms you like.
         </p>
         <p>
-          Irrevocable is doing real work in that sentence. Versions here are append-only and every
-          install pins to a specific version, so anyone who installed your package is already
-          running a copy you can&apos;t call back. You can have a package taken down from the
-          registry (section 7), but the license on copies already distributed stands.
+          Irrevocable matters here. Versions are append-only and every install pins to a specific
+          version, so anyone who installed your package is already running a copy you can&apos;t
+          call back. You can have a package taken down from the registry (section 7), but the
+          license on copies already distributed stands.
         </p>
       </Section>
 
@@ -132,12 +132,12 @@ export default function TermsPage() {
       </Section>
 
       <Section n={6} title="What you can't publish">
-        <p>Most of this is obvious. It&apos;s written down so there&apos;s no argument later.</p>
+        <p>This list exists so there&apos;s no argument later.</p>
         <ul className="flex list-disc flex-col gap-2 pl-4">
           <li>
-            Packages that attack the site they target or the person running them. No credential
-            harvesting, no sending page data somewhere the user didn&apos;t ask for, no writes the
-            tool description doesn&apos;t admit to.
+            Packages that attack the site they target or the person running them. That includes
+            harvesting credentials, sending page data somewhere the user didn&apos;t ask for, and
+            writes the tool description doesn&apos;t admit to.
           </li>
           <li>Anything illegal, or built to help someone else do something illegal.</li>
           <li>
@@ -146,8 +146,8 @@ export default function TermsPage() {
           <li>Malware of any description, including a harmless v1 followed by a hostile v2.</li>
         </ul>
         <p>
-          The same list covers the API. Don&apos;t hammer it either. Reads are unauthenticated today
-          as a courtesy, not a promise.
+          The same list covers the API. Don&apos;t hammer it either. Reads are unauthenticated
+          today, and that can change.
         </p>
       </Section>
 
@@ -186,7 +186,7 @@ export default function TermsPage() {
           limited, or does something you didn&apos;t expect, that is the risk you took by installing
           it.
         </p>
-        <p>Nothing about uptime is promised. This project is pre-launch and could stop existing.</p>
+        <p>Uptime is not promised. This project is pre-launch and could stop existing.</p>
       </Section>
 
       <Section n={9} title="Liability">
@@ -194,8 +194,7 @@ export default function TermsPage() {
           To the fullest extent the law allows, Robert Niimi is not liable for indirect, incidental,
           or consequential damages arising from this registry, a package published on it, or the
           extension. Where liability can&apos;t be excluded, the total is capped at 100 USD or what
-          you have paid to use the service, whichever is greater. Today that is nothing. The
-          registry is free.
+          you have paid to use the service, whichever is greater. Today you pay nothing to use it.
         </p>
       </Section>
 

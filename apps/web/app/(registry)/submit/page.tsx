@@ -12,14 +12,15 @@ export default function SubmitPage() {
   return (
     <div className="max-w-2xl">
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">Publish</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Publish a package.</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">Publish a package</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         A package is a JSON document with{" "}
         <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
           domain, urlPatterns[], title, description, tools[]
         </code>
         . It&apos;s validated against @robertn702/webmcp-today-schema before upload and published as
-        a new package at version 1. There is no review queue. It goes live when it validates.
+        a new package at version 1. There is no review queue. A package goes live as soon as it
+        validates.
       </p>
 
       <div className="mt-6">

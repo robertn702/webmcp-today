@@ -28,20 +28,20 @@ type ButtonState =
 const FAILURE_TEXT: Record<InstallFailure, string> = {
   "not-found": "The registry couldn't find this version.",
   "invalid-body": "The registry served a package the extension couldn't read.",
-  "id-mismatch": "The registry served the wrong package — install refused.",
-  "hash-mismatch": "The package's content didn't match its fingerprint — install refused.",
+  "id-mismatch": "Install refused. The registry served the wrong package.",
+  "hash-mismatch": "Install refused. The package's content didn't match its fingerprint.",
   revoked: "This package was pulled from the registry.",
-  "revocation-unavailable": "Couldn't reach the registry's safety list — try again.",
+  "revocation-unavailable": "Couldn't reach the registry's safety list. Try again.",
   "engine-too-old": "Update the extension to install this package.",
   quota: "Browser storage is full.",
-  network: "Couldn't reach the registry — try again.",
-  "storage-unreadable": "The extension's storage is unreadable — reinstall the extension.",
-  "bad-request": "The extension didn't understand the request — update it.",
+  network: "Couldn't reach the registry. Try again.",
+  "storage-unreadable": "The extension's storage is unreadable. Reinstall the extension.",
+  "bad-request": "The extension didn't understand the request. Update it.",
 };
 
 const STATE_BADGE: Record<InstallState, string | null> = {
   ok: null,
-  broken: "broken — reinstall",
+  broken: "broken, reinstall",
   revoked: "pulled by the registry",
   "engine-too-old": "needs an extension update",
 };
@@ -161,7 +161,7 @@ export function InstallButton({
       {status.kind === "installed" && (
         <>
           <span className="text-xs text-muted-foreground">
-            Installed — v{status.version}
+            Installed v{status.version}
             {badge(status.state) !== null && ` · ${badge(status.state)}`}
           </span>
           <Button variant="outline" size="sm" onClick={() => void uninstall()}>

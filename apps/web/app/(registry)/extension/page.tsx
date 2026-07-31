@@ -13,11 +13,11 @@ export default function ExtensionPage() {
   return (
     <div className="max-w-2xl">
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">The extension</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Run it from source.</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">Run it from source</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        It isn&apos;t in the Chrome Web Store yet, so building it yourself is the install. It&apos;s
-        the part that does the work. It registers tools from packages you&apos;ve installed on the
-        page you&apos;re on, so an agent can call them. You&apos;ll need Bun and Chrome 149+.
+        The extension isn&apos;t in the Chrome Web Store yet, so you build it yourself. It registers
+        tools from packages you&apos;ve installed on the page you&apos;re on, so an agent can call
+        them. You&apos;ll need Bun and Chrome 149+.
       </p>
 
       <ol className="mt-8 flex flex-col gap-5 border-l-2 border-brand/30 pl-5">
@@ -35,11 +35,11 @@ export default function ExtensionPage() {
           </pre>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             That variable controls where the extension polls for the revocation feed and the domain
-            list. Page loads never hit the network — they read from{" "}
+            list. Page loads never hit the network, since they read from{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
               chrome.storage.local
-            </code>{" "}
-            — so leaving it off just means those polls target localhost:3000. Leave it set to the
+            </code>
+            , so leaving it off just means those polls target localhost:3000. Leave it set to the
             live registry in production.
           </p>
         </li>
@@ -76,8 +76,8 @@ export default function ExtensionPage() {
             means a match registered. With nothing installed, every page logs{" "}
             <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
               0 installed package(s)
-            </code>{" "}
-            — that is the expected empty state, not a failure.
+            </code>
+            . That is the expected empty state, not a failure.
           </p>
         </li>
       </ol>
