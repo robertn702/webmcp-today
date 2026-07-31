@@ -62,7 +62,9 @@ jobs:
             echo "::error::repo variable WXT_EXTENSION_KEY is unset — the build would ship an unpinned extension ID"
             exit 1
           fi
-          bun run --filter @webmcp-today/extension zip
+          # See ci.yml: `bun run --filter` does not scope the cwd in plain bun.
+          cd apps/extension
+          bun run zip
 
       # Docs link to the version-less name via
       # https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip

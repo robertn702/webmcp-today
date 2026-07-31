@@ -21,8 +21,12 @@ jobs:
       # Unsigned (no WXT_EXTENSION_KEY): a random per-profile ID, so the
       # install bridge on webmcp.today won't answer. This artifact is for
       # eyeballing a build, not for testing installs — cut a tag for that.
+      # NOTE: `bun run --filter` (turbo syntax) does NOT scope the cwd in plain
+      # bun — it runs the script from the repo root, so the ZIP would land in
+      # ./.output/ instead of apps/extension/.output/. Working-directory pin:
       - name: Build extension ZIP
-        run: bun run --filter @webmcp-today/extension zip
+        working-directory: apps/extension
+        run: bun run zip
       - uses: actions/upload-artifact@v4
         with:
           name: extension-unsigned-${{ github.sha }}
