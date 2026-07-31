@@ -46,9 +46,8 @@ export const apiAuthSourceSchema = z.object({
       // sources that return HTML rather than JSON (Hacker News serves its hmac
       // as a hidden form input, its vote token inside an href). Capture group
       // 1 is the token; no match is a loud failure. May carry {{param}}
-      // placeholders (e.g. a per-item id in a vote URL), interpolated RAW
-      // before compiling — nothing regex-escapes them, so keep interpolated
-      // params to identifier shapes (numeric ids, slugs).
+      // placeholders (e.g. a per-item id in a vote URL); their values are
+      // regex-escaped before compiling, so they match literal text.
       pattern: z.string().min(1).max(500).optional(),
     })
     .superRefine((src, ctx) => {

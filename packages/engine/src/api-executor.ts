@@ -45,6 +45,14 @@ function interpolateString(template: string, params: Record<string, unknown>): s
   return template.replace(PLACEHOLDER_RE, (_, key: string) => stringifyParam(params[key]));
 }
 
+/** Interpolate {{param}} into a regex pattern. Param values are quoted as
+ * literal text; the package-authored template remains a raw JS regex. */
+function interpolatePattern(template: string, params: Record<string, unknown>): string {
+  return template.replace(PLACEHOLDER_RE, (_, key: string) =>
+    stringifyParam(params[key]).replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&"),
+  );
+}
+
 /** Interpolate {{param}} into a URL path — values are percent-encoded so a
  *  param can never inject a new path segment, query, fragment, or CRLF. */
 function interpolatePath(template: string, params: Record<string, unknown>): string {
@@ -296,7 +304,7 @@ function extractToken(
   stripPrefix?: string,
 ): string {
   if (source.source.pattern !== undefined) {
-    const resolvedPattern = interpolateString(source.source.pattern, params);
+    const resolvedPattern = interpolatePattern(source.source.pattern, params);
     const match = new RegExp(resolvedPattern).exec(text);
     const token = match?.[1];
     if (token === undefined || token === "") {
@@ -355,7 +363,7 @@ async function resolveAuthToken(
   const resolvedPattern =
     source.source.pattern === undefined
       ? undefined
-      : interpolateString(source.source.pattern, params);
+      : interpolatePattern(source.source.pattern, params);
   const key = tokenCacheKey(api, name, source, request.url, resolvedPattern);
   if (ttlMs > 0) {
     const stored = persistentTokenCache.get(key);

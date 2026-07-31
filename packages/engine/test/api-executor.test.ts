@@ -503,7 +503,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
     expect(form.get("hmac")).toBe("HMAC_42");
   });
 
-  it("extracts the vote token with an interpolated pattern and sends it as a query param", async () => {
+  it("extracts the vote token with an identifier-shaped interpolated pattern and sends it as a query param", async () => {
     const calls: { url: string; body?: string }[] = [];
     stubHnFetch(calls);
 
@@ -515,6 +515,42 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
     expect(voteUrl.searchParams.get("id")).toBe("42");
     expect(voteUrl.searchParams.get("how")).toBe("up");
     expect(voteUrl.searchParams.get("auth")).toBe("auth_42");
+  });
+
+  it("treats regex metacharacters in interpolated pattern params literally", async () => {
+    const patternApi: ApiBlock = apiBlockSchema.parse({
+      baseUrl: "https://example.com",
+      auth: {
+        token: {
+          source: { endpoint: "tokenPage", pattern: "id={{id}} value=([^\\s]+)" },
+          sendAs: { in: "query", name: "token" },
+        },
+      },
+      endpoints: {
+        tokenPage: { method: "GET", path: "/token" },
+        action: { method: "GET", path: "/action", auth: ["token"] },
+      },
+    });
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        calls.push(url);
+        return Promise.resolve(
+          new Response(url.includes("/token") ? "id=a)+ value=literal" : "done"),
+        );
+      }),
+    );
+
+    const matched = await executeApiTool("action", patternApi, "action", { id: "a)+" });
+
+    expect(matched.content[0]?.text).not.toMatch(/^Error/);
+    expect(new URL(calls[1] ?? "").searchParams.get("token")).toBe("literal");
+
+    const didNotMatch = await executeApiTool("action", patternApi, "action", { id: ".*" });
+
+    expect(didNotMatch.content[0]?.text).toMatch(/pattern matched nothing/);
+    expect(calls).toHaveLength(3);
   });
 
   it("extracts the retract (how=un) token from the unvote href, not the upvote one", async () => {
