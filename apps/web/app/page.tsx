@@ -175,25 +175,47 @@ export default async function LandingPage() {
 
           <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2">
             <TrustFact title="The source is public">
-              The extension, this registry, the schema and the MCP server all live in one GitHub
-              repo. What the extension does with a package is code you can read.
+              The extension, this registry, the schema and the MCP server all live in one{" "}
+              <a
+                href="https://github.com/robertn702/webmcp-today"
+                className="text-foreground underline underline-offset-4"
+              >
+                GitHub repo
+              </a>
+              . What the extension does with a package is code you can read.
             </TrustFact>
             <TrustFact title="Packages are data, not code">
-              A package is a JSON document. The schema has no step that executes code, so installing
-              one can&apos;t run arbitrary code in your page.
-            </TrustFact>
-            <TrustFact title="You see every tool first">
-              The package page lists each tool it registers and what that tool takes, so you can
-              read the full list before you install.
+              A package is a JSON document. The{" "}
+              <a
+                href="https://github.com/robertn702/webmcp-today/tree/main/packages/schema"
+                className="text-foreground underline underline-offset-4"
+              >
+                package schema
+              </a>{" "}
+              has no step that executes code, so installing one can&apos;t run arbitrary code in
+              your page.
             </TrustFact>
             <TrustFact title="Updates can’t ambush you">
-              Your install is pinned to one version, and a published version is never edited. A bad
-              update can&apos;t reach you until you choose to move the pin, and rolling back is
-              moving the pin to an older version.
+              Your install is{" "}
+              <a
+                href="https://github.com/robertn702/webmcp-today/blob/main/packages/db/src/package-schema.ts"
+                className="text-foreground underline underline-offset-4"
+              >
+                pinned to one version
+              </a>
+              , and a published version is never edited. A bad update can&apos;t reach you until you
+              choose to move the pin, and rolling back is moving the pin to an older version.
             </TrustFact>
             <TrustFact title="A call can’t leave the site">
-              API mode is locked to the package&apos;s own origin, checked when it&apos;s published
-              and again when it runs. Your session on one site stays there.
+              API mode is{" "}
+              <a
+                href="https://github.com/robertn702/webmcp-today/blob/main/packages/engine/src/api-executor.ts#L161-L187"
+                className="text-foreground underline underline-offset-4"
+              >
+                locked to the package&apos;s own origin
+              </a>
+              , checked when it&apos;s published and again when it runs. Your session on one site
+              stays there.
             </TrustFact>
           </div>
 
