@@ -124,7 +124,11 @@ export function SubmitForm() {
         </Alert>
       )}
       <div className="flex flex-col gap-3">
-        <Button onClick={() => void submit()} disabled={busy} className="w-fit">
+        <Button
+          onClick={() => void submit()}
+          disabled={busy || json.trim().length === 0}
+          className="w-fit"
+        >
           {busy ? "Publishing…" : "Publish package"}
         </Button>
         {/* The grant attaches on publish, so the notice sits on the control that
