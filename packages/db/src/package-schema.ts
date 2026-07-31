@@ -1,6 +1,8 @@
 import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-today-schema";
+import { sql } from "drizzle-orm";
 import {
   bigserial,
+  check,
   index,
   integer,
   jsonb,
@@ -32,7 +34,10 @@ export const packages = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("idx_packages_domain").on(t.domain)],
+  (t) => [
+    index("idx_packages_domain").on(t.domain),
+    index("idx_packages_updated_at").on(t.updatedAt),
+  ],
 );
 
 /**
@@ -68,12 +73,14 @@ export const packageVersions = pgTable(
   (t) => [
     index("idx_package_versions_package_id").on(t.packageId),
     unique("uq_package_versions_package_version").on(t.packageId, t.version),
+    check("chk_package_versions_version_positive", sql`"version" > 0`),
+    check("chk_package_versions_min_engine_positive", sql`"min_engine" > 0`),
   ],
 );
 
 /**
- * Auth-only per-user installs; double duty as the trust signal (COUNT/GROUP
- * BY package_id, derived at query time — no counter cache).
+ * Auth-only per-user install records pin a user to a version. Browse serves
+ * max(version); installed users stay pinned via `installs.versionId`.
  */
 export const installs = pgTable(
   "installs",

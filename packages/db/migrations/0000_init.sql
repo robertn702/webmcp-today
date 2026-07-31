@@ -122,6 +122,8 @@ ALTER TABLE "auth"."api_keys" ADD CONSTRAINT "api_keys_reference_id_users_id_fk"
 ALTER TABLE "auth"."accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "auth"."sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "package_versions" ADD CONSTRAINT "package_versions_package_id_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."packages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "package_versions" ADD CONSTRAINT "chk_package_versions_version_positive" CHECK ("version" > 0);--> statement-breakpoint
+ALTER TABLE "package_versions" ADD CONSTRAINT "chk_package_versions_min_engine_positive" CHECK ("min_engine" > 0);--> statement-breakpoint
 ALTER TABLE "installs" ADD CONSTRAINT "installs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "installs" ADD CONSTRAINT "installs_package_id_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."packages"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "installs" ADD CONSTRAINT "installs_version_id_package_versions_id_fk" FOREIGN KEY ("version_id") REFERENCES "public"."package_versions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -131,6 +133,7 @@ ALTER TABLE "revocations" ADD CONSTRAINT "revocations_revoked_by_users_id_fk" FO
 ALTER TABLE "packages" ADD CONSTRAINT "packages_contributor_id_users_id_fk" FOREIGN KEY ("contributor_id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "idx_package_versions_package_id" ON "package_versions" USING btree ("package_id");--> statement-breakpoint
 CREATE INDEX "idx_packages_domain" ON "packages" USING btree ("domain");--> statement-breakpoint
+CREATE INDEX "idx_packages_updated_at" ON "packages" USING btree ("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_api_keys" BEFORE UPDATE ON "auth"."api_keys" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_accounts" BEFORE UPDATE ON "auth"."accounts" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
 CREATE TRIGGER "mdt_sessions" BEFORE UPDATE ON "auth"."sessions" FOR EACH ROW EXECUTE PROCEDURE moddatetime("updated_at");--> statement-breakpoint
