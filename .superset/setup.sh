@@ -37,6 +37,15 @@ if [[ -f "$CLAUDE_SETTINGS" ]]; then
   echo "Copied .claude/settings.local.json"
 fi
 
+# 2b. Copy AGENTS.local.md if present in the main worktree (machine-local,
+#     gitignored via *.local.md — not tracked, but contains durable agent
+#     guidance like bottleneck doc pointers; see AGENTS.local.md itself).
+LOCAL_AGENTS="$MAIN_REPO/AGENTS.local.md"
+if [[ -f "$LOCAL_AGENTS" ]]; then
+  cp "$LOCAL_AGENTS" "$PWD/AGENTS.local.md"
+  echo "Copied AGENTS.local.md"
+fi
+
 # 3. Symlink .scratch/shared from the main worktree so durable scratch state is
 #    shared across workspaces; plain .scratch/ stays workspace-local (gitignored).
 SHARED_SCRATCH="$MAIN_REPO/.scratch/shared"
