@@ -1,4 +1,8 @@
-import { BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-today-schema";
+import {
+  BRIDGE_PROTOCOL_VERSION,
+  ENGINE_VERSION,
+  bridgeRequestSchema,
+} from "@robertn702/webmcp-today-schema";
 import { defineBackground } from "wxt/utils/define-background";
 import { browser } from "wxt/browser";
 import {
@@ -54,8 +58,14 @@ let lastKnownInstallCount = 0;
  * consult the schemaVersion guard themselves. */
 let initPromise: Promise<SchemaVersionState> | undefined;
 function ensureInitialized(): Promise<SchemaVersionState> {
-  initPromise ??= store.initialize();
-  return initPromise;
+  if (initPromise !== undefined) return initPromise;
+
+  const initializing = store.initialize();
+  initPromise = initializing;
+  void initializing.catch(() => {
+    if (initPromise === initializing) initPromise = undefined;
+  });
+  return initializing;
 }
 
 export default defineBackground(() => {
@@ -80,7 +90,9 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
     const lookup = lookupMessageSchema.safeParse(message);
     if (lookup.success) {
-      void handleLookup(lookup.data.url).then(sendResponse);
+      void handleLookup(lookup.data.url).then(sendResponse, () =>
+        sendResponse(storageUnreadableLookup()),
+      );
       return true;
     }
 
@@ -95,19 +107,23 @@ export default defineBackground(() => {
     }
 
     if (popupStateQuerySchema.safeParse(message).success) {
-      void buildPopupState().then(sendResponse);
+      void buildPopupState().then(sendResponse, () => sendResponse(storageUnreadablePopupState()));
       return true;
     }
 
     const uninstall = uninstallMessageSchema.safeParse(message);
     if (uninstall.success) {
-      void handleUninstall(uninstall.data.packageId).then(sendResponse);
+      void handleUninstall(uninstall.data.packageId).then(sendResponse, () =>
+        sendResponse({ removed: false }),
+      );
       return true;
     }
 
     const installSuggestion = installSuggestionMessageSchema.safeParse(message);
     if (installSuggestion.success) {
-      void handleInstallSuggestion(installSuggestion.data).then(sendResponse);
+      void handleInstallSuggestion(installSuggestion.data).then(sendResponse, () =>
+        sendResponse({ ok: false, reason: "storage-unreadable" }),
+      );
       return true;
     }
 
@@ -128,7 +144,7 @@ export default defineBackground(() => {
       fetchFn: (url) => fetch(url),
       extensionVersion: browser.runtime.getManifest().version,
       ensureInitialized,
-    }).then(sendResponse);
+    }).then(sendResponse, () => sendResponse(bridgeStorageFailure(message)));
     return true;
   });
 });
@@ -178,6 +194,48 @@ async function handleLookup(url: string): Promise<LocalLookupResult> {
   const result = await resolveLocalLookup(url, store, localStorageArea);
   rememberInstallCount(await store.readIndex());
   return result;
+}
+
+function storageUnreadableLookup(): LocalLookupResult {
+  return {
+    packages: [],
+    diagnostics: { matched: 0, revoked: 0, broken: 0, blocked: "storage-unreadable" },
+  };
+}
+
+function storageUnreadablePopupState(): PopupState {
+  return {
+    status: { kind: "storage-unreadable" },
+    hostname: null,
+    // The popup already renders this documented storage-unreadable failure
+    // state for a corrupt schema marker; initialization I/O errors are equally
+    // unsafe to read from, so serve the same fail-closed response.
+    schemaState: "corrupt",
+    safetyListPresent: false,
+    installs: [],
+  };
+}
+
+function bridgeStorageFailure(message: unknown): unknown {
+  const request = bridgeRequestSchema.safeParse(message);
+  if (!request.success) return { ok: false, reason: "bad-request" };
+
+  switch (request.data.type) {
+    case "ping":
+      return {
+        ok: true,
+        protocol: BRIDGE_PROTOCOL_VERSION,
+        engine: ENGINE_VERSION,
+        extensionVersion: browser.runtime.getManifest().version,
+        storageReadable: false,
+      };
+    case "install":
+      return { ok: false, reason: "storage-unreadable" };
+    case "uninstall":
+      return { ok: false, reason: "storage-unreadable" };
+    case "list-installs":
+      return { ok: true, installs: [] };
+  }
 }
 
 async function buildPopupState(): Promise<PopupState> {

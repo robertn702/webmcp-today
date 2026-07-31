@@ -11,10 +11,12 @@ someone browsing the repository.
 
 ## Bundled
 
-| Package                        | Version                                | Licence | Source                                                    |
-| ------------------------------ | -------------------------------------- | ------- | --------------------------------------------------------- |
-| `zod`                          | `^4.0.0` (see `bun.lock` for resolved) | MIT     | https://github.com/colinhacks/zod                         |
-| `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0 | https://github.com/jmespath-community/typescript-jmespath |
+| Package                        | Version                                | Licence    | Source                                                    |
+| ------------------------------ | -------------------------------------- | ---------- | --------------------------------------------------------- |
+| `zod`                          | `^4.0.0` (see `bun.lock` for resolved) | MIT        | https://github.com/colinhacks/zod                         |
+| `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0    | https://github.com/jmespath-community/typescript-jmespath |
+| `@noble/hashes`                | 2.2.0                                  | MIT        | https://github.com/paulmillr/noble-hashes                 |
+| `canonicalize`                 | 3.0.0                                  | Apache-2.0 | https://github.com/erdtman/canonicalize                   |
 
 ### MPL-2.0 notice
 
@@ -25,9 +27,7 @@ above and from npm (`npm pack @jmespath-community/jmespath@1.3.0`); a full copy 
 licence ships in that package as `LICENSE`. The rest of this extension is MIT and is a
 Larger Work under §3.3, which MPL-2.0 permits us to license under our own terms.
 
-## Not bundled
+### Apache-2.0 notice
 
-`@robertn702/webmcp-today-schema` (this repo, MIT) depends on `@noble/hashes` (MIT) and
-`canonicalize` (Apache-2.0), but neither reaches the shipped bundles: they are only
-used by `apiContentHash`, which the extension never calls, so the build tree-shakes
-them out. Verified by inspecting `.output/chrome-mv3/`. Add them here if that changes.
+`canonicalize` is covered by the Apache License 2.0. Its source and a copy of the
+licence are available at the URL above and from npm (`npm pack canonicalize@3.0.0`).
