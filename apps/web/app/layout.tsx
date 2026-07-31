@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s · WebMCP Today",
   },
   description:
-    "Install community-written MCP tool packages on sites that never shipped any. The extension registers them on the page, so your agent calls named tools instead of guessing.",
+    "A community registry of WebMCP tool packages. Install one and the extension registers its tools on the page, so your agent calls named tools like reddit_comment.",
 };
 
 // Applies the stored theme before first paint to avoid a flash of the wrong

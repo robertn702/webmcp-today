@@ -1,7 +1,7 @@
 # Product Marketing Context
 
-**Document version:** v4
-**Last updated:** 2026-07-26
+**Document version:** v5
+**Last updated:** 2026-07-30
 
 Source of truth for positioning, audience, and voice. Every marketing skill
 (copywriting, cro, copy-editing, …) reads this before drafting. Product facts
@@ -206,8 +206,38 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 - The Chrome flag requirement appears wherever someone might try to install.
 - Prefer the product's own vocabulary over invented marketing terms.
 - Prose mechanics (punctuation, sentence construction, banned vocabulary) follow
-  `~/git/robertn702/nexus/docs/context/personal/writing-style.md`. No em dashes,
-  colons or semicolons in body copy.
+  `~/git/robertn702/nexus/docs/context/personal/writing-style.md`. Anyone writing
+  site copy reads that file too, not just this one — it holds the AI-slop
+  construction bans, this doc only holds the vocabulary bans.
+- **No em dashes, colons or semicolons in any rendered string** — body copy, UI
+  microcopy, error strings, badges, and metadata descriptions alike. Code
+  comments are exempt.
+
+**Construction budgets (per page):** The voice above, generated without limits,
+produces its own slop — antithesis and wry kickers at machine density. Budgets:
+
+- "X, not Y" antithesis: max 1 per page.
+- Wry kicker sentences ("Read it before you run it"): max 2 per page. Most
+  paragraphs should end on a fact, not a landing.
+- Anaphora ("Nothing…" openers, "no X, no Y, no Z" lists): max 1 per page;
+  no-lists max 2 items.
+- Chiasmus / mirrored aphorisms: 0. If a line is quotable, that is suspicious.
+- Headlines: vary the form across pages. Not every h1 is a clipped fragment
+  with a period.
+
+**Repetition ledger:** signature phrases are single-use per page, ideally per
+site. Grep before adding one: "never shipped", "hunting for the reply box",
+"the site's own HTTP API", "data, not code". Never repeat a sentence verbatim
+anywhere on a page.
+
+**Filler check:** every sentence must add a fact. Commentary about the copy
+itself ("the more interesting half", "it's the part that does the work") gets cut.
+
+**Self-check before shipping copy:** grep the draft for `, not `, `Nothing`,
+`no .*, no `, and `—`; count sentences under 6 words; extract rendered strings
+and look for repeated 4+ word n-grams. Anything over budget gets rewritten
+before it is presented. Edit as a human editor who tolerates at most one clever
+line per page and prefers a paragraph that merely informs.
 
 ## Proof Points
 
@@ -240,6 +270,12 @@ package.
 
 _Newest first. One line per revision: what changed and why._
 
+- v5 (2026-07-30) — Copy audit found second-order slop: the voice's signature
+  constructions (antithesis, wry kickers, "Nothing" anaphora, fragment headlines)
+  at machine density. Added construction budgets, a repetition ledger, a filler
+  check, and a self-check pass to Brand Voice; em-dash rule scope widened to all
+  rendered strings (code comments exempt); writing-style.md is now required
+  reading for anyone drafting site copy, not just a punctuation reference.
 - v4 (2026-07-26) — The `config`/`package` split closed: code (routes, schema
   exports, DB tables, MCP tool names) now says `package` too, so the v3 caveat
   ("copy only") no longer applies. Glossary and "Words to use" updated to match.

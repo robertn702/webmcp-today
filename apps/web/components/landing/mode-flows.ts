@@ -81,12 +81,12 @@ export const llmFirstSteps: readonly FlowStep[] = [
     from: "api",
     to: "ext",
     title: "Installing pins you to one exact version",
-    body: "`install_package` writes an `installs` row on your webmcp.today account and returns a handoff link. Opening that link drives the install bridge into the extension: the body is fetched, `apiContentHash` is re-verified, and it lands atomically in `chrome.storage.local`. A new upstream version never arrives on its own — moving the pin is a fresh click.",
+    body: "`install_package` writes an `installs` row on your webmcp.today account and returns a handoff link. Opening that link drives the install bridge into the extension: the body is fetched, `apiContentHash` is re-verified, and it lands atomically in `chrome.storage.local`. A new upstream version never arrives on its own. Moving the pin is a fresh click.",
   },
   {
     from: "ext",
     to: "site",
     title: "And the tools appear on the page",
-    body: "The extension registers each pinned tool with `document.modelContext.registerTool()`. Your agent now calls `reddit_comment` instead of hunting for a textarea.",
+    body: "The extension registers each pinned tool with `document.modelContext.registerTool()`. Your agent now calls `reddit_comment`.",
   },
 ];

@@ -110,7 +110,7 @@ export default async function LandingPage() {
           <Reason
             index="02"
             title="Scraping rots quietly"
-            body="A selector breaks the day a class name changes and nothing tells you. A package that declares the site's own HTTP API fails loudly instead. A 4xx you can see beats a div you can't find."
+            body="A selector breaks the day a class name changes, and the failure is silent. A package built on the site's public API fails with a status code you can see."
           />
           <Reason
             index="03"
@@ -127,12 +127,12 @@ export default async function LandingPage() {
             How it runs
           </p>
           <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-            From your terminal.
+            From your terminal
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             An agent outside the browser, like Claude Code or any other MCP client, searches the
             registry, publishes what&apos;s missing, and pins an install. The extension delivers
-            that exact version into the page. Step through it.
+            that exact version into the page. The diagram below walks through each step.
           </p>
         </div>
 
@@ -156,8 +156,8 @@ export default async function LandingPage() {
               Read it before you run it.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              A package registers tools on pages you&apos;re signed into. So nothing here asks you
-              to take our word for it.
+              A package registers tools on pages you&apos;re signed into. Each claim below names the
+              mechanism that backs it.
             </p>
           </div>
 
@@ -167,18 +167,17 @@ export default async function LandingPage() {
               repo. What the extension does with a package is code you can read.
             </TrustFact>
             <TrustFact title="Packages are data, not code">
-              A package is a JSON document. URL patterns, tool descriptions, and an API block
-              declaring the site's own HTTP endpoints. Nothing in it can run arbitrary code in your
-              page.
+              A package is a JSON document. The schema has no step that executes code, so installing
+              one can&apos;t run arbitrary code in your page.
             </TrustFact>
             <TrustFact title="You see every tool first">
-              The package page lists each tool it registers and what that tool takes. Nothing shows
-              up on a page you didn&apos;t already read.
+              The package page lists each tool it registers and what that tool takes, so you can
+              read the full list before you install.
             </TrustFact>
             <TrustFact title="Updates can’t ambush you">
               Your install is pinned to one version, and a published version is never edited. A bad
-              update reaches you when you move the pin and not before. Rolling back means moving it
-              back.
+              update can&apos;t reach you until you choose to move the pin, and rolling back is
+              moving the pin to an older version.
             </TrustFact>
             <TrustFact title="A call can’t leave the site">
               API mode is locked to the package&apos;s own origin, checked when it&apos;s published

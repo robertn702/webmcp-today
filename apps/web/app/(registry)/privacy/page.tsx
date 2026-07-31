@@ -18,17 +18,17 @@ export default function PrivacyPage() {
       <p className="mt-2 font-mono text-xs text-muted-foreground">Last updated {LAST_UPDATED}</p>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        One page covers both halves of this project: the webmcp.today website and the companion
-        Chrome extension. The extension is the more interesting half, and the short version is that
-        it tells us almost nothing.
+        This page covers both the webmcp.today website and the companion Chrome extension. The
+        extension stores everything on your device and sends us almost nothing. The details are
+        below.
       </p>
 
       <Section n={1} title="The extension">
         <p>
           The extension stores your installed tool packages, the revocation (safety) list, and the
-          known-domains list in on-device browser storage only — <code>chrome.storage.local</code>,
-          never <code>chrome.storage.sync</code>, so nothing leaves your device through Chrome sync
-          either.
+          known-domains list in on-device browser storage (<code>chrome.storage.local</code>). It
+          never uses <code>chrome.storage.sync</code>, so nothing leaves your device through Chrome
+          sync.
         </p>
         <p>
           Loading a page with the extension installed makes no network requests. Every URL is
@@ -46,15 +46,15 @@ export default function PrivacyPage() {
           </li>
         </ul>
         <p>
-          Those requests carry no account, no identifier, no cookies, and no browsing data. The
-          extension has no analytics, no telemetry, and no error reporting. The one thing the
-          requests can&apos;t hide is your IP address — our hosting provider&apos;s servers see it,
-          as any web server does (see the processor list below).
+          Those requests carry no account, identifier, cookies, or browsing data. The extension has
+          no analytics, telemetry, or error reporting. The one thing the requests can&apos;t hide is
+          your IP address, which our hosting provider&apos;s servers see, as any web server does
+          (see the processor list below).
         </p>
         <p>
           When an AI agent runs one of your installed tools on a page, the request goes from the
           page to that same site, using your own existing session with it. The data goes from the
-          site to itself — never to us. We cannot see which sites you visit or which tools you run.
+          site to itself, never to us. We cannot see which sites you visit or which tools you run.
         </p>
       </Section>
 
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Publishing a package stores the package itself and its association with your account.
-          Published packages are public and offered to everyone under CC0 — see{" "}
+          Published packages are public and offered to everyone under CC0. See{" "}
           <Link href="/terms" className="text-foreground underline underline-offset-4">
             the terms
           </Link>{" "}
@@ -81,11 +81,11 @@ export default function PrivacyPage() {
         </p>
         <p>The service runs on three processors:</p>
         <ul className="flex list-disc flex-col gap-2 pl-4">
-          <li>Vercel — hosting; its servers log IP addresses, as any web server does</li>
-          <li>Neon — database</li>
+          <li>Vercel (hosting). Its servers log IP addresses, as any web server does.</li>
+          <li>Neon (database).</li>
           <li>
-            Sentry — error monitoring on the web app only (not in the extension); an error report
-            can include your IP address, browser, and the page that failed
+            Sentry (error monitoring, web app only, not in the extension). An error report can
+            include your IP address, browser, and the page that failed.
           </li>
         </ul>
         <p>
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
 
       <Section n={3} title="What we don't collect">
         <p>
-          No browsing history, no page contents, no per-URL activity from the extension. We do not
+          The extension sends us no browsing history, page contents, or per-URL activity. We do not
           sell or share your personal information, and nothing goes to anyone beyond the processors
           listed above.
         </p>
@@ -104,9 +104,9 @@ export default function PrivacyPage() {
 
       <Section n={4} title="Your rights">
         <p>
-          You can ask to see, correct, export, or delete the data tied to your account — email the
-          address below. Deleting your account removes your profile, sessions, and install pins.
-          Published packages are public under CC0 and stay public — see the terms.
+          You can ask to see, correct, export, or delete the data tied to your account by emailing
+          the address below. Deleting your account removes your profile, sessions, and install pins.
+          Published packages are public under CC0 and stay public (see the terms).
         </p>
         <p>
           If you&apos;re in the EU or UK, you also have the right to object to processing and to
@@ -117,16 +117,15 @@ export default function PrivacyPage() {
       <Section n={5} title="Changes">
         <p>
           The date at the top is the version you&apos;re reading, and every edit is visible in the
-          repository&apos;s public history. Material changes get called out at the top of this page,
-          not just in the history. If the extension&apos;s behavior ever changes in a way this page
-          doesn&apos;t cover, this page changes first.
+          repository&apos;s public history. Material changes also get called out at the top of this
+          page. If the extension&apos;s behavior ever changes in a way this page doesn&apos;t cover,
+          this page changes first.
         </p>
       </Section>
 
       <Section n={6} title="Contact">
         <p>
-          WebMCP Today is run by one person, not a company — the maintainer of the GitHub
-          repository.
+          WebMCP Today is run by one person, the maintainer of the GitHub repository, not a company.
         </p>
         <p>
           Email{" "}

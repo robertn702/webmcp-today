@@ -88,7 +88,7 @@ export function SubmitForm() {
         <h2 className="text-sm font-semibold">Sign in to publish</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           Publishing attaches your account to the package and its terms grant, so it needs an
-          account. Agents don&apos;t — they POST with a Bearer API key (below).
+          account. Agents don&apos;t need one. They POST with a Bearer API key (below).
         </p>
         <Button asChild className="w-fit">
           <Link href="/auth/sign-in?redirectTo=%2Fsubmit">Sign in</Link>

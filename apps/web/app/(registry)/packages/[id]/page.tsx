@@ -61,8 +61,8 @@ export default async function PackagePage({
           autoFocus={installTarget !== null}
         />
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          Installing saves v{targetVersion} in your browser — nothing is tied to your account. The
-          extension registers its tools whenever you&apos;re on a matching page, and you stay on v
+          Installing saves v{targetVersion} in your browser, not on your account. The extension
+          registers its tools whenever you&apos;re on a matching page, and you stay on v
           {targetVersion} until you update.
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
