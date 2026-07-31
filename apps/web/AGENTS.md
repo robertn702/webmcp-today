@@ -25,6 +25,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   landing treatments, also reused by the full-bleed `/auth/[path]` sign-in/sign-up
   pages. `--font-display` (Instrument Serif) and the `--brand` amber are also used
   by the interior page-header pattern — see Design language.
+- `/docs/package-format` is the publisher-facing format reference; its worked example is
+  drift-guarded by `apps/web/test/package-format-example.test.ts`. There is deliberately
+  no `/docs` index — the header "Docs" link points straight at the leaf — so add an
+  index before adding a second docs page.
 
 ## Design language
 
