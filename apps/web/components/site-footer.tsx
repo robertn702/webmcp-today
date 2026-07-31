@@ -21,6 +21,9 @@ export function SiteFooter() {
           <Link href="/submit" className="hover:text-foreground hover:underline">
             Submit
           </Link>
+          <Link href="/docs/package-format" className="hover:text-foreground hover:underline">
+            Docs
+          </Link>
           <Link href="/extension" className="hover:text-foreground hover:underline">
             Extension
           </Link>

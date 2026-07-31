@@ -16,11 +16,19 @@ export default function SubmitPage() {
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         A package is a JSON document with{" "}
         <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-          domain, urlPatterns[], title, description, tools[]
-        </code>
-        . It&apos;s validated against @robertn702/webmcp-today-schema before upload and published as
-        a new package at version 1. There is no review queue. A package goes live as soon as it
-        validates.
+          version, domain, urlPatterns[], title, description, tools[]
+        </code>{" "}
+        and an{" "}
+        <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
+          api
+        </code>{" "}
+        block the tools call. The{" "}
+        <Link href="/docs/package-format" className="text-foreground underline underline-offset-4">
+          package format
+        </Link>{" "}
+        documents every field and ends with a complete example. It&apos;s validated against
+        @robertn702/webmcp-today-schema before upload and published as a new package at version 1.
+        There is no review queue. A package goes live as soon as it validates.
       </p>
 
       <div className="mt-6">
