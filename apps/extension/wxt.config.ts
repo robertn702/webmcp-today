@@ -13,6 +13,9 @@ const matchPatterns = registryMatchPatterns(process.env.NODE_ENV !== "production
 export default defineConfig({
   srcDir: "src",
   imports: false,
+  // Without this, WXT kebab-cases the package name "@webmcp-today/extension"
+  // into "webmcp-todayextension" and the release asset reads as a typo.
+  zip: { name: "webmcp-today" },
   dev: {
     // Keep WXT's dev server off port 3000 — that's the registry web app's port.
     // Background polls default to https://webmcp.today; set
