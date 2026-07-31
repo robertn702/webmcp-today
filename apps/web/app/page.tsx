@@ -45,17 +45,13 @@ export default async function LandingPage() {
             </p>
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
-              Give your agent real tools for sites that shipped
-              <em className="text-brand not-italic"> none</em>.
+              Make any site agent-ready with
+              <em className="text-brand not-italic"> WebMCP</em>.
             </h1>
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
-              Install a small, inspectable JSON package. The extension registers its tools on the
-              matching site, so your agent can call{" "}
-              <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
-                reddit_subreddit_hot
-              </code>{" "}
-              through Reddit&apos;s own API instead of scraping the page or guessing where to click.
+              Install or publish a package that gives your agent named tools on sites that have yet
+              to adopt WebMCP.
             </p>
 
             <div className="cafe-rise mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
