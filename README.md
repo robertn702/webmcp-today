@@ -12,14 +12,14 @@ and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
 
 ## Packages
 
-| Path              | What                                                                      |
-| ----------------- | ------------------------------------------------------------------------- |
-| `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (published)        |
-| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (published)      |
-| `packages/db`     | Drizzle + Neon schema and client                                          |
-| `packages/mcp`    | `@robertn702/webmcp-today-mcp` — MCP server over the REST API (published) |
-| `apps/web`        | Next.js registry UI + public REST API                                     |
-| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                     |
+| Path              | What                                                                             |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (local pre-launch)        |
+| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (local pre-launch)      |
+| `packages/db`     | Drizzle + Neon schema and client                                                 |
+| `packages/mcp`    | `@robertn702/webmcp-today-mcp` — MCP server over the REST API (local pre-launch) |
+| `apps/web`        | Next.js registry UI + public REST API                                            |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                            |
 
 ## Quickstart
 
@@ -30,7 +30,7 @@ bun run typecheck && bun run lint && bun run test
 # web (needs apps/web/.env — see .env.example)
 cd packages/db && bun run db:migrate   # apply migrations to Neon
 cd apps/web && bun run dev             # http://localhost:3000
-bun run scripts/seed.ts                # optional: seed the 5 starter packages
+bun run scripts/seed.ts                # optional: seed the 3 starter packages
 
 # extension (Chrome 149+ with chrome://flags/#enable-webmcp-testing)
 cd apps/extension && bun run dev
@@ -47,9 +47,8 @@ cd apps/extension && bun run dev
 - Both publish routes carry the submission grant in
   [the terms](https://webmcp.today/terms) and echo it back on `201` as a `terms`
   field, a `Link: …; rel="terms-of-service"` header, and a `Location` header
-- `PUT/DELETE /api/packages/:id/install` — set the caller's install pin
-  (idempotent: creates it if absent, moves it if present — also how rollback
-  works) and remove it; install count is the trust signal
+- `PUT/DELETE /api/packages/:id/install` — set or remove the caller's account
+  pin. Browser installs are separate and local to the extension.
 - `GET /api/installs` — the caller's pinned packages (auth required)
 - `GET /api/stats`, `GET /api/revocations?since=…`
 
@@ -70,7 +69,7 @@ cp apps/web/.env.example apps/web/.env   # then fill real values
 bun run --filter @webmcp-today/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon
 # schema changes: bun run --filter @webmcp-today/db db:generate && db:migrate (db:push for quick prototyping)
 
-bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 5 starter packages (0 installs)
+bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 3 starter packages
 ```
 
 **Running locally:**
