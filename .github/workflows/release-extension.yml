@@ -64,6 +64,16 @@ jobs:
           fi
           bun run --filter @webmcp-today/extension zip
 
+      # Docs link to the version-less name via
+      # https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip
+      # — GitHub's /latest redirect resolves by exact asset filename, so a
+      # versioned name would break the link on every release. The versioned ZIP
+      # stays attached too: it's the citable artifact when someone reports a
+      # bug against a specific build.
+      - name: Stable-name copy for the /latest/download URL
+        working-directory: apps/extension/.output
+        run: cp "webmcp-today-${{ steps.version.outputs.version }}-chrome.zip" webmcp-today-chrome.zip
+
       - name: Checksums
         working-directory: apps/extension/.output
         run: sha256sum *.zip > SHA256SUMS
@@ -72,6 +82,10 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Extension v${{ steps.version.outputs.version }}
+          # Repo-wide "Latest" is set by whichever release claims it. Pinning it
+          # here keeps /releases/latest pointing at extension builds; if package
+          # releases ever land (npm publishing), mark those make_latest: false.
+          make_latest: true
           files: |
             apps/extension/.output/*.zip
             apps/extension/.output/SHA256SUMS
