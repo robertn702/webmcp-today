@@ -36,6 +36,8 @@ bun run scripts/seed.ts                # optional: seed the 3 starter packages
 cd apps/extension && bun run dev
 ```
 
+Browser support and a runtime verification probe: [docs/browser-compatibility.md](docs/browser-compatibility.md).
+
 ## REST API
 
 - `GET /api/packages/lookup?url=…` — packages for a page URL, most-specific

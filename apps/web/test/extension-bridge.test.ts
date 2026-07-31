@@ -70,6 +70,18 @@ describe("extension-bridge", () => {
     expect(await bridge.pingExtension()).toEqual({ status: "absent" });
   });
 
+  it("re-probes after an absent result when a user rechecks after loading the extension", async () => {
+    const bridge = await loadBridge("id-a");
+    installChrome(vi.fn(chromeRouter("no-extension", {})));
+
+    expect(await bridge.pingExtension()).toEqual({ status: "absent" });
+
+    installChrome(chromeRouter("id-a", { ping: PING_OK }));
+    bridge.resetExtensionBridgeProbe();
+
+    expect(await bridge.pingExtension()).toEqual({ status: "ok", data: PING_OK });
+  });
+
   it("probes the configured IDs in order and caches the winner", async () => {
     const bridge = await loadBridge("id-a, id-b");
     const sendMessage = vi.fn(chromeRouter("id-b", { ping: PING_OK }));

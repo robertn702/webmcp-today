@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyBlock } from "@/components/copy-block";
+import { ExtensionReadiness } from "@/components/extension-readiness";
 
 const RELEASE_ZIP_URL =
   "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip";
@@ -35,6 +36,8 @@ export default function ExtensionPage() {
         </Link>
         .
       </p>
+
+      <ExtensionReadiness />
 
       <CopyBlock label="Copy install prompt">{INSTALL_PROMPT}</CopyBlock>
 
