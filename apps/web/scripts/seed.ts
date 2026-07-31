@@ -5,6 +5,7 @@
 import { apiContentHash } from "@robertn702/webmcp-today-schema";
 import { createDb, packages, packageVersions, user } from "@webmcp-today/db";
 import { curatedPackages } from "@webmcp-today/curated-packages";
+import { and, eq } from "drizzle-orm";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
@@ -22,6 +23,16 @@ await db
   .onConflictDoNothing();
 
 for (const input of curatedPackages) {
+  const [existing] = await db
+    .select({ id: packages.id })
+    .from(packages)
+    .where(and(eq(packages.domain, input.domain), eq(packages.title, input.title)))
+    .limit(1);
+  if (existing) {
+    console.log(`skip ${input.domain}: already seeded`);
+    continue;
+  }
+
   const [pkg] = await db
     .insert(packages)
     .values({

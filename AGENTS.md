@@ -134,9 +134,10 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## Registry data model
 
-- Trust = install count, not verification. `packages` (mutable) /
-  `package_versions` (append-only; the served truth) / `installs` (pins
-  user→version). ERD: `docs/erd.md`; served-truth rules: `apps/web/AGENTS.md`.
+- `packages` (mutable) / `package_versions` (append-only; the served truth) /
+  `installs` (auth-only per-user version pins). Browse serves max(version);
+  users stay on their pinned version. ERD: `docs/erd.md`; served-truth rules:
+  `apps/web/AGENTS.md`.
 - No `(domain, url_pattern)` uniqueness — rival packages may target the same site;
   installs + pattern specificity rank them.
 - Two Postgres namespaces: app tables in `public`, better-auth's in `auth`

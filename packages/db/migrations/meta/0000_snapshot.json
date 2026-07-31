@@ -592,7 +592,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "chk_package_versions_version_positive": {
+          "name": "chk_package_versions_version_positive",
+          "value": "\"version\" > 0"
+        },
+        "chk_package_versions_min_engine_positive": {
+          "name": "chk_package_versions_min_engine_positive",
+          "value": "\"min_engine\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.installs": {
@@ -842,6 +851,21 @@
           "columns": [
             {
               "expression": "domain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_packages_updated_at": {
+          "name": "idx_packages_updated_at",
+          "columns": [
+            {
+              "expression": "updated_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
