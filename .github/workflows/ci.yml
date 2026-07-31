@@ -31,5 +31,8 @@ jobs:
         with:
           name: extension-unsigned-${{ github.sha }}
           path: apps/extension/.output/*.zip
+          # upload-artifact filters hidden paths by default, even when the glob
+          # names .output/ explicitly — without this the step finds nothing.
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
