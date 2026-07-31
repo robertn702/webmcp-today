@@ -43,6 +43,8 @@ async function loadBridge(ids?: string) {
   vi.stubEnv("GITHUB_CLIENT_ID", "test");
   vi.stubEnv("GITHUB_CLIENT_SECRET", "test");
   vi.stubEnv("BETTER_AUTH_SECRET", "x".repeat(32));
+  vi.stubEnv("OAUTH_PROXY_SECRET", "x".repeat(32));
+  vi.stubEnv("OAUTH_PROXY_PRODUCTION_URL", "");
   if (ids !== undefined) vi.stubEnv("NEXT_PUBLIC_WEBMCP_EXTENSION_IDS", ids);
   return import("@/lib/extension-bridge");
 }

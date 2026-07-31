@@ -86,8 +86,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 ## Env & dev
 
 - `.env` (gitignored) needs real `DATABASE_URL` (Neon), `BETTER_AUTH_SECRET`,
-  `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; `.env.example` has placeholders.
+  `OAUTH_PROXY_SECRET`, `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; `.env.example` has placeholders.
   t3-env (`env.ts`) validates at build time — `next build` fails without them.
+- `OAUTH_PROXY_PRODUCTION_URL=https://webmcp.today` is Vercel Preview + Production only.
+  Leave it unset locally so the separate development GitHub OAuth App keeps its localhost callback.
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
 - `scripts/seed.ts` seeds the curated packages from `@webmcp-today/curated-packages`

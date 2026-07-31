@@ -7,6 +7,8 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: z.string().min(1),
     GITHUB_CLIENT_SECRET: z.string().min(1),
     BETTER_AUTH_SECRET: z.string().min(32),
+    OAUTH_PROXY_SECRET: z.string().min(32),
+    OAUTH_PROXY_PRODUCTION_URL: z.url().optional(),
     BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
   },
   client: {
@@ -22,4 +24,5 @@ export const env = createEnv({
     NEXT_PUBLIC_WEBMCP_EXTENSION_IDS: process.env.NEXT_PUBLIC_WEBMCP_EXTENSION_IDS,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
+  emptyStringAsUndefined: true,
 });
