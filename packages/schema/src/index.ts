@@ -6,6 +6,7 @@ export * from "./tool.js";
 export * from "./api.js";
 export * from "./api-hash.js";
 export * from "./bridge.js";
+export * from "./local-bridge.js";
 export * from "./package.js";
 export * from "./registry.js";
 export * from "./url-matching.js";
