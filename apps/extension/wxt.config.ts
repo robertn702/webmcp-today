@@ -10,6 +10,12 @@ import { registryMatchPatterns } from "./src/lib/registry-origins.js";
 // manifest and runtime check never drift.
 const matchPatterns = registryMatchPatterns(process.env.NODE_ENV !== "production");
 
+// Public development identity for unpacked local builds. Its matching private
+// key is stored in 1Password; releases override this through WXT_EXTENSION_KEY.
+const developmentExtensionKey =
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl0DK8WOYNqdmxaOeksFExZilyd5HTPAFFZnFtvWYp1+HT80DXp46R8+g/nPpKsj1lnv6+5wScPn+b7PapJwFPJd1SfLstrmgJCySHskBdYsr4tERzdsnj41YBVIT+TkFV+Y3rKd8PLVN0CI3vxhla6SEFW4ccy9Qw8eedhtUwLH+pmeWYihm47VQ4C1+fnSJA1KvcxcgQ4ACqEs9/yXSeGpCbpRgROrJR3CrlqVwW78Xwr9NhOBkjNPJIN0RV9MAaLG7iWI+wT/oyaDjJz9HaLEOUdgFA4h/29UO0++2zw1oi4daujyEP02JBpS6/Rpc+oB3qlxCBa/pDAMUTDPcsQIDAQAB";
+const extensionKey = process.env.WXT_EXTENSION_KEY ?? developmentExtensionKey;
+
 export default defineConfig({
   srcDir: "src",
   imports: false,
@@ -24,14 +30,9 @@ export default defineConfig({
   },
   webExt: {
     // The dev browser is a separate Chrome instance with its own profile, so
-    // chrome://flags set in your main profile don't apply. Enable WebMCP via
-    // launch args instead (DevToolsWebMCPSupport is needed on Chrome 149).
-    chromiumArgs: [
-      "--enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport",
-      // Lets MCP clients (chrome-devtools-mcp via opencode.json at the repo
-      // root) attach to this browser and call the page's WebMCP tools.
-      "--remote-debugging-port=9222",
-    ],
+    // chrome://flags set in your main profile don't apply. The local bridge
+    // calls WebMCP from the content script; it needs no DevTools or remote port.
+    chromiumArgs: ["--enable-features=WebMCP,WebMCPTesting"],
     // Persist the dev profile (default is a fresh temp profile per run) so the
     // Model Context Tool Inspector extension survives restarts — install it
     // once in the dev browser. .wxt/ is gitignored.
@@ -41,10 +42,10 @@ export default defineConfig({
   manifest: {
     name: "WebMCP Today",
     description: "Injects community WebMCP tool configs into sites you visit.",
-    // Spread conditionally: an undefined `key` serialized into the manifest
-    // is a load error. The key pins the dev extension ID (see AGENTS.md).
-    ...(process.env.WXT_EXTENSION_KEY ? { key: process.env.WXT_EXTENSION_KEY } : {}),
-    permissions: ["storage", "alarms"],
+    // A public key pins local builds to one development extension ID. Release
+    // CI supplies WXT_EXTENSION_KEY to use its distinct release identity.
+    key: extensionKey,
+    permissions: ["storage", "alarms", "nativeMessaging"],
     // The 128 asset doubles as the Chrome Web Store icon.
     icons: {
       16: "icons/16.png",

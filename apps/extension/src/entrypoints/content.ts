@@ -1,19 +1,53 @@
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { browser } from "wxt/browser";
 import { getPackagesForUrl } from "../lib/packages.js";
-import { getModelContext } from "../lib/model-context.js";
+import { getModelContext, getToolConsumerModelContext } from "../lib/model-context.js";
 import { startNavigationWatcher } from "../lib/navigation.js";
 import { runRegistrationPass, type RegistrationDeps } from "../lib/register-tools.js";
 import { STATUS_MESSAGE_TYPE, type PageStatus } from "../lib/status.js";
+import { LocalBridgeContent } from "../lib/local-bridge-content.js";
+import { contentBridgeRequestSchema } from "@robertn702/webmcp-today-schema";
+import { INDEX_KEY, REVOKED_KEY } from "../lib/store-schema.js";
 
 export default defineContentScript({
   matches: ["<all_urls>"],
   runAt: "document_idle",
   main() {
-    // Runs the first pass now and re-runs it on SPA route changes.
+    const localBridge = new LocalBridgeContent({
+      getConsumer: getToolConsumerModelContext,
+      getTitle: () => document.title,
+      getUrl: () => window.location.href,
+    });
+    localBridge.installToolChangeListener();
+    browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+      if (!contentBridgeRequestSchema.safeParse(message).success) return;
+      void localBridge.handleMessage(message).then(sendResponse);
+      return true;
+    });
+
+    // Runs the first pass now and re-runs it on SPA route changes or local
+    // install/safety changes, so an already-open tab does not need a refresh.
     startNavigationWatcher({
       getUrl: () => window.location.href,
-      run: (url, signal) => runRegistrationPass(url, signal, deps),
+      run: (url, signal) => {
+        localBridge.invalidateDocument();
+        return runRegistrationPass(url, signal, deps);
+      },
+      subscribeInvalidation(invalidate) {
+        const listener: Parameters<typeof browser.storage.onChanged.addListener>[0] = (
+          changes,
+          areaName,
+        ) => {
+          if (
+            areaName === "local" &&
+            (changes[INDEX_KEY] !== undefined || changes[REVOKED_KEY] !== undefined)
+          ) {
+            invalidate();
+          }
+        };
+        browser.storage.onChanged.addListener(listener);
+        return () => browser.storage.onChanged.removeListener(listener);
+      },
     });
   },
 });

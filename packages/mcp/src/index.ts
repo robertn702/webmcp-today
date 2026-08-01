@@ -2,6 +2,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { RegistryClient } from "./client.js";
+import { LocalBridgeClient } from "./local-bridge-client.js";
+import { registerLocalBridgeTools } from "./local-bridge-tools.js";
 import { registerReadTools } from "./read-tools.js";
 import { registerWriteTools } from "./write-tools.js";
 
@@ -10,9 +12,11 @@ const apiKey = process.env.WEBMCP_TODAY_API_KEY;
 
 const server = new McpServer({ name: "webmcp-today", version: "0.1.0" });
 const client = new RegistryClient({ baseUrl, apiKey });
+const localBridgeClient = new LocalBridgeClient();
 
 registerReadTools(server, client);
 registerWriteTools(server, client);
+registerLocalBridgeTools(server, localBridgeClient);
 
 await server.connect(new StdioServerTransport());
 console.error(`webmcp-today MCP server connected (registry: ${baseUrl})`);

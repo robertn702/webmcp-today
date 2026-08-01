@@ -18,9 +18,8 @@ jobs:
       - run: bun run lint
       - run: bun run test
 
-      # Unsigned (no WXT_EXTENSION_KEY): a random per-profile ID, so the
-      # install bridge on webmcp.today won't answer. This artifact is for
-      # eyeballing a build, not for testing installs — cut a tag for that.
+      # Uses the committed development public key. Release builds override it
+      # with their separate key, so this artifact is only for build inspection.
       # NOTE: `bun run --filter` (turbo syntax) does NOT scope the cwd in plain
       # bun — it runs the script from the repo root, so the ZIP would land in
       # ./.output/ instead of apps/extension/.output/. Working-directory pin:

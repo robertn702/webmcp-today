@@ -20,11 +20,13 @@
   },
   "files": [
     "dist",
+    "bin",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/node": "^22",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

@@ -61,7 +61,7 @@ export const FIRST_TOOL_PROMPT = `Use the Chrome DevTools MCP server connected t
 
 1. Navigate to https://www.reddit.com/r/webdev/.
 2. List the page's WebMCP tools.
-3. If reddit_subreddit_hot is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then reload Reddit and list the tools again.
+3. If reddit_subreddit_hot is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then list the tools again in the same Reddit tab.
 4. Call reddit_subreddit_hot with subreddit "webdev" and limit 5.
 5. Show me the returned titles and permalinks.
 
@@ -73,7 +73,7 @@ Use the Chrome browser connected through Chrome DevTools MCP.
 1. Navigate to the Reddit URL.
 2. Use list_webmcp_tools to check whether reddit_subreddit_hot is already registered.
 3. If it is missing, ask me to open the WebMCP Today extension popup, inspect the Reddit suggestion, and click Install. You cannot click the browser toolbar extension icon for me, so wait for my confirmation.
-4. Reload Reddit and verify that reddit_subreddit_hot appears.
+4. Verify in the same Reddit tab that reddit_subreddit_hot appears without a reload.
 
 Do not use DOM scraping or evaluate_script to imitate the missing tool.`;
 

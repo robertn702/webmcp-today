@@ -35,6 +35,8 @@ import {
 import { localStorageArea } from "../lib/storage.js";
 import { fetchSuggestions } from "../lib/suggestions.js";
 import { INDEX_KEY, indexSchema, type InstallIndex } from "../lib/store-schema.js";
+import { startNativeBridge } from "../lib/native-bridge.js";
+import { createLocalBridgeRouter } from "../lib/local-bridge-router.js";
 
 // Page loads resolve against LOCAL storage only (local-lookup.ts); the env-var
 // origin is used exclusively by background polls. The install path (step 4)
@@ -69,6 +71,22 @@ function ensureInitialized(): Promise<SchemaVersionState> {
 }
 
 export default defineBackground(() => {
+  const localBridgeRouter = createLocalBridgeRouter({
+    async getSelectedTabId() {
+      const tabs = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+      return tabs[0]?.id;
+    },
+    sendToContent: (tabId, message) => browser.tabs.sendMessage(tabId, message),
+  });
+  startNativeBridge({
+    connectNative: (hostName) => browser.runtime.connectNative(hostName),
+    handle: localBridgeRouter.handle,
+    scheduleReconnect: (callback) => {
+      setTimeout(callback, 1_000);
+    },
+    getLastErrorMessage: () => browser.runtime.lastError?.message,
+  });
+
   browser.runtime.onInstalled.addListener(() => {
     void bootstrap();
   });

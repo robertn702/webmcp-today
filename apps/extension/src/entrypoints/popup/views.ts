@@ -94,7 +94,10 @@ function statusNodes(state: PopupState): Node[] {
     case "safety-list-missing":
       // safetyListPresent=false already rendered the pause view; reaching this
       // means the list arrived after the page loaded.
-      return [el("h1", "Packages paused on this page"), el("p", "Reload the page to retry.")];
+      return [
+        el("h1", "Packages paused on this page"),
+        el("p", "The extension will retry this page automatically."),
+      ];
     case "storage-unreadable":
       return [
         el("h1", "Extension storage is unreadable"),
