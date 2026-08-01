@@ -24,10 +24,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   landing treatments, also reused by the full-bleed `/auth/[path]` sign-in/sign-up
   pages. `--font-display` (Instrument Serif) and the `--brand` amber are also used
   by the interior page-header pattern — see Design language.
-- `/docs` is the task-oriented quickstart (extension → Chrome DevTools MCP → first tool
-  call → package creation/publish prompts). Its first-run claim was manually verified from an
-  empty extension store against Reddit: popup suggestion install → six registered tools → live
-  `reddit_subreddit_hot` result. `/docs/package-format` is the publisher-facing reference; its
+- `/docs` is the task-oriented quickstart (extension → WebMCP Today MCP local bridge/native host →
+  first tool call → package creation/publish prompts). Its first-run claim was manually verified
+  from an empty extension store against Reddit: popup suggestion install → six registered tools →
+  live `reddit_subreddit_hot` result. `/docs/package-format` is the publisher-facing reference; its
   worked example is drift-guarded by
   `apps/web/test/package-format-example.test.ts`.
 

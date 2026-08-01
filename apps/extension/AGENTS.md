@@ -1,7 +1,7 @@
 # AGENTS.md — apps/extension
 
 Extension-specific notes. Repo-wide guidance: root `AGENTS.md` (read it first).
-Internal architecture map (the three processes, the four flows every `src/lib/` file
+Internal architecture map (the three processes, the five flows every `src/lib/` file
 serves, where to look when something breaks): `apps/extension/ARCHITECTURE.md`.
 
 ## Dev browser
@@ -106,9 +106,10 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   (fail-closed: installed packages stay dormant until `GET /api/revocations`
   succeeds once). Pages in that state report `safety-list-missing` and register
   nothing.
-- `destructiveHint` tools gate on a blocking `window.confirm`. Invoked via
-  chrome-devtools-mcp, the call surfaces an "open dialog" notice and the write
-  waits until a human approves in the browser (or sends `handle_dialog`).
+- `destructiveHint` tools gate on a blocking `window.confirm`. When the local bridge invokes one,
+  the user approves the page-level confirmation manually in the selected tab. An
+  `execution-timeout` means the outcome is uncertain, so verify its effect before retrying;
+  `dispatch-failed` confirms it did not run and may be retried.
 
 ## Structure
 

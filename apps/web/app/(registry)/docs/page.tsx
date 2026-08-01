@@ -3,23 +3,24 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { CopyBlock } from "@/components/copy-block";
 import {
-  CHROME_DEVTOOLS_MCP_PROMPT,
+  BUILD_LOCAL_BRIDGE,
   CREATE_PACKAGE_PROMPT,
   DOWNLOAD_AND_EXTRACT,
   FIRST_TOOL_PROMPT,
   INSTALL_EXTENSION_PROMPT,
+  INSTALL_NATIVE_HOST,
   INSTALL_PACKAGE_PROMPT,
+  LOCAL_BRIDGE_MCP_PROMPT,
   MCP_CONFIG,
   PUBLISH_COMMAND,
   PUBLISH_PACKAGE_PROMPT,
   QUICKSTART_PROMPT,
-  START_CHROME,
 } from "./content";
 
 export const metadata: Metadata = {
   title: "Quickstart",
   description:
-    "Install the WebMCP Today extension, connect Chrome DevTools MCP, install a package, call a tool, and create a package with an AI coding agent.",
+    "Install the WebMCP Today extension, configure its local MCP bridge, install a package, call a tool, and create a package with an AI coding agent.",
 };
 
 export default function DocsPage() {
@@ -36,8 +37,8 @@ export default function DocsPage() {
       <section className="mt-8 border-l-2 border-brand/30 pl-5">
         <h2 className="text-lg font-semibold">Let an agent run the whole quickstart</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          Start here if your coding agent can edit project configuration and use Chrome DevTools
-          MCP. It will pause for the browser actions only you can approve.
+          Start here if your coding agent can edit project configuration and use the local WebMCP
+          Today MCP bridge. It will pause for the browser actions only you can approve.
         </p>
         <CopyBlock label="Copy quickstart prompt">{QUICKSTART_PROMPT}</CopyBlock>
       </section>
@@ -51,38 +52,38 @@ export default function DocsPage() {
         <CopyBlock label="Copy prompt">{INSTALL_EXTENSION_PROMPT}</CopyBlock>
         <CopyBlock>{DOWNLOAD_AND_EXTRACT}</CopyBlock>
         <p>
-          Load the extracted folder into the Chrome profile from the next step, not your default
-          browser profile. Chrome cannot install the ZIP directly.
+          Chrome cannot install the ZIP directly. Load its extracted folder in Chrome in the next
+          step.
         </p>
       </Step>
 
-      <Step number="2" title="Start Chrome and load the extension">
+      <Step number="2" title="Enable WebMCP and load the extension">
         <p>
-          Your MCP client and the extension must use the same Chrome profile. This macOS command
-          starts a separate Chrome 149+ profile with WebMCP and remote debugging enabled.
-        </p>
-        <CopyBlock>{START_CHROME}</CopyBlock>
-        <p>
-          In that new window, open <Code>chrome://extensions</Code>, enable Developer mode, choose
-          Load unpacked, and select the extracted folder from step 1. Off-store installs do not
-          update automatically, and Chrome may show a developer-mode warning each time it starts. On
-          Linux or Windows, launch Chrome with the same three flags. The separate
-          <Code>--user-data-dir</Code> is required by current Chrome remote-debugging security.
+          In Chrome 149+, enable <Code>chrome://flags/#enable-webmcp-testing</Code> and restart.
+          Then open <Code>chrome://extensions</Code>, enable Developer mode, choose Load unpacked,
+          and select the extracted folder from step 1. Off-store installs do not update
+          automatically, and Chrome may show a developer-mode warning each time it starts.
         </p>
       </Step>
 
-      <Step number="3" title="Connect Chrome DevTools MCP">
+      <Step number="3" title="Configure the local MCP bridge">
         <p>
-          Let your coding agent add the server without overwriting the rest of your config, or copy
-          the OpenCode example below. The exact outer config key differs by client; the command and
-          flags are the important part.
+          The native host is a macOS development setup. Follow its README, then let your coding
+          agent merge the local server into your existing <Code>opencode.json</Code>, or use the
+          OpenCode entry below without replacing unrelated configuration.
         </p>
-        <CopyBlock label="Copy prompt">{CHROME_DEVTOOLS_MCP_PROMPT}</CopyBlock>
+        <CopyBlock>{BUILD_LOCAL_BRIDGE}</CopyBlock>
+        <p>
+          The explicit extension ID below is for the downloaded release from step 1; the installer
+          default is only for the local development extension.
+        </p>
+        <CopyBlock>{INSTALL_NATIVE_HOST}</CopyBlock>
+        <CopyBlock label="Copy prompt">{LOCAL_BRIDGE_MCP_PROMPT}</CopyBlock>
         <CopyBlock>{MCP_CONFIG}</CopyBlock>
         <p>
-          A working connection exposes <Code>list_webmcp_tools</Code> and
-          <Code>execute_webmcp_tool</Code>. If those tools are missing, check that Chrome is running
-          on port 9222 and the experimental WebMCP category flag is present.
+          A working connection exposes <Code>list_connected_webmcp_tabs</Code>,{" "}
+          <Code>list_webmcp_tools</Code>, and <Code>execute_webmcp_tool</Code>. Select a normal
+          Chrome tab before using them.
         </p>
       </Step>
 
@@ -97,8 +98,8 @@ export default function DocsPage() {
 
       <Step number="5" title="Call the tool">
         <p>
-          Give the agent this prompt after Chrome DevTools MCP is connected. A successful run lists
-          six Reddit tools and returns live post data without DOM scraping.
+          Give the agent this prompt after the local bridge is connected. A successful run lists six
+          Reddit tools and returns live post data without DOM scraping.
         </p>
         <CopyBlock label="Copy prompt">{FIRST_TOOL_PROMPT}</CopyBlock>
       </Step>

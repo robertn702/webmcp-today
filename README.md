@@ -12,14 +12,14 @@ and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
 
 ## Packages
 
-| Path              | What                                                                             |
-| ----------------- | -------------------------------------------------------------------------------- |
-| `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (local pre-launch)        |
-| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (local pre-launch)      |
-| `packages/db`     | Drizzle + Neon schema and client                                                 |
-| `packages/mcp`    | `@robertn702/webmcp-today-mcp` — MCP server over the REST API (local pre-launch) |
-| `apps/web`        | Next.js registry UI + public REST API                                            |
-| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                            |
+| Path              | What                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (local pre-launch)                                    |
+| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (local pre-launch)                                  |
+| `packages/db`     | Drizzle + Neon schema and client                                                                             |
+| `packages/mcp`    | `@robertn702/webmcp-today-mcp` — registry MCP server + local bridge for live WebMCP tools (local pre-launch) |
+| `apps/web`        | Next.js registry UI + public REST API                                                                        |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                                                        |
 
 ## Quickstart
 

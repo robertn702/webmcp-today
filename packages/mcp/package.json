@@ -1,7 +1,7 @@
 {
   "name": "@robertn702/webmcp-today-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the WebMCP Today registry — lookup, publish, install, and manage community WebMCP packages",
+  "description": "MCP server for the WebMCP Today registry and local browser bridge — manage packages and list or execute live WebMCP tools",
   "type": "module",
   "license": "MIT",
   "repository": {
