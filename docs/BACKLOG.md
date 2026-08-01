@@ -104,8 +104,8 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   (apps/extension/wxt.config.ts manifest; docs/BACKLOG.md CWS item for the
   review-time research)
 - **Chat UI** — embedded chat panel in the extension so users can drive the
-  page's WebMCP tools without a terminal agent (today's loop needs opencode +
-  chrome-devtools-mcp). Needs a design call: model/API-key story, panel
+  page's WebMCP tools without a terminal agent (today's manual loop uses OpenCode +
+  the WebMCP Today MCP local bridge). Needs a design call: model/API-key story, panel
   placement. (apps/extension/AGENTS.md → E2E testing shows the manual loop
   this would replace)
 - **MV3 spike for tier-2 script slots** — execute a registry-delivered string

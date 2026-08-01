@@ -2,7 +2,7 @@
 
 The delivery mechanism for WebMCP Today: injects registry packages' tools into sites
 that haven't implemented WebMCP. This document maps the extension's internals — the
-three processes Chrome MV3 forces on us, the four flows every `src/lib/` file serves,
+three processes Chrome MV3 forces on us, the five flows every `src/lib/` file serves,
 and where to look when something breaks. System-level flows (registration, invocation,
 publish/install sequence diagrams): root `ARCHITECTURE.md`. Operational gotchas (dev
 browser, storage keys, E2E recipe): `apps/extension/AGENTS.md`.
@@ -19,12 +19,13 @@ flowchart TB
     end
 
     subgraph BG["Background service worker — entrypoints/background.ts"]
-        BRIDGE["install-bridge.ts"]
+        IBRIDGE["install-bridge.ts"]
+        LBRIDGE["native-bridge.ts · local-bridge-router.ts"]
         LOOKUP["local-lookup.ts"]
         POLLS["revocations.ts · domains.ts · suggestions.ts"]
         STORE["installs-store.ts"]
         ST[("chrome.storage.local<br/>store-schema.ts · storage.ts")]
-        BRIDGE --> STORE --> ST
+        IBRIDGE --> STORE --> ST
         POLLS --> ST
         LOOKUP --> ST
     end
@@ -32,6 +33,7 @@ flowchart TB
     subgraph CS["Content script — entrypoints/content.ts (runs on every page)"]
         PKG["packages.ts · lookup-client.ts"]
         REG["register-tools.ts"]
+        LCONTENT["local-bridge-content.ts"]
         NAV["navigation.ts"]
         EXEC["@robertn702/webmcp-today-engine<br/>(packages/engine)"]
         PKG --> REG
@@ -43,10 +45,13 @@ flowchart TB
         VIEWS["main.ts · views.ts"]
     end
 
-    UI -- "externally_connectable messages" --> BRIDGE
+    UI -- "externally_connectable messages" --> IBRIDGE
     PKG -- "getPackagesForUrl" --> LOOKUP
     POP -- "status / uninstall" --> BG
     REG -- "registerTool()" --> MC["document.modelContext<br/>(WebMCP API)"]
+    HOST["Native host ↔ local MCP"] -- "native messaging" --> LBRIDGE
+    LBRIDGE -- "selected tab message" --> LCONTENT
+    LCONTENT -- "getTools() / executeTool()" --> MC
 ```
 
 - **Background worker — the librarian.** Owns `chrome.storage.local`, handles
@@ -71,9 +76,9 @@ flowchart TB
   atomically replaces it. A successful socket connection, not the path's presence,
   establishes bridge availability.
 
-## The four flows
+## The five flows
 
-`src/lib/` has 26 files but only four jobs. Read the directory by flow, not
+`src/lib/` has 26 files but only five jobs. Read the directory by flow, not
 alphabetically.
 
 ### ① Install flow — registry site → storage
@@ -149,7 +154,26 @@ executor — DOM mode was cut pre-launch
 input, acquires tokens from the package's `api.auth` sources, performs the
 same-origin fetch, checks `errorPath`, and applies the `returns` projection.
 
-### ④ Safety & discovery flow — background polling → popup
+### ④ Local bridge flow — MCP → selected tab's live tools
+
+_The user selects a visible tab; the native host relays only discovery and execution._
+
+```mermaid
+flowchart LR
+    MCP["WebMCP Today MCP"] --> HOST["native host"]
+    HOST --> NB["native-bridge.ts"]
+    NB --> ROUTER["local-bridge-router.ts<br/>(selected visible tab only)"]
+    ROUTER --> CONTENT["local-bridge-content.ts<br/>(getTools / executeTool)"]
+    CONTENT --> MC["WebMCP API"]
+```
+
+- `native-bridge.ts` reconnects the ephemeral MV3 worker to the native host without retaining
+  request state.
+- `local-bridge-router.ts` targets only the user's selected visible tab.
+- `local-bridge-content.ts` retains live handles only in that document and rejects stale document
+  or tool-list generations before execution.
+
+### ⑤ Safety & discovery flow — background polling → popup
 
 _The only network calls the extension makes, all on timers._
 
@@ -180,6 +204,7 @@ messages).
 | SPA navigation doesn't re-register tools         | `navigation.ts`                                                                                        |
 | What's actually in chrome.storage                | `store-schema.ts` (`schemaVersion`, `index`, `pkg:<id>`, `revoked`)                                    |
 | Popup shows the wrong state                      | `status.ts` (message shapes) → `background.ts` badge logic                                             |
+| Local bridge cannot list or call a tab's tools   | `native-bridge.ts` → `local-bridge-router.ts` → `local-bridge-content.ts`                              |
 
 ## Why `src/lib/` is flat
 

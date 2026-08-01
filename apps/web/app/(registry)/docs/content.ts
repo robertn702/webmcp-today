@@ -10,9 +10,10 @@ export const QUICKSTART_PROMPT = `Walk me through the verified WebMCP Today quic
 Your job:
 - Perform the terminal commands and MCP configuration changes you can do safely.
 - Preserve unrelated files and existing MCP servers.
-- Download and extract the stable WebMCP Today release ZIP; do not clone or build the repository, or use a per-commit CI artifact.
+- Download and extract the stable WebMCP Today release ZIP rather than using a per-commit CI artifact. Use the checked-out WebMCP Today source only to build and configure the local bridge.
 - Pause whenever I must act in Chrome: loading the extracted extension folder, opening its popup, reviewing a package, or clicking Install.
-- Use Chrome DevTools MCP to verify list_webmcp_tools and execute_webmcp_tool.
+- Build and configure the WebMCP Today MCP native bridge using its macOS development instructions.
+- Use its local MCP tools in order: list_connected_webmcp_tabs, list_webmcp_tools, then execute_webmcp_tool.
 - Finish by calling reddit_subreddit_hot for r/webdev and showing five titles and permalinks.
 
 Do not use DOM scraping, coordinate clicks, or evaluate_script as a substitute for a missing WebMCP tool. If a step fails, diagnose that step before continuing.`;
@@ -30,50 +31,53 @@ Requirements:
 - Remind me that off-store installs do not update automatically and Chrome may show a developer-mode warning at launch.
 - Do not claim the extension is loaded yet.`;
 
-export const START_CHROME = `open -na "Google Chrome" --args \\
-  --remote-debugging-port=9222 \\
-  --user-data-dir="$HOME/.chrome-webmcp" \\
-  --enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport`;
-
 export const MCP_CONFIG = `{
   "mcp": {
-    "chrome-devtools": {
+    "webmcp-today": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--browser-url=http://127.0.0.1:9222",
-        "--category-experimental-webmcp"
-      ]
+      "command": ["bun", "packages/mcp/dist/index.js"]
     }
   }
 }`;
 
-export const CHROME_DEVTOOLS_MCP_PROMPT = `Configure Chrome DevTools MCP for WebMCP in this project.
+export const BUILD_LOCAL_BRIDGE = 'bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."';
 
-Use this server command:
-npx -y chrome-devtools-mcp@latest --browser-url=http://127.0.0.1:9222 --category-experimental-webmcp
+export const RELEASE_EXTENSION_ID = "lldklnhkedjeiggmdfligbcpdebgaaji";
 
-Add it to the project's MCP configuration using the format this client expects. Do not replace unrelated MCP servers. Then tell me how to restart or reload the MCP client and how to verify that list_webmcp_tools and execute_webmcp_tool are available.`;
+export const INSTALL_NATIVE_HOST = `node packages/mcp/bin/install-native-host.mjs ${RELEASE_EXTENSION_ID}`;
 
-export const FIRST_TOOL_PROMPT = `Use the Chrome DevTools MCP server connected to my Chrome browser.
+export const LOCAL_BRIDGE_MCP_PROMPT = `Configure the WebMCP Today MCP local bridge in this project.
 
-1. Navigate to https://www.reddit.com/r/webdev/.
-2. List the page's WebMCP tools.
-3. If reddit_subreddit_hot is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then list the tools again in the same Reddit tab.
-4. Call reddit_subreddit_hot with subreddit "webdev" and limit 5.
+First follow the macOS development setup in packages/mcp/README.md:
+1. Build @robertn702/webmcp-today-mcp and its schema dependency.
+2. Install the native host manifest for the downloaded release extension:
+   node packages/mcp/bin/install-native-host.mjs ${RELEASE_EXTENSION_ID}
+
+Then add this local MCP entry to opencode.json without replacing unrelated configuration:
+"webmcp-today": {
+  "type": "local",
+  "command": ["bun", "packages/mcp/dist/index.js"]
+}
+
+Tell me how to restart or reload the MCP client and verify that list_connected_webmcp_tabs, list_webmcp_tools, and execute_webmcp_tool are available. This native-host setup is macOS development only; do not claim it works on other platforms.`;
+
+export const FIRST_TOOL_PROMPT = `Use the WebMCP Today MCP local bridge.
+
+1. Ask me to open and select a normal Chrome tab at https://www.reddit.com/r/webdev/.
+2. Call list_connected_webmcp_tabs, then use its tab id with list_webmcp_tools.
+3. If reddit_subreddit_hot is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then list the tools again in the selected Reddit tab.
+4. Call execute_webmcp_tool with the tab id, documentGeneration, toolsGeneration, tool name, tool origin, and input for reddit_subreddit_hot: subreddit "webdev" and limit 5.
 5. Show me the returned titles and permalinks.
 
 Do not use DOM scraping, coordinate clicks, or evaluate_script as a substitute for the WebMCP tool.`;
 
 export const INSTALL_PACKAGE_PROMPT = `Install the WebMCP Today package for https://www.reddit.com/r/webdev/.
 
-Use the Chrome browser connected through Chrome DevTools MCP.
-1. Navigate to the Reddit URL.
-2. Use list_webmcp_tools to check whether reddit_subreddit_hot is already registered.
+Use the WebMCP Today MCP local bridge.
+1. Ask me to open and select a normal Chrome tab at the Reddit URL.
+2. Call list_connected_webmcp_tabs, then list_webmcp_tools to check whether reddit_subreddit_hot is already registered.
 3. If it is missing, ask me to open the WebMCP Today extension popup, inspect the Reddit suggestion, and click Install. You cannot click the browser toolbar extension icon for me, so wait for my confirmation.
-4. Verify in the same Reddit tab that reddit_subreddit_hot appears without a reload.
+4. Verify in the selected Reddit tab that reddit_subreddit_hot appears without a reload.
 
 Do not use DOM scraping or evaluate_script to imitate the missing tool.`;
 
@@ -84,7 +88,7 @@ Work from https://github.com/robertn702/webmcp-today and read:
 - packages/curated-packages/data for real examples
 
 Requirements:
-- Use Chrome DevTools MCP to inspect the site's own same-origin HTTP requests.
+- Use the site's documented API or normal browser inspection to identify its own same-origin HTTP requests; do not use Chrome DevTools MCP.
 - Use API execution only. Do not use DOM selectors or arbitrary page scripts.
 - Start with one useful read-only tool and the smallest required input schema.
 - Project the response with returns so the tool returns only what it promises.

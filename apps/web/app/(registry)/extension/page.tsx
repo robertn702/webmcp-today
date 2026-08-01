@@ -107,7 +107,7 @@ export default function ExtensionPage() {
       <p className="mt-10 text-sm text-muted-foreground">
         Next, follow the{" "}
         <Link href="/docs" className="text-foreground underline underline-offset-4">
-          quickstart to connect Chrome DevTools MCP and make a tool call
+          local WebMCP Today MCP bridge quickstart and make a tool call
         </Link>
         , or{" "}
         <Link href="/packages" className="text-foreground underline underline-offset-4">

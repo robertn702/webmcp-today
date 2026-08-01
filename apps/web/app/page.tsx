@@ -131,9 +131,9 @@ export default async function LandingPage() {
             Download and extract the current signed release ZIP, then load the extracted folder in
             Chrome&apos;s Developer mode.
           </RunStep>
-          <RunStep number="2" title="Start and connect Chrome">
-            Launch a WebMCP-enabled Chrome profile, load the extension there, and connect Chrome
-            DevTools MCP to that same browser.
+          <RunStep number="2" title="Load the bridge">
+            Enable WebMCP, load the extension, then configure the WebMCP Today MCP local bridge for
+            the Chrome tab you select.
           </RunStep>
           <RunStep number="3" title="Install and call a package">
             Open Reddit, approve its suggested package, and call the read-only tool as soon as it
