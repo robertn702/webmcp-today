@@ -88,8 +88,10 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   Per-tab status is an in-memory Map in the background worker; a restart loses it and
   the popup then says "reload the page", which is cheaper than paying for the `storage`
   permission. (4) One `AbortController` per registration pass, aborted on the next URL
-  change, so a route's tools die with the pass that made them; passes are serialized
-  and an unchanged URL is a no-op. SPA detection lives in the content script partly to
+  change, so a route's tools die with the pass that made them; passes are serialized,
+  unchanged URL events are no-ops, and install/revocation storage changes explicitly
+  force a same-URL pass so already-open tabs update without a refresh. SPA detection
+  lives in the content script partly to
   avoid `chrome.webNavigation`'s "read your browsing history" store warning — see
   `apps/extension/AGENTS.md` for why its 500 ms poll can't be replaced.
 

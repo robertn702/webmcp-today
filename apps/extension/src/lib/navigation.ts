@@ -5,18 +5,22 @@
 export interface NavigationWatcherOptions {
   /** The current URL, read on every check. */
   getUrl: () => string;
-  /** A registration pass for `url`. Its signal aborts when the URL changes,
-   * which is what unregisters that pass's tools. */
+  /** A registration pass for `url`. Its signal aborts when the URL or local
+   * package authority changes, which unregisters that pass's tools. */
   run: (url: string, signal: AbortSignal) => Promise<void>;
   /** Where popstate/hashchange are observed. Defaults to `window`. */
   target?: EventTarget;
   /** Poll period, see below. */
   intervalMs?: number;
+  /** Subscribe to non-navigation changes that require re-matching the current
+   * URL, such as a package install or revocation-list update. */
+  subscribeInvalidation?: (invalidate: () => void) => () => void;
 }
 
 /**
- * Runs a registration pass for the current URL, then again on every URL change,
- * aborting the previous pass's signal first so its tools go away with it.
+ * Runs a registration pass for the current URL, then again on every URL change
+ * or explicit invalidation, aborting the previous pass's signal first so its
+ * tools go away with it.
  *
  * Detection is `popstate` + `hashchange` plus a URL poll. The poll is not
  * laziness: `history.pushState`/`replaceState` are the common SPA route change
@@ -25,23 +29,23 @@ export interface NavigationWatcherOptions {
  * alternative is `chrome.webNavigation.onHistoryStateUpdated` in the background
  * script, which costs a "read your browsing history" permission warning.
  *
- * Passes are serialized and deduped: an unchanged URL is a no-op, and a pass
- * queued by a navigation waits for the aborted one to settle rather than
- * interleaving registrations with it.
+ * Passes are serialized and URL-change checks are deduped. Explicit
+ * invalidations may re-run an unchanged URL; every queued pass waits for the
+ * aborted one to settle rather than interleaving registrations with it.
  *
  * Returns a teardown for symmetry and tests; the content script never calls it
  * (the page going away is the teardown).
  */
 export function startNavigationWatcher(options: NavigationWatcherOptions): () => void {
-  const { getUrl, run, target = window, intervalMs = 500 } = options;
+  const { getUrl, run, target = window, intervalMs = 500, subscribeInvalidation } = options;
 
   let currentUrl: string | undefined;
   let controller: AbortController | undefined;
   let queue: Promise<void> = Promise.resolve();
 
-  const check = (): void => {
+  const check = (force = false): void => {
     const url = getUrl();
-    if (url === currentUrl) return;
+    if (!force && url === currentUrl) return;
     currentUrl = url;
 
     // Drops the previous route's tools: registerTool takes this signal.
@@ -58,16 +62,19 @@ export function startNavigationWatcher(options: NavigationWatcherOptions): () =>
         console.warn(`[webmcp-today] Registration pass failed for ${url}:`, err);
       });
   };
+  const checkNavigation = (): void => check();
 
-  target.addEventListener("popstate", check);
-  target.addEventListener("hashchange", check);
-  const timer = setInterval(check, intervalMs);
+  target.addEventListener("popstate", checkNavigation);
+  target.addEventListener("hashchange", checkNavigation);
+  const unsubscribeInvalidation = subscribeInvalidation?.(() => check(true));
+  const timer = setInterval(checkNavigation, intervalMs);
   check();
 
   return () => {
     clearInterval(timer);
-    target.removeEventListener("popstate", check);
-    target.removeEventListener("hashchange", check);
+    target.removeEventListener("popstate", checkNavigation);
+    target.removeEventListener("hashchange", checkNavigation);
+    unsubscribeInvalidation?.();
     controller?.abort();
   };
 }

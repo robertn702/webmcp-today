@@ -89,8 +89,8 @@ export default function DocsPage() {
       <Step number="4" title="Install the Reddit package">
         <p>
           Open <Code>https://www.reddit.com/r/webdev/</Code>, open the WebMCP Today popup, inspect
-          the Reddit suggestion, and click Install. Reload Reddit afterward. This works with any
-          signed release and needs no webmcp.today account.
+          the Reddit suggestion, and click Install. The tools appear in that open Reddit tab
+          automatically, with no webmcp.today account required.
         </p>
         <CopyBlock label="Copy prompt">{INSTALL_PACKAGE_PROMPT}</CopyBlock>
       </Step>

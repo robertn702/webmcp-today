@@ -38,14 +38,19 @@ third-party sites are user-hostile and a review risk.
 No extra permissions back this — the badge comes with the `action` key that the
 popup entrypoint already adds.
 
-## SPA navigation
+## Registration lifecycle
 
 `src/lib/navigation.ts` runs a registration pass for the current URL and another
 on every URL change, so a client-side route change re-matches packages instead of
 leaving the previous route's tools behind. Each pass gets its own
 `AbortController`, passed to `registerTool` as `{ signal }`; the next navigation
 aborts it, which is what unregisters that pass's tools. Passes are serialized and
-an unchanged URL is a no-op.
+an unchanged URL event is a no-op.
+
+The content script also forces a same-URL pass when the local install index or
+revocation list changes. Installing a matching package while its site is already
+open therefore registers its tools without a refresh; uninstalling or revoking it
+aborts the previous pass and removes its tools the same way.
 
 Detection is `popstate` + `hashchange` plus a 500 ms poll of `location.href`. The
 poll is load-bearing: `history.pushState` is the usual SPA route change, and a

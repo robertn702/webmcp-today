@@ -136,8 +136,8 @@ export default async function LandingPage() {
             DevTools MCP to that same browser.
           </RunStep>
           <RunStep number="3" title="Install and call a package">
-            Open Reddit, approve its suggested package, reload, and call the read-only tool for live
-            results. No webmcp.today account is required.
+            Open Reddit, approve its suggested package, and call the read-only tool as soon as it
+            appears. No webmcp.today account is required.
           </RunStep>
         </div>
         <div className="mt-8">

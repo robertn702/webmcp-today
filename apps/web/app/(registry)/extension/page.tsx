@@ -85,7 +85,7 @@ export default function ExtensionPage() {
               reddit.com
             </code>
             , click the extension icon, and inspect the Reddit package under Discover packages.
-            Click Install and reload the page.
+            Click Install; the tools appear in the open Reddit tab automatically.
           </p>
         </li>
         <li>

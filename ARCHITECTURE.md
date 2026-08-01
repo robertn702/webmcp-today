@@ -39,11 +39,14 @@ flowchart LR
     end
 
     DB[("Neon Postgres<br/>(packages/db — Drizzle)")]
-    MCP["packages/mcp<br/>MCP server (stdio)"]
+     MCP["packages/mcp<br/>MCP server (stdio)"]
+     HOST["Native host<br/>private local IPC"]
 
     UI -. "install bridge<br/>(externally_connectable)" .-> EXT
     EXT -- "GET /api/revocations ·<br/>GET /api/domains (alarms)" --> API
-    MCP -- "REST (+ Bearer API key)" --> API
+     MCP -- "REST (+ Bearer API key)" --> API
+     MCP -- "user-only Unix socket" --> HOST
+     HOST -- "native messaging" --> EXT
     TA --> MCP
     UI --> API
     API --> AUTH
@@ -60,7 +63,12 @@ flowchart LR
   site; the only other HTTP the extension makes is a revocation poll and a domain
   list, both on `chrome.alarms`.
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
-  install packages without a browser. Thin client over the same REST API.
+  install packages without a browser. It also exposes a narrow local bridge to
+  list and execute live WebMCP tools in the user's selected browser tab. The
+  native host only relays zod-validated messages; it is not a CDP/HTTP proxy. Its
+  stable discovery symlink is atomically replaced only when a session starts; shutdown
+  removes only that session's private socket/config, so connection success determines
+  availability rather than the presence of a potentially stale discovery path.
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
   against; published as `@robertn702/webmcp-today-schema`.
 - **`packages/engine`** — the execution engine
@@ -247,7 +255,7 @@ validated by zod in `packages/schema`:
 webmcp-today/
 ├── apps/
 │   ├── web/            # Next.js — registry UI + public REST API (port 3000)
-│   └── extension/      # WXT — package lookup + tool injection (dev port 5173, CDP 9222)
+│   └── extension/      # WXT — package lookup + tool injection (dev port 5173)
 ├── packages/
 │   ├── schema/            # @robertn702/webmcp-today-schema — zod package format (published)
 │   ├── db/                # Drizzle + Neon — schema + client
@@ -260,5 +268,5 @@ webmcp-today/
   is the pre-commit gate (same as CI).
 - Publishing uses Changesets; published packages list `LICENSE` in `files`.
 - Local dev needs Chrome 149+ with WebMCP flags for the extension
-  (`--enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport`) and a Neon
+  (`--enable-features=WebMCP,WebMCPTesting`) and a Neon
   `DATABASE_URL` + GitHub OAuth + `BETTER_AUTH_SECRET` for the web app.

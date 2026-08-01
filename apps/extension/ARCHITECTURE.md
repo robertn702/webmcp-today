@@ -59,6 +59,17 @@ flowchart TB
 - **Popup — the dashboard.** Read-mostly UI over the background's state: what matched
   this tab, the install list (with uninstall), paused/recovery states, suggestions.
   Never injects UI into the page.
+- **Local bridge — capability relay.** The native host accepts only the versioned
+  list-tabs/list-tools/execute-tool protocol. The service worker forwards those
+  operations only to the user's active tab; the content script uses WebMCP's
+  `getTools()` and `executeTool()` consumer APIs. Tool handles never cross a
+  JSON boundary: descriptors are re-resolved after document and `toolchange`
+  generations are checked. The host runs no shell, files, URL, JavaScript, or
+  CDP commands; its private Unix socket is authenticated with a per-host secret.
+  Its stable discovery symlink is last-known-session data: a normal host exit removes
+  the private socket/config but leaves a harmless dangling path, and the next session
+  atomically replaces it. A successful socket connection, not the path's presence,
+  establishes bridge availability.
 
 ## The four flows
 
@@ -116,8 +127,10 @@ flowchart TB
   unit-testable. Reports `site-blocked` distinctly when a `Permissions-Policy:
 tools=()` page throws `SecurityError`.
 - `navigation.ts` — content scripts can't see the page's `history.pushState`
-  (isolated world), so SPA navigation is detected by polling `location.href` and
-  re-running the pass with a fresh abort signal. Don't "fix" it by patching history.
+  (isolated world), so SPA navigation is detected by polling `location.href`.
+  Install-index and revocation-list storage changes explicitly force a same-URL
+  pass, so already-open tabs update without a refresh. Every re-run gets a fresh
+  abort signal; don't "fix" SPA detection by patching history.
 
 ### ③ Tool-invocation flow — agent calls a tool
 

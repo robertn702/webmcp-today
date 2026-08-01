@@ -8,34 +8,31 @@ serves, where to look when something breaks): `apps/extension/ARCHITECTURE.md`.
 
 - `bun run dev` launches a **separate** Chrome with its own persistent profile
   (`.wxt/chrome-profile/`, gitignored). WebMCP features are force-enabled via
-  `chromiumArgs` (`--enable-features=WebMCP,WebMCPTesting,DevToolsWebMCPSupport`)
+  `chromiumArgs` (`--enable-features=WebMCP,WebMCPTesting`)
   — `chrome://flags` will still show "Default"; `chrome://version` → Command Line
   is ground truth.
-- Ports: registry web app 3000, WXT dev server 5173, CDP remote debugging 9222.
-  The CDP port is what lets chrome-devtools-mcp (registered in the repo-root
-  `opencode.json`) attach and drive the page's WebMCP tools.
+- Ports: registry web app 3000 and WXT dev server 5173. The local bridge uses
+  `runtime.connectNative()` to `today.webmcp.bridge`, then a user-only Unix
+  socket to the local MCP process. It calls `document.modelContext.getTools()` /
+  `executeTool()` in the selected tab's content script. It never needs
+  `chrome.debugger`, CDP, `tabs`, `cookies`, or arbitrary page execution.
+  `packages/mcp/README.md` documents the development native-host manifest.
 - The Model Context Tool Inspector must be installed manually **once** in the dev
   browser (profile persists). `--load-extension` is dead in branded Chrome 137+.
 
-## Dev extension key (stable ID for the install bridge)
+## Development extension key (stable ID for the install bridge)
 
 The registry site reaches the extension by ID (`externally_connectable` +
-`NEXT_PUBLIC_WEBMCP_EXTENSION_IDS`). Without a manifest `key`, Chrome assigns
-a random ID per profile and the bridge never connects. Generate a dev keypair
-once per machine:
+`NEXT_PUBLIC_WEBMCP_EXTENSION_IDS`). Local builds use the committed development
+**public** key by default, so their unpacked extension ID is always
+`peaiababjjehplphfkhefdlgefaaemkl`; no local `.env` setup is required. Its
+private PEM is stored in 1Password (`Private` → "WebMCP Today extension
+development key") and must never be committed or copied into `.env`.
 
-```
-openssl genrsa 2048 > key.pem
-openssl rsa -in key.pem -pubout -outform DER | base64  # one line; on macOS add -w0 if base64 wraps
-```
-
-Put the base64 public key in `apps/extension/.env` as `WXT_EXTENSION_KEY` (the
-config spreads it into the manifest only when set). The extension ID that
-results — `chrome://extensions` with the build loaded — goes in
-`apps/web/.env` `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS` (comma-separated; the
-CWS-assigned ID joins the list after first store upload). **NEVER commit
-`key.pem` or the key value** — both stay in untracked local config only. A new
-key means a new ID; keep `key.pem` backed up off-repo or the dev ID changes.
+`WXT_EXTENSION_KEY` overrides the default only when a distinct build identity
+is needed. Release CI uses it for the separate release key. Changing the
+development key would change the local extension ID and require re-registering
+the native host and registry bridge allowlist.
 
 ## Self-hosted GitHub releases (while CWS is in review)
 
@@ -71,7 +68,7 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   lock ("CDP connection closed before response to Extensions.loadUnpacked"), and
   interleaved runs corrupt `.output/` (manifest CSP pinned to a port the live
   server isn't on — extension loads but nothing works). Find strays with
-  `lsof -nP -i :3000 -i :5173 -i :9222`; killing the bun wrapper does NOT kill
+  `lsof -nP -i :3000 -i :5173`; killing the bun wrapper does NOT kill
   the node child.
 - **Page loads never hit the network.** The background resolves every URL from
   `chrome.storage.local` (install index + bodies); the registry is only polled
@@ -89,14 +86,18 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   `history.pushState` — patching `history` only intercepts the isolated world's
   own calls, so SPA navigation is detected by polling `location.href`
   (`src/lib/navigation.ts`). Don't "fix" it by monkey-patching history.
+- **Open-tab installs are live.** The content script listens for local `index`
+  and `revoked` storage changes and forces a same-URL registration pass. Installing,
+  uninstalling, or revoking a matching package must update an already-open tab
+  without a refresh; `src/lib/navigation.ts` preserves serialized passes and aborts
+  the previous pass's tools first.
 
-## E2E testing (chrome-devtools-mcp)
+## E2E testing
 
-- Drive the dev browser's page tools with chrome-devtools-mcp
-  (`--browser-url=http://127.0.0.1:9222 --category-experimental-webmcp`):
-  `list_webmcp_tools` / `execute_webmcp_tool`. If the agent session lacks that
-  server, spawn it over stdio — `packages/mcp/.scratch/call-tool.mjs`
-  (`bun ... <toolName> '<inputJson>'`) is a working driver.
+- Drive the dev browser's page tools through `packages/mcp` after registering
+  the local native host (`packages/mcp/README.md`):
+  `list_connected_webmcp_tabs` → `list_webmcp_tools` →
+  `execute_webmcp_tool`. Chrome's WebMCP testing flag is still required.
 - All extension logging (match counts, registered/skipped tools, executor
   failures) lands in the **page console** — not the service worker, not the
   WXT terminal.
@@ -116,6 +117,13 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   `GET /api/revocations` on a 6h `chrome.alarms` tick + startup/popup-open from
   `WXT_REGISTRY_API_URL` (default `https://webmcp.today`; polls only — page
   loads never fetch). Everything crossing a boundary is zod-validated.
+- `src/lib/local-bridge-content.ts` owns live `getTools()` handles for one
+  document. Only serializable descriptors leave the content script; execution
+  re-resolves the tool and requires matching document + tool-list generations,
+  so navigation and `toolchange` fail stale calls rather than calling a new page.
+  `local-bridge-router.ts` permits the native bridge only to target the user's
+  selected visible tab; `native-bridge.ts` reconnects the ephemeral MV3 worker
+  without retaining request state.
 - The install bridge: `externally_connectable` (built from
   `src/lib/registry-origins.ts`'s `registryMatchPatterns()` — the same function
   the runtime origin allowlist derives from; dev builds also trust
@@ -132,10 +140,9 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   `apps/web/lib/extension-bridge.ts` (probes `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS`)
   - `apps/web/components/install-button.tsx`.
 - E2E for the install path (replaces "did the registry fetch work"): `bun run
-dev` + web on :3000 → open `/packages/<id>` → click Install via
-  chrome-devtools-mcp → popup lists it → navigate to the target site → page
-  console shows `[webmcp-today] 1 installed package(s) matched this URL` →
-  `list_webmcp_tools` shows the tools.
+dev` + web on :3000 → open `/packages/<id>` → install → popup lists it →
+  navigate to the target site → page console shows `[webmcp-today] 1 installed
+package(s) matched this URL` → bridge `list_webmcp_tools` shows the tools.
 - Storage lives in `chrome.storage.local` under four keys
   (`src/lib/store-schema.ts`): `schemaVersion`, `index` (install metadata),
   `pkg:<id>` (served bodies verbatim), `revoked` (kill list + cursor).

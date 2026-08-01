@@ -19,6 +19,18 @@ export interface ModelContextLike {
   registerTool(descriptor: ToolRegistration, options?: { signal?: AbortSignal }): Promise<unknown>;
 }
 
+/** The consumer surface is deliberately separate from registration: Chrome may
+ * expose one while withholding the other as WebMCP evolves. */
+export interface ToolConsumerModelContextLike {
+  getTools(): Promise<unknown[]>;
+  executeTool(
+    tool: unknown,
+    inputJson: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<unknown>;
+  addEventListener?: (type: string, listener: EventListener) => void;
+}
+
 function isModelContext(value: unknown): value is ModelContextLike {
   return (
     typeof value === "object" &&
@@ -27,12 +39,29 @@ function isModelContext(value: unknown): value is ModelContextLike {
   );
 }
 
+function isToolConsumerModelContext(value: unknown): value is ToolConsumerModelContextLike {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof Reflect.get(value, "getTools") === "function" &&
+    typeof Reflect.get(value, "executeTool") === "function"
+  );
+}
+
+function modelContextCandidates(): unknown[] {
+  return [Reflect.get(document, "modelContext"), Reflect.get(navigator, "modelContext")];
+}
+
 export function getModelContext(): ModelContextLike | undefined {
-  for (const candidate of [
-    Reflect.get(document, "modelContext"),
-    Reflect.get(navigator, "modelContext"),
-  ]) {
+  for (const candidate of modelContextCandidates()) {
     if (isModelContext(candidate)) return candidate;
+  }
+  return undefined;
+}
+
+export function getToolConsumerModelContext(): ToolConsumerModelContextLike | undefined {
+  for (const candidate of modelContextCandidates()) {
+    if (isToolConsumerModelContext(candidate)) return candidate;
   }
   return undefined;
 }
