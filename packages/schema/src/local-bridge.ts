@@ -3,6 +3,8 @@ import { z } from "zod";
 /** Wire protocol for the local MCP -> native host -> extension bridge. */
 export const LOCAL_BRIDGE_PROTOCOL_VERSION = 1;
 export const LOCAL_BRIDGE_NATIVE_HOST_NAME = "today.webmcp.bridge";
+export const LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES = 1_000_000;
+export const LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH = 128;
 
 export type JsonValue =
   boolean | null | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -18,7 +20,7 @@ export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   ]),
 );
 
-const requestIdSchema = z.string().min(1).max(128);
+const requestIdSchema = z.string().min(1).max(LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH);
 const generationSchema = z.string().min(1).max(128);
 const tabIdSchema = z.number().int().nonnegative();
 
@@ -80,7 +82,7 @@ export const contentBridgeExecuteToolRequestSchema = z.object({
   inputJson: z
     .string()
     .min(2)
-    .max(1_000_000)
+    .max(LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES)
     .superRefine((input, ctx) => {
       try {
         const value: unknown = JSON.parse(input);

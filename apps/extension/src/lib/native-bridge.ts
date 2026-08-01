@@ -1,6 +1,8 @@
 import {
+  LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES,
   LOCAL_BRIDGE_NATIVE_HOST_NAME,
   LOCAL_BRIDGE_PROTOCOL_VERSION,
+  LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH,
   localBridgeErrorResponseSchema,
   localBridgeResponseSchema,
   type LocalBridgeResponse,
@@ -83,7 +85,7 @@ export function startNativeBridge(deps: NativeBridgeDeps): void {
         return;
       }
       const encoded = new TextEncoder().encode(JSON.stringify(parsed.data));
-      if (encoded.byteLength <= 1_000_000) {
+      if (encoded.byteLength <= LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES) {
         postResponse(parsed.data);
         return;
       }
@@ -122,7 +124,9 @@ export function startNativeBridge(deps: NativeBridgeDeps): void {
 function requestIdFromUnknown(message: unknown): string {
   if (typeof message !== "object" || message === null) return "invalid-request";
   const requestId = Reflect.get(message, "requestId");
-  return typeof requestId === "string" && requestId.length > 0 && requestId.length <= 128
+  return typeof requestId === "string" &&
+    requestId.length > 0 &&
+    requestId.length <= LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH
     ? requestId
     : "invalid-request";
 }
