@@ -1,5 +1,6 @@
 import {
   LOCAL_BRIDGE_PROTOCOL_VERSION,
+  LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH,
   contentBridgeResponseSchema,
   localBridgeErrorResponseSchema,
   localBridgeRequestSchema,
@@ -165,7 +166,9 @@ function invalidRequestResponse(message: unknown): LocalBridgeResponse {
 function requestIdFromUnknown(message: unknown): string {
   if (typeof message !== "object" || message === null) return "invalid-request";
   const requestId = Reflect.get(message, "requestId");
-  return typeof requestId === "string" && requestId.length > 0 && requestId.length <= 128
+  return typeof requestId === "string" &&
+    requestId.length > 0 &&
+    requestId.length <= LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH
     ? requestId
     : "invalid-request";
 }

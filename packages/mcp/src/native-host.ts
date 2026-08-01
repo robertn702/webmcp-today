@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import {
+  LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES,
   LOCAL_BRIDGE_PROTOCOL_VERSION,
+  LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH,
   localBridgeConfigurationSchema,
   localBridgeErrorResponseSchema,
   localBridgeReadySchema,
@@ -19,7 +21,7 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_CONFIGURATION_DIRECTORY = join(homedir(), ".config", "webmcp-today");
-const MAX_NATIVE_MESSAGE_BYTES = 1_000_000;
+const NATIVE_MESSAGE_HEADER_BYTES = 4;
 const DEFAULT_PREPARE_ACK_TIMEOUT_MS = 2_000;
 const MAX_PREPARE_ACK_TIMEOUT_MS = 10_000;
 
@@ -467,7 +469,9 @@ async function removeIfPresent(path: string): Promise<void> {
 function requestIdFromUnknown(message: unknown): string {
   if (typeof message !== "object" || message === null) return "";
   const requestId = Reflect.get(message, "requestId");
-  return typeof requestId === "string" && requestId.length > 0 && requestId.length <= 128
+  return typeof requestId === "string" &&
+    requestId.length > 0 &&
+    requestId.length <= LOCAL_BRIDGE_REQUEST_ID_MAX_LENGTH
     ? requestId
     : "";
 }
@@ -495,8 +499,8 @@ function dispatchFailedResponse(requestId: string, message: string) {
 
 function nativeMessageFrame(message: unknown): Buffer | undefined {
   const encoded = Buffer.from(JSON.stringify(message), "utf8");
-  if (encoded.length > MAX_NATIVE_MESSAGE_BYTES) return undefined;
-  const prefix = Buffer.alloc(4);
+  if (encoded.length > LOCAL_BRIDGE_MAX_NATIVE_MESSAGE_BYTES) return undefined;
+  const prefix = Buffer.alloc(NATIVE_MESSAGE_HEADER_BYTES);
   prefix.writeUInt32LE(encoded.length, 0);
   return Buffer.concat([prefix, encoded]);
 }
@@ -505,12 +509,14 @@ async function* nativeMessageStream(stream: NodeJS.ReadableStream): AsyncGenerat
   let buffer = Buffer.alloc(0);
   for await (const chunk of stream) {
     buffer = Buffer.concat([buffer, Buffer.from(chunk)]);
-    while (buffer.length >= 4) {
+    while (buffer.length >= NATIVE_MESSAGE_HEADER_BYTES) {
       const length = buffer.readUInt32LE(0);
       if (length > 64 * 1024 * 1024) throw new Error("Native message exceeds Chrome's size limit.");
-      if (buffer.length < 4 + length) break;
-      const message = buffer.subarray(4, 4 + length).toString("utf8");
-      buffer = buffer.subarray(4 + length);
+      if (buffer.length < NATIVE_MESSAGE_HEADER_BYTES + length) break;
+      const message = buffer
+        .subarray(NATIVE_MESSAGE_HEADER_BYTES, NATIVE_MESSAGE_HEADER_BYTES + length)
+        .toString("utf8");
+      buffer = buffer.subarray(NATIVE_MESSAGE_HEADER_BYTES + length);
       try {
         yield JSON.parse(message);
       } catch {
