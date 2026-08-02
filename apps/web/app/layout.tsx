@@ -67,7 +67,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   className="flex shrink-0 items-center gap-2 whitespace-nowrap font-mono text-lg font-bold"
                 >
                   <span>⚡ webmcp.today</span>
-                  <span className="rounded border border-brand/40 bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.14em] text-brand uppercase">
+                  <span aria-hidden className="h-4 w-px bg-border" />
+                  <span className="text-[10px] font-medium tracking-[0.16em] text-brand uppercase">
                     Beta
                   </span>
                 </Link>
