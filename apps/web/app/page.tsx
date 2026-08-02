@@ -220,13 +220,14 @@ export default async function LandingPage() {
           </div>
 
           <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <Button asChild variant="outline" size="icon" className="size-11">
+            <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
               <a
                 href="https://github.com/robertn702/webmcp-today"
-                aria-label="View the source on GitHub"
-                title="View the source on GitHub"
+                aria-label="Read the source on GitHub"
+                title="Read the source on GitHub"
               >
                 <SiGithub className="size-5" aria-hidden="true" />
+                Read the source
               </a>
             </Button>
           </div>
