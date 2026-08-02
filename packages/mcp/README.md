@@ -1,15 +1,48 @@
 # WebMCP Today MCP bridge
 
-`webmcp-today-mcp` exposes registry operations and three browser bridge tools:
+`webmcp-today-mcp` exposes registry operations, three browser bridge tools, and
+first-party macOS bridge setup tools:
 
 - `list_connected_webmcp_tabs`
 - `list_webmcp_tools`
 - `execute_webmcp_tool`
+- `setup_webmcp_bridge`
+- `get_webmcp_bridge_status`
+- `uninstall_webmcp_bridge`
 
 The bridge calls WebMCP's consumer API in the existing extension content script.
 It does not enable WebMCP, run JavaScript, proxy CDP, read cookies, or expose an
 HTTP port. Package API execution stays inside the page content script; a
 destructive package tool still blocks on the browser's `window.confirm`.
+
+## macOS setup from source
+
+The MCP and schema packages are not published to npm yet. Build this checkout and
+add its `dist/index.js` to your MCP client with Node, not Bun:
+
+```bash
+bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."
+node /absolute/path/to/webmcp-today/packages/mcp/dist/index.js
+```
+
+After restarting the MCP client, ask it to call
+`setup_webmcp_bridge` with `confirm: true` and `browser: "chrome"` (or `"brave"`).
+The tool copies the bundled host to `~/.config/webmcp-today/native-host-public` and writes
+only WebMCP Today's native-messaging manifest(s). Setup uses the official release extension
+ID by default; its only override is the documented development ID.
+
+Use `get_webmcp_bridge_status` to inspect the installation. It reports paths and
+permissions but never exposes the bridge secret. Use `uninstall_webmcp_bridge` with
+`confirm: true` to remove only browser-owned manifest paths and unused bridge artifacts.
+For Brave, the result intentionally retains the Chrome compatibility manifest because Brave 151
+may launch it from that root. It returns that manifest in `residual` and requires a second
+confirmed `uninstall_webmcp_bridge` call with `browser: "chrome"` to complete removal after
+closing Chrome and Brave. Do not claim the bridge is fully removed until that follow-up reports
+no residual paths.
+
+Chrome and Brave still need WebMCP enabled (`chrome://flags/#enable-webmcp-testing`
+or `brave://flags/#enable-webmcp-testing` in the current preview). The bridge does not
+enable WebMCP, run JavaScript, proxy CDP, or expose an HTTP port.
 
 ## macOS development setup
 
@@ -40,7 +73,7 @@ destructive package tool still blocks on the browser's `window.confirm`.
    compatibility directory. Brave 151 can retain the Chrome native-messaging
    lookup root even while its profile data uses `BraveSoftware/Brave-Browser`.
 
-4. Start the MCP server with `bun packages/mcp/dist/index.js`, select a normal
+4. Start the MCP server with `node packages/mcp/dist/index.js`, select a normal
    Chrome tab, and call `list_connected_webmcp_tabs`. Confirm that Chrome can
    launch the installed host with this call before relying on it in an MCP client.
 
@@ -56,7 +89,8 @@ or Brave can launch it from Finder or the Dock. Native-host manifests and their
 wrappers are readable/executable (`0644`/`0755`) because Chromium's sandboxed
 native-messaging discovery otherwise treats them as unavailable; the private
 socket configuration and its secret remain user-only (`0600`). Re-run the
-installer after upgrading Node.
+setup after upgrading Node, then use `get_webmcp_bridge_status` to verify the new wrapper before
+using the bridge again.
 A production
 release still needs a signed/notarized native executable, installers for Edge,
 Brave, Linux, and Windows registry entries, exact release/dev extension IDs,

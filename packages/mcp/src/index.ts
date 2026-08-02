@@ -5,6 +5,7 @@ import { RegistryClient } from "./client.js";
 import { LocalBridgeClient } from "./local-bridge-client.js";
 import { registerLocalBridgeTools } from "./local-bridge-tools.js";
 import { registerReadTools } from "./read-tools.js";
+import { registerSetupTools } from "./setup-tools.js";
 import { registerWriteTools } from "./write-tools.js";
 
 const baseUrl = process.env.WEBMCP_TODAY_API_URL ?? "https://webmcp.today";
@@ -17,6 +18,7 @@ const localBridgeClient = new LocalBridgeClient();
 registerReadTools(server, client);
 registerWriteTools(server, client);
 registerLocalBridgeTools(server, localBridgeClient);
+registerSetupTools(server);
 
 await server.connect(new StdioServerTransport());
 console.error(`webmcp-today MCP server connected (registry: ${baseUrl})`);
