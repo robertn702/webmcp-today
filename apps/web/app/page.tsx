@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { SiGithub } from "react-icons/si";
 import { EXTENSION_RELEASE_URL } from "@/app/(registry)/docs/content";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
@@ -219,10 +220,13 @@ export default async function LandingPage() {
           </div>
 
           <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <Button asChild variant="outline" className="h-11 gap-2 px-5 text-[0.95rem]">
-              <a href="https://github.com/robertn702/webmcp-today">
-                Read the source
-                <ArrowRight data-icon="inline-end" />
+            <Button asChild variant="outline" size="icon" className="size-11">
+              <a
+                href="https://github.com/robertn702/webmcp-today"
+                aria-label="View the source on GitHub"
+                title="View the source on GitHub"
+              >
+                <SiGithub className="size-5" aria-hidden="true" />
               </a>
             </Button>
           </div>

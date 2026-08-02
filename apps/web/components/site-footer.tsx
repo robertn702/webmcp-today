@@ -34,7 +34,7 @@ export function SiteFooter() {
             Privacy
           </Link>
           <a href={SOURCE_HREF} className="hover:text-foreground hover:underline">
-            Source
+            GitHub
           </a>
         </div>
       </div>
