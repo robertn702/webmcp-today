@@ -22,6 +22,24 @@ export default function DocsPage() {
         connect its local bridge to the first-party MCP server, then make one read-only Reddit call.
       </p>
 
+      <section className="mt-8 border-l-2 border-brand/30 pl-5">
+        <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">Public beta</p>
+        <h2 className="mt-2 text-lg font-semibold">
+          The registry, extension, and bridge are actively developing
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Expect rough edges and breaking changes before a stable release. WebMCP itself remains
+          experimental in Chromium and requires its testing flag. Report problems through the
+          <a
+            href="https://github.com/robertn702/webmcp-today/issues"
+            className="text-foreground underline underline-offset-4"
+          >
+            project&apos;s GitHub issues
+          </a>
+          .
+        </p>
+      </section>
+
       <section className="mt-8 rounded-2xl border bg-card p-5">
         <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">Start here</p>
         <h2 className="mt-2 font-display text-2xl tracking-tight">Bridge quickstart</h2>
@@ -44,7 +62,7 @@ export default function DocsPage() {
         <section className="rounded-2xl border bg-card p-5">
           <h2 className="text-base font-semibold">Load the extension</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Download the preview ZIP, load its extracted folder, and learn how package installation
+            Download the beta ZIP, load its extracted folder, and learn how package installation
             stays explicit and browser-owned.
           </p>
           <a

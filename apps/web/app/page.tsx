@@ -74,7 +74,7 @@ export default async function LandingPage() {
             </div>
 
             <p className="cafe-rise mt-4 font-mono text-xs text-muted-foreground [animation-delay:280ms]">
-              Early preview: supported Chromium runtime, WebMCP when required, unpacked extension
+              Public beta. Supported Chromium runtime, WebMCP when required, unpacked extension.
             </p>
 
             {stats ? (

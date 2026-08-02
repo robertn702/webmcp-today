@@ -24,11 +24,11 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "WebMCP Today · MCP tools for any site",
+    default: "WebMCP Today Beta · MCP tools for any site",
     template: "%s · WebMCP Today",
   },
   description:
-    "A community registry of inspectable WebMCP packages. Install one and your agent can call named, same-origin API tools instead of scraping the page.",
+    "WebMCP Today is a public beta registry of inspectable WebMCP packages. Install one and your agent can call named, same-origin API tools instead of scraping the page.",
 };
 
 // Applies the stored theme before first paint to avoid a flash of the wrong
@@ -62,8 +62,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   shifts the nav. */}
               <div className="flex items-center gap-2">
                 <MobileNav />
-                <Link href="/" className="shrink-0 whitespace-nowrap font-mono text-lg font-bold">
-                  ⚡ webmcp.today
+                <Link
+                  href="/"
+                  className="flex shrink-0 items-center gap-2 whitespace-nowrap font-mono text-lg font-bold"
+                >
+                  <span>⚡ webmcp.today</span>
+                  <span className="rounded border border-brand/40 bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.14em] text-brand uppercase">
+                    Beta
+                  </span>
                 </Link>
                 <DesktopNavLinks />
               </div>
