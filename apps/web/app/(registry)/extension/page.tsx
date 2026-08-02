@@ -4,27 +4,39 @@ import { WebMcpReadiness } from "@/components/webmcp-readiness";
 import { EXTENSION_RELEASE_URL } from "../docs/content";
 
 export const metadata: Metadata = {
-  title: "Get the extension",
+  title: "Get the beta extension",
   description:
-    "Download and load the WebMCP Today browser extension, then check its WebMCP runtime and install a package on a matching page.",
+    "Download and load the WebMCP Today public beta extension, then check its WebMCP runtime and install a package on a matching page.",
 };
 
 export default function ExtensionPage() {
   return (
     <div className="max-w-2xl">
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">The extension</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Load the preview</h1>
+      <h1 className="mt-3 font-display text-4xl tracking-tight">Load the beta extension</h1>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        The extension is not in a store yet. Download its release ZIP, then load the extracted
-        folder into the supported Chromium browser you already use. It stores the package versions
-        you approve and registers their tools on matching pages.
+        WebMCP Today is in public beta. The extension is not in a store yet, and its behavior may
+        change as the registry and WebMCP platform develop. Download its release ZIP, then load the
+        extracted folder into the supported Chromium browser you already use.
+      </p>
+
+      <p className="mt-4 border-l-2 border-brand/30 pl-5 text-sm leading-relaxed text-muted-foreground">
+        It stores the package versions you approve and registers their tools on matching pages. If
+        something breaks, report it in the{" "}
+        <a
+          href="https://github.com/robertn702/webmcp-today/issues"
+          className="text-foreground underline underline-offset-4"
+        >
+          project&apos;s GitHub issues
+        </a>{" "}
+        so the beta can improve.
       </p>
 
       <WebMcpReadiness />
 
       <ol className="mt-8 flex flex-col gap-5 border-l-2 border-brand/30 pl-5">
         <li>
-          <p className="text-sm font-semibold">Download and extract the preview</p>
+          <p className="text-sm font-semibold">Download and extract the beta release</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Download the{" "}
             <a

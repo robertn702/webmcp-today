@@ -34,6 +34,18 @@ export default function QuickstartPage() {
         and does not replace missing tools with browser automation.
       </p>
 
+      <p className="mt-4 border-l-2 border-brand/30 pl-5 text-sm leading-relaxed text-muted-foreground">
+        WebMCP Today is in public beta. The extension, bridge, and package format may change while
+        the platform develops. Report a failed step through the{" "}
+        <a
+          href="https://github.com/robertn702/webmcp-today/issues"
+          className="text-foreground underline underline-offset-4"
+        >
+          project&apos;s GitHub issues
+        </a>
+        .
+      </p>
+
       <WebMcpReadiness />
 
       <section className="mt-8 border-l-2 border-brand/30 pl-5">

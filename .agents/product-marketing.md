@@ -1,14 +1,14 @@
 # Product Marketing Context
 
-**Document version:** v5
-**Last updated:** 2026-07-30
+**Document version:** v6
+**Last updated:** 2026-08-02
 
 Source of truth for positioning, audience, and voice. Every marketing skill
 (copywriting, cro, copy-editing, …) reads this before drafting. Product facts
 live in `AGENTS.md` / `ARCHITECTURE.md`; when they disagree, the code wins.
 
-> **Pre-production.** No users, no revenue, no testimonials, no metrics. Sections
-> that would require them are marked `None yet` rather than filled with
+> **Public beta launch.** No users, no revenue, no testimonials, no metrics.
+> Sections that would require them are marked `None yet` rather than filled with
 > plausible-sounding invention. Do not write proof points this document can't back.
 
 ## Product Overview
@@ -37,6 +37,11 @@ published npm packages (`schema`, `mcp`). No hosted paid tier.
 installs, not revenue. Licensing is undecided, so **no copy may claim the
 product is free, open source, or permanently either** — that claim was
 deliberately removed from the site (v3).
+
+**Release status:** Public beta for the initial release. The registry, browser
+extension, and local MCP bridge are actively developing, and the WebMCP
+dependency remains experimental in Chromium. State this at activation points
+without using it to soften the concrete package safety claims.
 
 ## Target Audience
 
@@ -131,6 +136,7 @@ hasn't shipped them, and the cost of trying is one install.
 | "This needs a Chrome flag, so it's a toy."             | True and stated up front: Chrome 149+ with `chrome://flags/#enable-webmcp-testing`. It's an origin-trial-era platform; say so plainly rather than bury it. |
 | "There's no package for the site I care about."         | Write one — it's a JSON document, validated on submit — or point your agent at the API and have it publish one.                        |
 | "WebMCP could change under you."                       | Tracked openly: `docs/platform-risks.md`, incl. the `tools=()` kill switch and unsanctioned-registration risk.                        |
+| "Is this ready for production use?"                    | It is a public beta. The registry, extension, bridge, and package format can change before a stable release. Report failures in GitHub issues. |
 
 **Anti-persona:** Anyone wanting a zero-setup consumer product today (the
 extension isn't in the Web Store and the flag is mandatory), and anyone wanting
@@ -204,6 +210,9 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 - Say what breaks and when. Skeptic-first: name the objection before the reader does.
 - Never claim verification or safety guarantees; describe the data model instead.
 - The Chrome flag requirement appears wherever someone might try to install.
+- Describe the public beta at installation and first-run decision points. It
+  signals active development and possible breaking changes, not a weaker trust
+  model or a guarantee disclaimer.
 - Prefer the product's own vocabulary over invented marketing terms.
 - Prose mechanics (punctuation, sentence construction, banned vocabulary) follow
   `~/git/robertn702/nexus/docs/context/personal/writing-style.md`. Anyone writing
@@ -270,6 +279,10 @@ package.
 
 _Newest first. One line per revision: what changed and why._
 
+- v6 (2026-08-02) — Positioned the initial release as a public beta so active
+  development and possible breaking changes are explicit at activation points;
+  added release status and a readiness objection while preserving concrete trust
+  claims.
 - v5 (2026-07-30) — Copy audit found second-order slop: the voice's signature
   constructions (antithesis, wry kickers, "Nothing" anaphora, fragment headlines)
   at machine density. Added construction budgets, a repetition ledger, a filler
