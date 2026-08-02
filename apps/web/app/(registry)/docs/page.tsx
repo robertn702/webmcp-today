@@ -29,7 +29,7 @@ export default function DocsPage() {
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Expect rough edges and breaking changes before a stable release. WebMCP itself remains
-          experimental in Chromium and requires its testing flag. Report problems through the
+          experimental in Chromium and requires its testing flag. Report problems through the{" "}
           <a
             href="https://github.com/robertn702/webmcp-today/issues"
             className="text-foreground underline underline-offset-4"
