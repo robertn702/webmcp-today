@@ -1,14 +1,11 @@
 # ⚡ WebMCP Today
 
-Community registry of **WebMCP packages** injected into sites that haven't
-implemented WebMCP themselves — Greasyfork for the agentic web. Humans and agents
-author declarative packages that teach AI agents how to operate a site; an
-extension (or MCP server) delivers them. **Agents teaching agents.**
+WebMCP Today is a registry for declarative packages that add WebMCP tools to
+sites that do not expose them. A package describes a site's tools and the API
+requests they use. The browser extension installs packages locally and
+registers their tools on matching pages.
 
-Live at `webmcp.today` (Vercel + Cloudflare DNS — see AGENTS.md). Format and
-executor based on Joakim
-Selemyr's MIT-licensed [web-mcp-hub](https://github.com/Joakim-Sael/web-mcp-hub)
-and [webmcp-extension](https://github.com/Joakim-Sael/webmcp-extension).
+The registry is live at [webmcp.today](https://webmcp.today).
 
 ## Packages
 
@@ -31,27 +28,11 @@ bun run typecheck && bun run lint && bun run test
 # web (needs apps/web/.env — see .env.example)
 cd packages/db && bun run db:migrate   # apply migrations to Neon
 cd apps/web && bun run dev             # http://localhost:3000
-bun run scripts/seed.ts                # optional: seed the 3 starter packages
+bun run scripts/seed.ts                # optional: seed the curated packages
 
 # extension (Chrome 149+ with chrome://flags/#enable-webmcp-testing)
 cd apps/extension && bun run dev
 ```
-
-## REST API
-
-- `GET /api/packages/lookup?url=…` — packages for a page URL, most-specific
-  first, at each package's latest version
-- `GET/POST /api/packages`, `GET/PATCH /api/packages/:id` — browse, submit
-  (session or `Authorization: Bearer <api key>`), edit metadata (owner)
-- `GET /api/packages/:id/versions`, `POST /api/packages/:id/versions` — list
-  versions, publish a new one (owner; versions are append-only)
-- Both publish routes carry the submission grant in
-  [the terms](https://webmcp.today/terms) and echo it back on `201` as a `terms`
-  field, a `Link: …; rel="terms-of-service"` header, and a `Location` header
-- `PUT/DELETE /api/packages/:id/install` — set or remove the caller's account
-  pin. Browser installs are separate and local to the extension.
-- `GET /api/installs` — the caller's pinned packages (auth required)
-- `GET /api/stats`, `GET /api/revocations?since=…`
 
 ## Development
 
@@ -71,7 +52,7 @@ cp apps/web/.env.example apps/web/.env   # then fill real values
 bun run --filter @webmcp-today/db db:migrate   # or cd packages/db && bun run db:migrate — applies Drizzle migrations to Neon
 # schema changes: bun run --filter @webmcp-today/db db:generate && db:migrate (db:push for quick prototyping)
 
-bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds 3 starter packages
+bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds curated packages
 ```
 
 **Running locally:**
@@ -94,4 +75,4 @@ Split, so the pieces worth adopting stay permissive:
 
 Community-submitted packages are not code and are not covered by either license. Publishing one grants the registry a permanent license to host and redistribute it, and offers it onward under **CC0 1.0** — see [the terms](https://webmcp.today/terms) (`apps/web/app/(registry)/terms`). `packages/curated-packages` is the first-party exception: it ships as MIT source.
 
-Executor and package format credit: Joakim Selemyr (MIT). Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are covered by the agreement in [CONTRIBUTING.md](CONTRIBUTING.md).
