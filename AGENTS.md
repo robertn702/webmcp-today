@@ -71,6 +71,11 @@ packages/mcp/               @robertn702/webmcp-today-mcp — MCP server (not yet
 - Set Vercel env vars via the **API** (`POST /v10/projects/<name>/env?upsert=true`),
   not `vercel env add` — CLI 54.x silently stores **empty** values when the value
   is piped via stdin (this is why prod vars were empty placeholders originally).
+- Neon Preview branches are removed when a PR closes by
+  `.github/workflows/cleanup-neon-preview.yml`. Keep the repository variable
+  `NEON_PROJECT_ID` and secret `NEON_API_KEY` configured; closed PR Preview URLs
+  intentionally lose database access. Manually remove existing stale `preview/*`
+  branches in Neon before relying on the workflow to keep the Free-plan limit clear.
 
 ## Stack (decided — do not relitigate)
 
