@@ -120,7 +120,6 @@
       "version": "0.1.0",
       "bin": {
         "webmcp-today-mcp": "./dist/index.js",
-        "webmcp-today-native-host": "./bin/native-host.mjs",
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",
@@ -129,6 +128,7 @@
       },
       "devDependencies": {
         "@types/node": "^22",
+        "esbuild": "^0.25.12",
         "typescript": "^5.9.2",
         "vitest": "^3.2.4",
       },

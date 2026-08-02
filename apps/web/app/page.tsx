@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { EXTENSION_RELEASE_URL } from "@/app/(registry)/docs/content";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
 import { listPackages } from "@/lib/packages-repo";
@@ -73,7 +74,7 @@ export default async function LandingPage() {
             </div>
 
             <p className="cafe-rise mt-4 font-mono text-xs text-muted-foreground [animation-delay:280ms]">
-              Early preview: Chrome 149+, WebMCP enabled, unpacked extension
+              Early preview: supported Chromium runtime, WebMCP when required, unpacked extension
             </p>
 
             {stats ? (
@@ -120,20 +121,22 @@ export default async function LandingPage() {
             One browser, three steps
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Download the extension, start a WebMCP-enabled Chrome, then install the suggested Reddit
-            package and call it. The verified path exposes six tools and returns live subreddit
-            data.
+            Load the extension in your existing supported Chromium browser, connect the local MCP
+            bridge, then install the suggested Reddit package and call it. The path exposes six
+            tools and returns live subreddit data when its final read-only check succeeds.
           </p>
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
-          <RunStep number="1" title="Download the extension">
-            Download and extract the current signed release ZIP, then load the extracted folder in
-            Chrome&apos;s Developer mode.
+          <RunStep number="1" title="Download and load the extension">
+            <a href={EXTENSION_RELEASE_URL} className="underline underline-offset-4">
+              Download the release ZIP
+            </a>
+            , extract it, then load its folder in the browser&apos;s Developer mode.
           </RunStep>
-          <RunStep number="2" title="Load the bridge">
-            Enable WebMCP, load the extension, then configure the WebMCP Today MCP local bridge for
-            the Chrome tab you select.
+          <RunStep number="2" title="Connect the local bridge">
+            Check the actual WebMCP runtime, install the native host on macOS, and connect the
+            first-party MCP server to your existing browser.
           </RunStep>
           <RunStep number="3" title="Install and call a package">
             Open Reddit, approve its suggested package, and call the read-only tool as soon as it

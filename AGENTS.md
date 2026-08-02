@@ -149,8 +149,8 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
   `generate --custom`, hand-fill SQL + meta snapshot, verify with plain `generate`.
 - `packages/schema` resolves via `dist/` — rebuild it after schema changes or consumers
   see bizarre validation errors.
-- Ports: web 3000 / wxt 5173 — find strays with `lsof -nP -i :3000 -i :5173`; killing a bun
-  wrapper does NOT kill its node child.
+- Ports: web 3000 / WXT 5173 — find strays with `lsof -nP -i :3000 -i :5173`;
+  killing a bun wrapper does NOT kill its node child.
 
 ## Decision log (`docs/DECISIONS.md`)
 
