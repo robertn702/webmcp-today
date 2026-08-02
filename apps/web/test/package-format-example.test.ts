@@ -7,7 +7,7 @@ import {
   TOOL_NAME_MAX,
 } from "@robertn702/webmcp-today-schema";
 import { describe, expect, it } from "vitest";
-import examplePackage from "@/app/(registry)/docs/package-format/example-package.json";
+import examplePackage from "@/content/package-format-example.json";
 
 // The worked example on /docs/package-format is hand-written prose's one
 // falsifiable claim: it says "this document validates". Parsing it here means a

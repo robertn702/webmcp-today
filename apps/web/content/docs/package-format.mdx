@@ -1,0 +1,76 @@
+---
+title: "The package format"
+description: "The full reference for a WebMCP Today package: every top-level field, the tool descriptor, the api block, and a complete worked example."
+---
+
+A package is one JSON document. It names the site it targets, the tools it registers there, and the site's own HTTP endpoints those tools call. Nothing in it can run arbitrary code in the page: a tool is a declared request, not a script. When you're ready, [paste it into the form](/submit).
+
+## The shape
+
+Every field below is checked before a package is stored. Validation failures come back as the zod issue list, keyed by the path that failed.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `version` | integer at least 1, required | Author-declared, not semver. Use `1` when creating a package. A new version must be exactly one higher than the current highest or the API returns `409` with `expectedVersion`. |
+| `domain` | string, 1-253, required | The lowercased lookup key; a leading `www.` is stripped. It must be reachable through `urlPatterns`. |
+| `urlPatterns` | string[], 1-20, required | Chrome `@match` patterns: `scheme://host/path`. Scheme is `*`, `http`, or `https`; host is `*`, `*.example.com`, or exact; path starts with `/` and may contain `*`. More specific matching patterns rank higher. |
+| `title` | string, 1-200, required | The registry listing title. |
+| `description` | string, 1-5000, required | What the package does and needs. Describe any writes before a person installs it. |
+| `tools` | ToolDescriptor[], 1-30, required | Tools registered on a matching page; names must be unique within a package. |
+| `api` | ApiBlock, optional | The site's HTTP surface. Execution is API-mode only, so a usable tool binds to an endpoint here. |
+| `minEngine` | integer at least 1, optional | Capability floor, like an Android API level. Current level is `1`; lower-level extensions skip the package. |
+| `pageType` | string up to 100 characters, optional | Free-text hint for the page kind the tools belong to. |
+| `changelog` | string up to 2000 characters, optional | Version changes shown to installed users deciding whether to move their pin. |
+
+## Tools
+
+A tool is metadata plus a binding. Its description and input schema are the interface an agent sees.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | string up to 30 characters, required | Starts with a letter; then letters, digits, `_`, and `-`. Prefix names such as `notes_search` to avoid site tool collisions. Colliding tools are skipped while the rest still registers. |
+| `description` | string up to 500 characters, required | Say what it does, returns, and needs. The Chrome-guidance 500-character budget is enforced. |
+| `inputSchema` | JSON Schema object, required | `{ type: "object", properties, required? }`; up to 20 properties. A property has a `type`, optional `description` (up to 1000 characters) and `enum`, and may nest `items`, `properties`, and `required`. Placeholders refer to property names. |
+| `annotations` | object, optional | Agent hints such as `readOnlyHint` and `untrustedContentHint`. Mark writes honestly. |
+| `execution` | `{ mode: "api", endpoint }`, optional | Binds a tool to `api.endpoints`. A tool with no execution is skipped at registration. |
+
+## The api block
+
+Declare the requests the site's own front end already makes instead of shipping a script that pokes at the DOM. Everything is data, so a reader can audit a package by reading it.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `baseUrl` | https URL, required | Its host must be covered by a `urlPatterns` entry. A package can only call the same site it runs on with the user's existing session. |
+| `endpoints` | named API endpoint map, required | Named requests that tools bind to. |
+| `auth` | named API auth-source map, optional | Named token flows: fetch a response, extract a token, and attach it to the real call. |
+| `documents` | named string map, optional | Static GraphQL documents referenced as `@documents/name`; they are never scanned for placeholders. |
+
+### An endpoint
+
+An endpoint declares `method` (`GET`, `POST`, `PUT`, `PATCH`, or `DELETE`) and a path resolved against `baseUrl`. Optional `query` values may contain `{{param}}`. Declare at most one of `body`, `form`, and `graphql`; a body or GraphQL variable leaf equal to one `{{param}}` preserves its type.
+
+`returns` is an optional JMESPath projection, compiled at publish time. `errorPath` is a JSON locator such as `["json", "errors"]`; a non-empty value means failure even on `200`. `stripPrefix` removes an optional literal response prefix, including Google's `)]}'` anti-XSSI prefix. `persistedQuery` is accepted by the schema but unsupported by the executor. `auth` lists auth sources to attach.
+
+### An auth source
+
+`source.endpoint` identifies the token request. Declare exactly one of `source.extract`, a JSON locator such as `["data", "modhash"]`, or `pattern`, a raw-response regex where capture group 1 is the token. `sendAs` is `{ in, name }`, where `in` is `header`, `form`, or `query`; a form token requires a form body. `ttlSeconds` is an optional integer from 1 to 86400; omitting it safely fetches a fresh token for every call.
+
+### Placeholders
+
+`{{param}}` in a path, query, form field, body leaf, or GraphQL variable comes from the bound tool input. Every placeholder on a tool-bound endpoint must name an `inputSchema` property or publication fails. The same validation covers an auth source's fetch endpoint path/query and pattern. Missing path, query, or form values become empty strings. A body or GraphQL variable leaf that is exactly one missing placeholder becomes `undefined` and drops from the JSON. There is no literal `{{` escape hatch yet.
+
+## A complete package
+
+Two tools use a site's JSON API: one read and one CSRF-protected write. The JSON artifact below is parsed against `createPackageSchema` by the test suite, so it cannot drift from the format.
+
+<ExamplePackage />
+
+The curated packages cover real awkward cases: Reddit extracts a JSON token into a header, Hacker News extracts an HTML token with `pattern`, and Google Maps uses `stripPrefix` and positional-array projection. [Read them](https://github.com/robertn702/webmcp-today/tree/main/packages/curated-packages/data).
+
+## Publishing
+
+[Paste the JSON](/submit) or `POST /api/packages` with a Bearer API key. The same schema applies either way; it goes live when validation succeeds.
+
+Versions are append-only. Publish a new version to `POST /api/packages/:id/versions` with `version` set one above the current highest. Only the owner may publish it. `urlPatterns`, `tools`, `api`, `minEngine`, and `changelog` are version-scoped; title, description, domain, and pageType are edited package metadata.
+
+Installs pin a version, so publishing never moves anyone automatically. [Read the publishing grant](/terms) before submitting.

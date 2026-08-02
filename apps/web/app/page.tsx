@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { EXTENSION_RELEASE_URL } from "@/app/(registry)/docs/content";
+import { EXTENSION_RELEASE_URL } from "@/lib/docs";
 import { ToolMenu } from "@/components/landing/tool-menu";
 import { Button } from "@/components/ui/button";
 import { listPackages } from "@/lib/packages-repo";

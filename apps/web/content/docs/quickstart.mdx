@@ -1,0 +1,90 @@
+---
+title: Make your first live tool call
+description: Load WebMCP Today in your current Chromium browser, connect the local bridge, install Reddit, and make a read-only tool call.
+---
+
+This path uses the WebMCP Today extension in your existing supported Chromium browser and a local MCP bridge. It keeps package installation and destructive confirmations in the browser and does not replace missing tools with browser automation.
+
+<WebMcpReadiness />
+
+## Let an agent guide the safe parts
+
+This prompt keeps configuration additive and pauses for the browser actions only you can approve.
+
+```text
+Walk me through the WebMCP Today bridge quickstart at https://webmcp.today/docs/quickstart.
+
+Your job:
+- Preserve unrelated MCP servers and configuration.
+- Download and extract the extension ZIP from https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip. Do not build the extension from source.
+- Pause for browser-only actions: enabling Developer mode, choosing Load unpacked, and selecting the extracted extension folder; enabling WebMCP if the readiness check says it is unavailable; opening and selecting https://www.reddit.com/r/webdev/ in my normal browser; and reviewing/installing the Reddit package from the extension popup.
+- Configure the first-party WebMCP Today MCP server from the local repository build.
+- After restarting the MCP client, call setup_webmcp_bridge with browser "chrome" and confirm: true. Use browser "brave" for Brave.
+- Call get_webmcp_bridge_status after setup. If it is not ready, diagnose its returned bridge-owned paths and permissions before proceeding.
+- Use list_connected_webmcp_tabs, list_webmcp_tools, and execute_webmcp_tool for the verification.
+- After I confirm the selected Reddit tab is open, use it. If reddit_subreddit_hot is missing, ask me to install the Reddit package in the extension popup and wait for confirmation.
+- Call reddit_subreddit_hot with {"subreddit":"webdev","limit":5} and show five titles and permalinks.
+
+Do not substitute DOM scraping, coordinate clicks, or arbitrary page execution for a missing WebMCP tool. If a step fails, diagnose that step before continuing.
+```
+
+## Step 1: Load WebMCP Today in the browser you already use
+
+Download the [WebMCP Today extension ZIP](https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip) and extract it. Then open the browser's extensions page, enable Developer mode, choose Load unpacked, and select the extracted folder. The extension must remain enabled in the same browser that will hold your target tab.
+
+Install the Reddit package from its popup rather than relying on a registry-page Install button. If the readiness check says either WebMCP API is unavailable, use its copy-only settings path, enable WebMCP testing, relaunch, and check again. Do not enable it preemptively when the runtime check already passes.
+
+## Step 2: Install the local bridge and configure your MCP client
+
+The current first-party bridge setup supports macOS Chrome and Brave. Build the local MCP package and add it to your MCP client. After restarting the client, ask it to call `setup_webmcp_bridge` with the Chrome browser and confirmation enabled (or use `brave`). The confirmation-gated tool copies the durable host and writes only this bridge's per-user native-messaging manifest; it does not expose an HTTP service.
+
+```sh
+cd /absolute/path/to/webmcp-today
+bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."
+```
+
+Add the local server to your MCP client without replacing its other servers, then restart or reload that client. This OpenCode example uses the repository's built executable; change only the absolute checkout path.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "webmcp-today": {
+      "type": "local",
+      "command": ["node", "/absolute/path/to/webmcp-today/packages/mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+Call `get_webmcp_bridge_status` after setup, then continue only when it reports ready. The server exposes `list_connected_webmcp_tabs`, `list_webmcp_tools`, and `execute_webmcp_tool`. The webpage cannot see a native host or MCP client: the successful tab-list call is the real handoff check.
+
+## Step 3: Open Reddit and explicitly install its package
+
+In your normal browser, open `https://www.reddit.com/r/webdev/` and make that tab visible and selected. Open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. This remains a browser-owned consent action; your agent cannot perform it for you. The extension registers the package into the already open matching tab.
+
+If tools are missing, install or repair the package from the popup and list the tools again. Do not substitute DOM scraping or arbitrary page execution for a missing tool.
+
+## Step 4: List live tools and make the read-only call
+
+Ask the MCP client to list connected tabs, then list the tools in the selected Reddit tab. A successful installed package contributes 6 Reddit tools, including `reddit_subreddit_hot`. Call it with subreddit `webdev` and limit `5`, passing the document and tools generations returned from the tool-list call.
+
+```text
+Use the WebMCP Today MCP server to verify a live, read-only Reddit call.
+
+1. I have selected the normal browser tab at https://www.reddit.com/r/webdev/.
+2. Call list_connected_webmcp_tabs, then list_webmcp_tools for that tab.
+3. If reddit_subreddit_hot is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then list tools again in the same tab.
+4. Call reddit_subreddit_hot with {"subreddit":"webdev","limit":5}, using the document and tool-list generations returned by list_webmcp_tools.
+5. Show five returned titles and permalinks.
+
+Do not substitute DOM scraping or arbitrary page execution for the missing tool.
+```
+
+**Success:** five current post titles and permalinks return from Reddit's own JSON API. This is generic WebMCP tool passthrough: the bridge lists and executes whatever live tools are registered in the selected tab. It has no package-only fallback when WebMCP is unavailable.
+
+## Next: create a package
+
+A first call proves the browser bridge. To add a capability for another site, start with the package format and one read-only API tool.
+
+[Read the package format](/docs/package-format)

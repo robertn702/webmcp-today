@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { RootProvider as FumadocsProvider } from "fumadocs-ui/provider/next";
 import "./globals.css";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -50,8 +51,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="flex min-h-screen flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <Providers>
-          <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+        <FumadocsProvider theme={{ enabled: false }} search={{ enabled: false }}>
+          <Providers>
+            <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
             <nav
               aria-label="Main"
               className="mx-auto flex max-w-5xl items-center justify-between gap-x-4 px-4 py-3"
@@ -75,10 +77,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <UserButton size="icon" align="end" />
               </div>
             </nav>
-          </header>
-          <main className="flex flex-1 flex-col">{children}</main>
-          <SiteFooter />
-        </Providers>
+            </header>
+            <main className="flex flex-1 flex-col">{children}</main>
+            <SiteFooter />
+          </Providers>
+        </FumadocsProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { WebMcpReadiness } from "@/components/webmcp-readiness";
-import { EXTENSION_RELEASE_URL } from "../docs/content";
+import { EXTENSION_RELEASE_URL } from "@/lib/docs";
 
 export const metadata: Metadata = {
   title: "Get the extension",
