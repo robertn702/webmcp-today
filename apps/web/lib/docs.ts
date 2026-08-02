@@ -1,3 +1,5 @@
+import examplePackage from "@/content/package-format-example.json";
+
 export const EXTENSION_RELEASE_URL =
   "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip";
 export const REDDIT_DEMO_URL = "https://www.reddit.com/r/webdev/";
@@ -78,3 +80,5 @@ header = "Authorization: Bearer $WEBMCP_TODAY_API_KEY"
 header = "Content-Type: application/json"
 data-binary = "@webmcp-package.json"
 EOF`;
+
+export const EXAMPLE_PACKAGE_JSON = JSON.stringify(examplePackage, null, 2);

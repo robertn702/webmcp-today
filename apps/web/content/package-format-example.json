@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "domain": "example.com",
+  "urlPatterns": ["*://*.example.com/*"],
+  "title": "Example Notes",
+  "description": "Search and create notes on example.com as the logged-in user, through the site's own JSON API. Reads need no token; writes attach the CSRF token the session endpoint hands out.",
+  "minEngine": 1,
+  "changelog": "Initial version: notes_search, notes_create.",
+  "api": {
+    "baseUrl": "https://www.example.com",
+    "auth": { "csrf": { "source": { "endpoint": "session", "extract": ["data", "csrfToken"] }, "sendAs": { "in": "header", "name": "X-CSRF-Token" }, "ttlSeconds": 300 } },
+    "endpoints": {
+      "session": { "method": "GET", "path": "/api/session.json" },
+      "searchNotes": { "method": "GET", "path": "/api/notes", "query": { "q": "{{query}}", "limit": "{{limit}}" }, "returns": "notes[].{id: id, title: title, updated_at: updated_at}" },
+      "createNote": { "method": "POST", "path": "/api/notes", "body": { "title": "{{title}}", "body": "{{body}}" }, "auth": ["csrf"], "errorPath": ["errors"], "returns": "note.{id: id, url: url}" }
+    }
+  },
+  "tools": [
+    { "name": "notes_search", "description": "Search the logged-in user's notes on example.com by keyword. Returns the matching notes' ids, titles, and last-updated timestamps, newest first.", "inputSchema": { "type": "object", "properties": { "query": { "type": "string", "description": "Keywords to search note titles and bodies for" }, "limit": { "type": "integer", "description": "How many notes to return (1-50)" } }, "required": ["query"] }, "annotations": { "readOnlyHint": true }, "execution": { "mode": "api", "endpoint": "searchNotes" } },
+    { "name": "notes_create", "description": "Create a new note on example.com as the logged-in user. Returns the new note's id and URL.", "inputSchema": { "type": "object", "properties": { "title": { "type": "string", "description": "Note title" }, "body": { "type": "string", "description": "Note body (plain text)" } }, "required": ["title", "body"] }, "annotations": { "readOnlyHint": false }, "execution": { "mode": "api", "endpoint": "createNote" } }
+  ]
+}

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "fumadocs-ui/style.css";
 
 /* Class-based dark mode so the manual light/dark/system toggle can override
    prefers-color-scheme. The `dark` class is set on <html> by the inline
@@ -107,6 +108,17 @@ html.dark {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --fd-background: var(--background);
+  --fd-foreground: var(--foreground);
+  --fd-muted: var(--muted);
+  --fd-muted-foreground: var(--muted-foreground);
+  --fd-card: var(--card);
+  --fd-card-foreground: var(--card-foreground);
+  --fd-border: var(--border);
+  --fd-primary: var(--brand);
+  --fd-primary-foreground: var(--brand-contrast);
+  --fd-accent: var(--brand-soft);
+  --fd-accent-foreground: var(--foreground);
 }
 
 .dark {
@@ -146,6 +158,17 @@ html.dark {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --fd-background: var(--background);
+  --fd-foreground: var(--foreground);
+  --fd-muted: var(--muted);
+  --fd-muted-foreground: var(--muted-foreground);
+  --fd-card: var(--card);
+  --fd-card-foreground: var(--card-foreground);
+  --fd-border: var(--border);
+  --fd-primary: var(--brand);
+  --fd-primary-foreground: var(--brand-contrast);
+  --fd-accent: var(--brand-soft);
+  --fd-accent-foreground: var(--foreground);
 }
 
 @layer base {

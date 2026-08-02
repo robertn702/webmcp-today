@@ -22,7 +22,7 @@ import {
   REDDIT_DEMO_URL,
   REDDIT_PACKAGE_DOMAIN,
   REDDIT_TOOL_COUNT,
-} from "@/app/(registry)/docs/content";
+} from "@/lib/docs";
 import {
   browserGuidance,
   extensionCheckpoint,
@@ -30,8 +30,8 @@ import {
 } from "@/lib/onboarding-preflight";
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
-const quickstartPath = resolve(testDirectory, "../app/(registry)/docs/quickstart/page.tsx");
-const docsPath = resolve(testDirectory, "../app/(registry)/docs/page.tsx");
+const quickstartPath = resolve(testDirectory, "../content/docs/quickstart.mdx");
+const docsPath = resolve(testDirectory, "../content/docs/index.mdx");
 const landingPath = resolve(testDirectory, "../app/page.tsx");
 
 const PING_OK: BridgePingResponse = {
@@ -158,8 +158,8 @@ describe("bridge quickstart", () => {
       readFile(landingPath, "utf8"),
     ]);
 
-    expect(docs).toContain('href="/docs/quickstart"');
-    expect(docs).toContain("EXTENSION_RELEASE_URL");
+    expect(docs).toContain("[Follow the quickstart](/docs/quickstart)");
+    expect(docs).toContain("extension ZIP");
     expect(landing).toContain("EXTENSION_RELEASE_URL");
     expect(quickstart).toContain("list_connected_webmcp_tabs");
     expect(quickstart).toContain("list_webmcp_tools");
@@ -167,7 +167,7 @@ describe("bridge quickstart", () => {
     expect(quickstart).toContain("setup_webmcp_bridge");
     expect(quickstart).toContain("get_webmcp_bridge_status");
     expect(quickstart).toContain("no package-only fallback");
-    expect(quickstart).toContain("EXTENSION_RELEASE_URL");
+    expect(quickstart).toContain("extension ZIP");
     expect(quickstart).toContain("Developer mode");
     expect(quickstart).toContain("Load unpacked");
     expect(quickstart).not.toContain("BUILD_EXTENSION");
