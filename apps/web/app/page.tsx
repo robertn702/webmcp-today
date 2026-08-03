@@ -269,8 +269,8 @@ export default async function LandingPage() {
 
       {/* ----------------------------------------------------------------- hire me */}
       <section className="border-t bg-muted/30">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-5 sm:py-6">
-          <div className="hidden w-9 shrink-0 sm:block" aria-hidden>
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-5 sm:flex-nowrap sm:py-6">
+          <div className="w-9 shrink-0" aria-hidden>
             <div className="cafe-rocketman-hover relative h-15 w-7">
               <Image
                 src="https://www.robertniimi.com/space-suit-200.png"
@@ -300,7 +300,7 @@ export default async function LandingPage() {
             href="https://www.robertniimi.com"
             rel="noreferrer"
             target="_blank"
-            className="inline-flex shrink-0 items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            className="inline-flex basis-full items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground sm:basis-auto sm:shrink-0"
           >
             See Robert&apos;s work
             <ArrowRight data-icon="inline-end" className="size-4" />
