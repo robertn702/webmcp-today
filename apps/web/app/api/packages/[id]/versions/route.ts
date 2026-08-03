@@ -1,4 +1,4 @@
-import { publishVersionSchema } from "@robertn702/webmcp-today-schema";
+import { publishVersionSchemaForDomain } from "@robertn702/webmcp-today-schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -56,7 +56,7 @@ export async function POST(
     return jsonError(403, "Only the contributor may publish new versions");
   }
 
-  const body = await parseBody(request, publishVersionSchema);
+  const body = await parseBody(request, publishVersionSchemaForDomain(existing.domain));
   if (!body.ok) return body.response;
 
   try {

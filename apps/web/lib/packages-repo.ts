@@ -1,4 +1,4 @@
-import type { WebMcpPackage } from "@robertn702/webmcp-today-schema";
+import { packageWithinDomainScope, type WebMcpPackage } from "@robertn702/webmcp-today-schema";
 import { installs, packages, packageVersions, user } from "@webmcp-today/db";
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
@@ -36,7 +36,11 @@ async function hydrate(
   return packageRows.flatMap((pkg) => {
     const version = versionByPackage.get(pkg.id);
     if (!version) return [];
-    return [serializePackage(pkg, version, { contributorName: names.get(pkg.contributorId) })];
+    // Legacy rows bypassed current publish validation; never serve them.
+    const served = serializePackage(pkg, version, {
+      contributorName: names.get(pkg.contributorId),
+    });
+    return packageWithinDomainScope(served) ? [served] : [];
   });
 }
 

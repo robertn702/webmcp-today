@@ -1,4 +1,4 @@
-import { domainCoveredByPatterns, updatePackageMetaSchema } from "@robertn702/webmcp-today-schema";
+import { packageWithinDomainScope, updatePackageMetaSchema } from "@robertn702/webmcp-today-schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -32,15 +32,21 @@ export async function PATCH(request: Request, context: Context): Promise<NextRes
   const body = await parseBody(request, updatePackageMetaSchema);
   if (!body.ok) return body.response;
 
-  // `domain` is the lookup key but urlPatterns live on the (version-scoped)
-  // latest version, so a metadata PATCH can move `domain` off the patterns that
-  // publish couldn't. Re-check coverage against the latest version's patterns.
+  // `domain` is the visible scope but urlPatterns/api live on the version row,
+  // so a metadata PATCH must not move a package outside its existing content.
   if (body.data.domain !== undefined) {
     const latest = await getLatestVersion(id);
-    if (latest && !domainCoveredByPatterns(body.data.domain, latest.urlPatterns)) {
+    if (
+      latest &&
+      !packageWithinDomainScope({
+        domain: body.data.domain,
+        urlPatterns: latest.urlPatterns,
+        ...(latest.api === null ? {} : { api: latest.api }),
+      })
+    ) {
       return jsonError(
         422,
-        `domain "${body.data.domain}" is not covered by this package's urlPatterns, so it would be unreachable by lookup.`,
+        `domain "${body.data.domain}" does not scope this package's urlPatterns and api.baseUrl.`,
       );
     }
   }

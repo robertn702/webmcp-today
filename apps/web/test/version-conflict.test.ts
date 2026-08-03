@@ -11,13 +11,13 @@ import { POST as postPackage } from "@/app/api/packages/route";
 const state = vi.hoisted(
   (): {
     userId: string | null;
-    packageRow: { id: string; contributorId: string } | null;
+    packageRow: { id: string; contributorId: string; domain: string } | null;
     maxReads: number[];
     inserts: { version?: unknown }[];
     insertError: Error | null;
   } => ({
     userId: "user-1",
-    packageRow: { id: "pkg-1", contributorId: "user-1" },
+    packageRow: { id: "pkg-1", contributorId: "user-1", domain: "example.com" },
     maxReads: [0],
     inserts: [],
     insertError: null,
@@ -91,7 +91,7 @@ function publish(body: unknown): Promise<Response> {
 describe("author-declared versions", () => {
   beforeEach(() => {
     state.userId = "user-1";
-    state.packageRow = { id: "pkg-1", contributorId: "user-1" };
+    state.packageRow = { id: "pkg-1", contributorId: "user-1", domain: "example.com" };
     state.maxReads = [0];
     state.inserts = [];
     state.insertError = null;
@@ -132,6 +132,17 @@ describe("author-declared versions", () => {
     const body = await response.json();
     expect(body.version).toBe(3);
     expect(state.inserts[0]?.version).toBe(3);
+  });
+
+  it("rejects a version pattern that exceeds the parent package domain", async () => {
+    state.maxReads = [2];
+    const response = await publish({
+      version: 3,
+      urlPatterns: ["*://*/*"],
+      tools: [tool],
+    });
+    expect(response.status).toBe(400);
+    expect(state.inserts).toEqual([]);
   });
 
   it("maps a lost publish race (unique violation) to the same 409 with a fresh expected version", async () => {

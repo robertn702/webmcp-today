@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   domainLookupKeys,
+  packageWithinDomainScope,
   matchUrlPattern,
   parseUrlPattern,
   rankPackagesByUrl,
@@ -146,5 +147,37 @@ describe("subdomain config lookup (domainLookupKeys + rankPackagesByUrl)", () =>
     const oldReddit = { domain: "old.reddit.com", urlPatterns: ["*://old.reddit.com/*"] };
     const ranked = lookup([reddit, oldReddit], "https://old.reddit.com/r/programming");
     expect(ranked).toEqual([oldReddit, reddit]);
+  });
+});
+
+describe("package scope", () => {
+  it("allows an apex and subdomain scope", () => {
+    expect(
+      packageWithinDomainScope({
+        domain: "example.com",
+        urlPatterns: ["*://example.com/*", "*://*.example.com/*"],
+        api: { baseUrl: "https://api.example.com" },
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects global, public-suffix, misleading, and unrelated API scopes", () => {
+    expect(packageWithinDomainScope({ domain: "example.com", urlPatterns: ["*://*/*"] })).toBe(
+      false,
+    );
+    expect(packageWithinDomainScope({ domain: "com", urlPatterns: ["*://*.com/*"] })).toBe(false);
+    expect(
+      packageWithinDomainScope({
+        domain: "reddit.com",
+        urlPatterns: ["*://news.ycombinator.com/*"],
+      }),
+    ).toBe(false);
+    expect(
+      packageWithinDomainScope({
+        domain: "reddit.com",
+        urlPatterns: ["*://*.reddit.com/*"],
+        api: { baseUrl: "https://evil.example.com" },
+      }),
+    ).toBe(false);
   });
 });

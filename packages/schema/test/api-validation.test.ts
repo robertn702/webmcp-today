@@ -120,7 +120,7 @@ describe("api block cross-validation", () => {
     expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
-  it("rejects a baseUrl whose host no urlPatterns host covers", () => {
+  it("rejects a baseUrl outside the visible package domain", () => {
     const c = structuredClone(base);
     c.api.baseUrl = "https://evil.example.com";
     expect(createPackageSchema.safeParse(c).success).toBe(false);

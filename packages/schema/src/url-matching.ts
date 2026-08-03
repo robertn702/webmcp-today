@@ -1,6 +1,8 @@
 // URL pattern matching — Chrome extension `@match` style patterns:
 // "<scheme>://<host><path>", e.g. "*://*.wikipedia.org/wiki/*".
 
+import { getDomain } from "tldts";
+
 export interface ParsedUrlPattern {
   /** "*" (http or https) | "http" | "https" */
   scheme: string;
@@ -18,6 +20,46 @@ export function parseUrlPattern(pattern: string): ParsedUrlPattern | null {
   const [, scheme, host, path] = match;
   if (scheme === undefined || host === undefined || path === undefined) return null;
   return { scheme: scheme.toLowerCase(), host: host.toLowerCase(), path };
+}
+
+/**
+ * Is this a concrete host beneath a registrable domain? Public suffixes, IPs,
+ * and special-use hosts do not identify one site a package can safely claim.
+ * Private PSL entries count: `github.io` must not authorize every GitHub Pages
+ * site, while `owner.github.io` is a valid package scope.
+ */
+export function isRegistrableHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  try {
+    if (new URL(`https://${host}`).hostname !== host) return false;
+  } catch {
+    return false;
+  }
+  return getDomain(host, { allowPrivateDomains: true }) !== null;
+}
+
+/** True when `hostname` is the declared domain itself or one of its subdomains. */
+export function hostnameWithinDomain(hostname: string, domain: string): boolean {
+  const host = hostname.toLowerCase();
+  const scope = domain.toLowerCase();
+  return host === scope || host.endsWith(`.${scope}`);
+}
+
+/**
+ * A registrable package domain may only claim itself or its subdomains. Chrome
+ * supports global and public-suffix match patterns, but those scopes do not
+ * match the concrete site identity shown to package installers.
+ */
+export function urlPatternWithinDomain(pattern: string, domain: string): boolean {
+  const parsed = parseUrlPattern(pattern);
+  if (parsed === null || parsed.host === "*") return false;
+  const host = parsed.host.startsWith("*.") ? parsed.host.slice(2) : parsed.host;
+  return isRegistrableHostname(domain) && hostnameWithinDomain(host, domain);
+}
+
+/** Is every URL pattern constrained to the declared package domain? */
+export function urlPatternsWithinDomain(domain: string, urlPatterns: string[]): boolean {
+  return urlPatterns.every((pattern) => urlPatternWithinDomain(pattern, domain));
 }
 
 export interface MatchResult {
@@ -59,6 +101,31 @@ export function domainCoveredByPatterns(domain: string, urlPatterns: string[]): 
     const parsed = parseUrlPattern(pattern);
     return parsed !== null && hostCoversHostname(parsed.host, domain);
   });
+}
+
+/**
+ * Whether a package document stays inside its visible site scope. Consumers
+ * use this to fail closed for data stored before publish-time validation was
+ * tightened; schema publication uses the more precise issue paths in package.ts.
+ */
+export function packageWithinDomainScope(input: {
+  domain: string;
+  urlPatterns: string[];
+  api?: { baseUrl: string };
+}): boolean {
+  if (
+    !isRegistrableHostname(input.domain) ||
+    !urlPatternsWithinDomain(input.domain, input.urlPatterns) ||
+    !domainCoveredByPatterns(input.domain, input.urlPatterns)
+  ) {
+    return false;
+  }
+  if (input.api === undefined) return true;
+  try {
+    return hostnameWithinDomain(new URL(input.api.baseUrl).hostname, input.domain);
+  } catch {
+    return false;
+  }
 }
 
 /**
