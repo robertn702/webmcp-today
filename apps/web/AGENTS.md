@@ -87,9 +87,10 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 
 ## Env & dev
 
-- `.env` (gitignored) needs real `DATABASE_URL` (Neon), `BETTER_AUTH_SECRET`,
-  `OAUTH_PROXY_SECRET`, `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`; `.env.example` has placeholders.
-  t3-env (`env.ts`) validates at build time — `next build` fails without them.
+- `apps/web/.env.example` lists the local configuration variables, including
+  `DATABASE_URL`, `BETTER_AUTH_SECRET`, `OAUTH_PROXY_SECRET`, and
+  `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`. t3-env (`env.ts`) validates them at
+  build time, so `next build` fails without required values.
 - `OAUTH_PROXY_PRODUCTION_URL=https://webmcp.today` is Vercel Preview + Production only.
   Leave it unset locally so the separate development GitHub OAuth App keeps its localhost callback.
 - Dev server owns port 3000 — the extension's default registry URL points here.
@@ -102,11 +103,9 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   `NEXT_PUBLIC_SENTRY_DSN` (optional — unset disables the SDK so outside
   contributors don't need a Sentry project), and org/project come from
   `SENTRY_ORG`/`SENTRY_PROJECT` env vars. Source-map upload needs
-  `SENTRY_AUTH_TOKEN` too — local builds read all three from gitignored
-  `.env.sentry-build-plugin`, Vercel has them as env vars (Production +
-  Preview). Robert's Sentry: org `roberts-personal`, project `webmcp-today`.
-  `next.config.ts` keeps the ad-blocker `tunnelRoute` commented out; enable it
-  at launch if client events get blocked.
+  `SENTRY_AUTH_TOKEN` too; configure these only in environments that upload
+  source maps. The `next.config.ts` keeps the ad-blocker `tunnelRoute` commented
+  out; enable it if client events get blocked.
 
 ## Auth
 

@@ -24,15 +24,14 @@ serves, where to look when something breaks): `apps/extension/ARCHITECTURE.md`.
 
 The registry site reaches the extension by ID (`externally_connectable` +
 `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS`). Local builds use the committed development
-**public** key by default, so their unpacked extension ID is always
-`peaiababjjehplphfkhefdlgefaaemkl`; no local `.env` setup is required. Its
-private PEM is stored in 1Password (`Private` → "WebMCP Today extension
-development key") and must never be committed or copied into `.env`.
+**public** key by default, so their unpacked extension ID is stable and no local
+`.env` setup is required. The corresponding private key must never be committed
+or copied into an environment file.
 
 `WXT_EXTENSION_KEY` overrides the default only when a distinct build identity
 is needed. Release CI uses it for the separate release key. Changing the
-development key would change the local extension ID and require re-registering
-the native host and registry bridge allowlist.
+development key would change the local extension ID and require updating the
+native host and registry bridge allowlist.
 
 ## Self-hosted GitHub releases (while CWS is in review)
 
@@ -44,15 +43,11 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   The workflow fails if the tag and package version disagree, re-runs
   typecheck/lint/test (a tag can come off any commit), and attaches the ZIP
   plus `SHA256SUMS`. `workflow_dispatch` with an existing tag re-runs it.
-- **Release keypair ≠ dev keypair.** The release `key.pem` lives in 1Password
-  (robertn702 → Private, "WebMCP Today extension release key"); the base64
-  public key is the repo **variable** `WXT_EXTENSION_KEY` (a variable, not a
-  secret — it ships inside `manifest.json`, and secrets would be masked in
-  logs for no gain). Release extension ID:
-  `kngdblibgfakdkfgbbolnmgajaacchgb` — it must be in Vercel's
+- **Release keypair != dev keypair.** The base64 public release key is the repo
+  **variable** `WXT_EXTENSION_KEY` (a variable, not a secret: it ships inside
+  `manifest.json`). Its resulting extension ID must be included in the deployed
   `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS` or install buttons report the extension
-  absent. Losing `key.pem` is not fatal (the manifest only carries the public
-  half) but changing the key changes the ID and orphans every existing install.
+  absent. Changing the key changes the ID and orphans every existing install.
 - The workflow hard-fails when the variable is unset rather than shipping an
   unpinned build: without a manifest `key` an unpacked extension's ID derives
   from its directory path, so every user gets a different ID and the install

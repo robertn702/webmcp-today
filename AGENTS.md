@@ -41,41 +41,21 @@ packages/mcp/               @robertn702/webmcp-today-mcp — MCP server (not yet
 
 ## Deploy, domain & DNS
 
-- Hosting: Vercel project `webmcp-today`, team `robertniimi` (orgId
-  `team_rckbXC20kaxUXeA1qKq8UxVZ`); linked via `.vercel/project.json`. The GitHub
-  integration auto-deploys — Production on every push to `main`, a Preview per PR;
-  `vercel --prod` from the repo root is the manual override, not the normal path.
-  Consequence: merging a schema-breaking change deploys the new code before any
-  migration runs — migrate Neon first, or accept a window of 500s.
-- Required env vars must exist in the Vercel project (Production) or the build
-  fails at "Collecting page data" (t3-env validates on import). Set with
-  `vercel env add <NAME> production`; local source of truth is `apps/web/.env`
-  (override `BETTER_AUTH_URL` to the prod origin for Production).
-- Domain `webmcp.today`: registered at **Namecheap**, DNS on **Cloudflare** (zone
-  `fc81b4d78657c27568e2d4376de57bbd`, **DNS-only**/grey cloud; nameservers pointed
-  at `diva`/`patrick.ns.cloudflare.com`). Records: `A @ → 76.76.21.21`,
-  `CNAME www → cname.vercel-dns.com`; www 308→apex. CF API token: 1Password
-  robertn702 → Private, "Cloudflare API Token (webmcp-today)" (the item may still
-  be labeled "webmcp-cafe" — label only).
-- Renamed from `webmcp.cafe` on 2026-07-28 (docs/DECISIONS.md) — keep the old
-  domain registered and attached in Vercel as a redirect to `webmcp.today`.
-- Vercel token/scope quirks (which token to use, the `robertniimi` 403 trap):
-  global `~/.config/opencode/AGENTS.md` "Vercel". Vercel refuses
-  `vercel domains add` while the latest prod deploy is errored — fix the deploy
-  first, then attach the domain.
-- GitHub OAuth uses **two apps** (an OAuth App allows exactly one callback URL):
-  `WebMCP Today (dev)` → `http://localhost:3000/api/auth/callback/github`, and
-  `WebMCP Today` (prod, github.com/settings/applications/3759220) →
-  `https://webmcp.today/api/auth/callback/github`. Prod creds are Vercel env vars;
-  dev creds live in `apps/web/.env`.
-- Set Vercel env vars via the **API** (`POST /v10/projects/<name>/env?upsert=true`),
-  not `vercel env add` — CLI 54.x silently stores **empty** values when the value
-  is piped via stdin (this is why prod vars were empty placeholders originally).
-- Neon Preview branches are removed when a PR closes by
-  `.github/workflows/cleanup-neon-preview.yml`. Keep the repository variable
-  `NEON_PROJECT_ID` and secret `NEON_API_KEY` configured; closed PR Preview URLs
-  intentionally lose database access. Manually remove existing stale `preview/*`
-  branches in Neon before relying on the workflow to keep the Free-plan limit clear.
+- The Vercel project is linked via `.vercel/project.json`. The GitHub integration
+  deploys Production from `main` and a Preview per PR; `vercel --prod` is the manual
+  override. Migrate Neon before merging schema-breaking changes, or expect a window
+  of 500s.
+- Required production environment variables must be configured in Vercel or the build
+  fails at "Collecting page data" (t3-env validates on import). Use
+  `apps/web/.env.example` for the required local and deployed names; production
+  `BETTER_AUTH_URL` must use the production origin.
+- Keep the canonical domain's DNS records pointed at Vercel and redirect any legacy
+  domain to it. Fix an errored production deployment before attaching a domain.
+- Configure separate GitHub OAuth applications for local development and production:
+  each application permits only one callback URL.
+- `.github/workflows/cleanup-neon-preview.yml` removes Neon Preview branches after a
+  PR closes. It requires the `NEON_PROJECT_ID` repository variable and
+  `NEON_API_KEY` secret; closed Preview URLs intentionally lose database access.
 
 ## Stack (decided — do not relitigate)
 
