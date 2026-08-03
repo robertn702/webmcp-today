@@ -19,7 +19,7 @@ function fetchStub(response: unknown | "network-error" | number) {
 
 function pkg(
   id: string,
-  { domain = "example.com", urlPatterns = [`*://${domain}/*`] }: Partial<WebMcpPackage> = {},
+  { domain = "acme.com", urlPatterns = [`*://${domain}/*`] }: Partial<WebMcpPackage> = {},
 ): WebMcpPackage {
   return webMcpPackageSchema.parse({
     id,
@@ -55,7 +55,7 @@ describe("fetchSuggestions", () => {
     });
     // The old unscoped request would have surfaced this globally newest package.
     const recentlyUpdatedElsewhere = pkg("recently-updated-elsewhere", {
-      domain: "example.com",
+      domain: "acme.com",
     });
     const fetchFn = async (url: string) => {
       calls.push(url);

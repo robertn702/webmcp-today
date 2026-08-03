@@ -1,7 +1,7 @@
 // URL pattern matching — Chrome extension `@match` style patterns:
 // "<scheme>://<host><path>", e.g. "*://*.wikipedia.org/wiki/*".
 
-import { getDomain } from "tldts";
+import { parse } from "tldts";
 
 export interface ParsedUrlPattern {
   /** "*" (http or https) | "http" | "https" */
@@ -13,6 +13,8 @@ export interface ParsedUrlPattern {
 }
 
 const URL_PATTERN_RE = /^(\*|https?):\/\/(\*|(?:\*\.)?[^/*]+)(\/.*)$/;
+const SPECIAL_USE_SUFFIXES = ["localhost", "local", "test", "invalid", "example", "onion", "arpa"];
+const SPECIAL_USE_DOMAINS = ["example.com", "example.net", "example.org"];
 
 export function parseUrlPattern(pattern: string): ParsedUrlPattern | null {
   const match = URL_PATTERN_RE.exec(pattern);
@@ -30,12 +32,19 @@ export function parseUrlPattern(pattern: string): ParsedUrlPattern | null {
  */
 export function isRegistrableHostname(hostname: string): boolean {
   const host = hostname.toLowerCase();
+  if (host.endsWith(".")) return false;
   try {
     if (new URL(`https://${host}`).hostname !== host) return false;
   } catch {
     return false;
   }
-  return getDomain(host, { allowPrivateDomains: true }) !== null;
+  const parsed = parse(host, { allowPrivateDomains: true });
+  return (
+    parsed.domain !== null &&
+    (parsed.isIcann === true || parsed.isPrivate === true) &&
+    !SPECIAL_USE_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`)) &&
+    !SPECIAL_USE_DOMAINS.some((domain) => host === domain || host.endsWith(`.${domain}`))
+  );
 }
 
 /** True when `hostname` is the declared domain itself or one of its subdomains. */

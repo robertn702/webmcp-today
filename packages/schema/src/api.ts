@@ -320,9 +320,9 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
     }
   }
 
-  // 6. Same-origin: baseUrl host must be the visible package domain or one of
-  // its subdomains. The generic version-body schema has no parent domain, so
-  // the route uses publishVersionSchemaForDomain for this security boundary.
+  // 6. Same-origin: baseUrl host must stay within the visible package domain
+  // when known. Generic version bodies lack the parent package domain; the
+  // publish route validates that relationship with publishVersionSchemaForDomain.
   let baseHost: string | null = null;
   try {
     baseHost = new URL(api.baseUrl).hostname.toLowerCase();

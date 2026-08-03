@@ -1,16 +1,31 @@
 import { packageWithinDomainScope, type WebMcpPackage } from "@robertn702/webmcp-today-schema";
 import { installs, packages, packageVersions, user } from "@webmcp-today/db";
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { serializePackage } from "./serialize";
 
 type PackageRow = typeof packages.$inferSelect;
 type VersionRow = typeof packageVersions.$inferSelect;
 
-/** Highest-version row per packageId. */
-function pickLatestVersions(versionRows: VersionRow[]): Map<string, VersionRow> {
+/** Highest safe version row per packageId. */
+function pickLatestVersions(
+  packageRows: PackageRow[],
+  versionRows: VersionRow[],
+): Map<string, VersionRow> {
+  const packageById = new Map(packageRows.map((pkg) => [pkg.id, pkg]));
   const latest = new Map<string, VersionRow>();
   for (const row of versionRows) {
+    const pkg = packageById.get(row.packageId);
+    if (
+      !pkg ||
+      !packageWithinDomainScope({
+        domain: pkg.domain,
+        urlPatterns: row.urlPatterns,
+        ...(row.api === null ? {} : { api: row.api }),
+      })
+    ) {
+      continue;
+    }
     const prev = latest.get(row.packageId);
     if (!prev || row.version > prev.version) latest.set(row.packageId, row);
   }
@@ -44,7 +59,12 @@ async function hydrate(
   });
 }
 
-/** Hydrate packages at each one's globally-latest version. */
+/** Every currently servable package, after rejecting legacy out-of-scope rows. */
+export async function listServablePackages(): Promise<WebMcpPackage[]> {
+  return hydratePackages(await db.select().from(packages));
+}
+
+/** Hydrate packages at each one's globally-newest safe version. */
 export async function hydratePackages(packageRows: PackageRow[]): Promise<WebMcpPackage[]> {
   const ids = packageRows.map((p) => p.id);
   if (ids.length === 0) return [];
@@ -52,7 +72,7 @@ export async function hydratePackages(packageRows: PackageRow[]): Promise<WebMcp
     .select()
     .from(packageVersions)
     .where(inArray(packageVersions.packageId, ids));
-  return hydrate(packageRows, pickLatestVersions(versionRows));
+  return hydrate(packageRows, pickLatestVersions(packageRows, versionRows));
 }
 
 export async function listPackages(opts: {
@@ -61,17 +81,10 @@ export async function listPackages(opts: {
   pageSize: number;
 }): Promise<{ packages: WebMcpPackage[]; total: number }> {
   const where = opts.domain ? eq(packages.domain, opts.domain) : undefined;
-  const [rows, totals] = await Promise.all([
-    db
-      .select()
-      .from(packages)
-      .where(where)
-      .orderBy(desc(packages.updatedAt))
-      .limit(opts.pageSize)
-      .offset((opts.page - 1) * opts.pageSize),
-    db.select({ value: count() }).from(packages).where(where),
-  ]);
-  return { packages: await hydratePackages(rows), total: totals[0]?.value ?? 0 };
+  const rows = await db.select().from(packages).where(where).orderBy(desc(packages.updatedAt));
+  const valid = await hydratePackages(rows);
+  const start = (opts.page - 1) * opts.pageSize;
+  return { packages: valid.slice(start, start + opts.pageSize), total: valid.length };
 }
 
 export async function getPackageById(id: string): Promise<WebMcpPackage | null> {
@@ -83,13 +96,25 @@ export async function getPackageById(id: string): Promise<WebMcpPackage | null> 
 }
 
 export async function getLatestVersion(packageId: string): Promise<VersionRow | null> {
-  const rows = await db
-    .select()
-    .from(packageVersions)
-    .where(eq(packageVersions.packageId, packageId))
-    .orderBy(desc(packageVersions.version))
-    .limit(1);
-  return rows[0] ?? null;
+  const [packageRows, versionRows] = await Promise.all([
+    db.select().from(packages).where(eq(packages.id, packageId)).limit(1),
+    db
+      .select()
+      .from(packageVersions)
+      .where(eq(packageVersions.packageId, packageId))
+      .orderBy(desc(packageVersions.version)),
+  ]);
+  const pkg = packageRows[0];
+  if (!pkg) return null;
+  return (
+    versionRows.find((version) =>
+      packageWithinDomainScope({
+        domain: pkg.domain,
+        urlPatterns: version.urlPatterns,
+        ...(version.api === null ? {} : { api: version.api }),
+      }),
+    ) ?? null
+  );
 }
 
 export async function getVersionById(
@@ -130,18 +155,34 @@ export type VersionSummary = {
   createdAt: Date;
 };
 
-/** A package's versions, newest first — what update and rollback choose from. */
-export function listVersions(packageId: string): Promise<VersionSummary[]> {
-  return db
-    .select({
-      versionId: packageVersions.id,
-      version: packageVersions.version,
-      changelog: packageVersions.changelog,
-      createdAt: packageVersions.createdAt,
+/** A package's safe versions, newest first — what update and rollback choose from. */
+export async function listVersions(packageId: string): Promise<VersionSummary[]> {
+  const [packageRows, versionRows] = await Promise.all([
+    db.select().from(packages).where(eq(packages.id, packageId)).limit(1),
+    db
+      .select()
+      .from(packageVersions)
+      .where(eq(packageVersions.packageId, packageId))
+      .orderBy(desc(packageVersions.version)),
+  ]);
+  const pkg = packageRows[0];
+  if (!pkg) return [];
+  return versionRows.flatMap((version) =>
+    packageWithinDomainScope({
+      domain: pkg.domain,
+      urlPatterns: version.urlPatterns,
+      ...(version.api === null ? {} : { api: version.api }),
     })
-    .from(packageVersions)
-    .where(eq(packageVersions.packageId, packageId))
-    .orderBy(desc(packageVersions.version));
+      ? [
+          {
+            versionId: version.id,
+            version: version.version,
+            changelog: version.changelog,
+            createdAt: version.createdAt,
+          },
+        ]
+      : [],
+  );
 }
 
 /** A user's installed packages, each pinned to `installs.versionId`. */

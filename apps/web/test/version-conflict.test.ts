@@ -17,7 +17,7 @@ const state = vi.hoisted(
     insertError: Error | null;
   } => ({
     userId: "user-1",
-    packageRow: { id: "pkg-1", contributorId: "user-1", domain: "example.com" },
+    packageRow: { id: "pkg-1", contributorId: "user-1", domain: "acme.com" },
     maxReads: [0],
     inserts: [],
     insertError: null,
@@ -67,8 +67,8 @@ const tool = {
 
 const createBody = {
   version: 1,
-  domain: "example.com",
-  urlPatterns: ["*://example.com/*"],
+  domain: "acme.com",
+  urlPatterns: ["*://acme.com/*"],
   title: "Example",
   description: "Example tools",
   tools: [tool],
@@ -91,7 +91,7 @@ function publish(body: unknown): Promise<Response> {
 describe("author-declared versions", () => {
   beforeEach(() => {
     state.userId = "user-1";
-    state.packageRow = { id: "pkg-1", contributorId: "user-1", domain: "example.com" };
+    state.packageRow = { id: "pkg-1", contributorId: "user-1", domain: "acme.com" };
     state.maxReads = [0];
     state.inserts = [];
     state.insertError = null;
@@ -113,7 +113,7 @@ describe("author-declared versions", () => {
     state.maxReads = [2];
     const response = await publish({
       version: 2,
-      urlPatterns: ["*://example.com/*"],
+      urlPatterns: ["*://acme.com/*"],
       tools: [tool],
     });
     expect(response.status).toBe(409);
@@ -125,7 +125,7 @@ describe("author-declared versions", () => {
     state.maxReads = [2];
     const response = await publish({
       version: 3,
-      urlPatterns: ["*://example.com/*"],
+      urlPatterns: ["*://acme.com/*"],
       tools: [tool],
     });
     expect(response.status).toBe(201);
@@ -154,7 +154,7 @@ describe("author-declared versions", () => {
     );
     const response = await publish({
       version: 3,
-      urlPatterns: ["*://example.com/*"],
+      urlPatterns: ["*://acme.com/*"],
       tools: [tool],
     });
     expect(response.status).toBe(409);

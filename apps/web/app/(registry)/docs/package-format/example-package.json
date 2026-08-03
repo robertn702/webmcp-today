@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "domain": "example.com",
-  "urlPatterns": ["*://*.example.com/*"],
+  "domain": "acme.com",
+  "urlPatterns": ["*://*.acme.com/*"],
   "title": "Example Notes",
-  "description": "Search and create notes on example.com as the logged-in user, through the site's own JSON API. Reads need no token; writes attach the CSRF token the session endpoint hands out.",
+  "description": "Search and create notes on acme.com as the logged-in user, through the site's own JSON API. Reads need no token; writes attach the CSRF token the session endpoint hands out.",
   "minEngine": 1,
   "changelog": "Initial version: notes_search, notes_create.",
   "api": {
-    "baseUrl": "https://www.example.com",
+    "baseUrl": "https://www.acme.com",
     "auth": {
       "csrf": {
         "source": { "endpoint": "session", "extract": ["data", "csrfToken"] },
@@ -39,7 +39,7 @@
   "tools": [
     {
       "name": "notes_search",
-      "description": "Search the logged-in user's notes on example.com by keyword. Returns the matching notes' ids, titles, and last-updated timestamps, newest first.",
+      "description": "Search the logged-in user's notes on acme.com by keyword. Returns the matching notes' ids, titles, and last-updated timestamps, newest first.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -59,7 +59,7 @@
     },
     {
       "name": "notes_create",
-      "description": "Create a new note on example.com as the logged-in user. Returns the new note's id and URL.",
+      "description": "Create a new note on acme.com as the logged-in user. Returns the new note's id and URL.",
       "inputSchema": {
         "type": "object",
         "properties": {

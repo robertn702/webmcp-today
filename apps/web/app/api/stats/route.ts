@@ -1,24 +1,18 @@
-import { packages } from "@webmcp-today/db";
-import { count, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { listDistinctDomains } from "@/lib/domains-repo";
+import { listServablePackages } from "@/lib/packages-repo";
 
 export async function GET(): Promise<NextResponse> {
-  const [packageTotals, domains, topDomains] = await Promise.all([
-    db.select({ value: count() }).from(packages),
-    listDistinctDomains(),
-    db
-      .select({ domain: packages.domain, count: count() })
-      .from(packages)
-      .groupBy(packages.domain)
-      .orderBy(desc(count()))
-      .limit(10),
-  ]);
+  const packages = await listServablePackages();
+  const counts = new Map<string, number>();
+  for (const pkg of packages) counts.set(pkg.domain, (counts.get(pkg.domain) ?? 0) + 1);
+  const rankedDomains = [...counts]
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([domain, count]) => ({ domain, count }));
 
   return NextResponse.json({
-    totalPackages: packageTotals[0]?.value ?? 0,
-    totalDomains: domains.length,
-    topDomains,
+    totalPackages: packages.length,
+    totalDomains: counts.size,
+    topDomains: rankedDomains,
   });
 }
