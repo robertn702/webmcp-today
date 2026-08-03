@@ -94,6 +94,16 @@ describe("installs-store", () => {
       expect(area.snapshot()).toEqual({});
     });
 
+    it("rejects a legacy body whose pattern exceeds its visible domain", async () => {
+      const area = createFakeStorageArea();
+      const store = createInstallsStore(area);
+
+      const result = await store.install(servedPackage({ urlPatterns: ["*://*/*"] }), OPTS);
+
+      expect(result).toEqual({ ok: false, reason: "invalid-body" });
+      expect(area.snapshot()).toEqual({});
+    });
+
     it("verifies apiContentHash by recomputation and carries it in the index", async () => {
       const area = createFakeStorageArea();
       const store = createInstallsStore(area);
@@ -222,6 +232,17 @@ describe("installs-store", () => {
       expect(await store.collectOrphans()).toEqual([pkgKey("pkg-wiki")]);
       expect(area.snapshot()[pkgKey("pkg-wiki")]).toBeUndefined();
       expect(area.snapshot()[pkgKey("pkg-other")]).toBeDefined();
+    });
+  });
+
+  describe("loadPackage", () => {
+    it("treats a previously stored out-of-scope body as invalid", async () => {
+      const area = createFakeStorageArea({
+        [pkgKey("pkg-wiki")]: servedPackage({ urlPatterns: ["*://*/*"] }),
+      });
+      const store = createInstallsStore(area);
+
+      expect(await store.loadPackage("pkg-wiki")).toEqual({ status: "invalid" });
     });
   });
 

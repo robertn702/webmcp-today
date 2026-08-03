@@ -54,6 +54,19 @@ describe("matchInstalled", () => {
     expect(matchInstalled(idx, "https://example.com/blog/post")).toEqual([]);
   });
 
+  it("fails closed for legacy installs whose pattern exceeds their visible domain", () => {
+    const idx = index(
+      entry({ packageId: "global", urlPatterns: ["*://*/*"] }),
+      entry({
+        packageId: "misleading",
+        domain: "example.com",
+        urlPatterns: ["*://news.ycombinator.com/*"],
+      }),
+    );
+    expect(matchInstalled(idx, "https://example.com/page")).toEqual([]);
+    expect(matchInstalled(idx, "https://news.ycombinator.com/")).toEqual([]);
+  });
+
   it("ranks exact-host patterns above wildcard-host patterns", () => {
     const idx = index(
       entry({

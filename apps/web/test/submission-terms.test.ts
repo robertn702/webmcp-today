@@ -18,7 +18,10 @@ vi.mock("@/lib/db", () => ({
   db: {
     select: () => ({
       from: () => ({
-        where: () => ({ limit: () => Promise.resolve([{ id: "pkg-1", contributorId: "user-1" }]) }),
+        where: () => ({
+          limit: () =>
+            Promise.resolve([{ id: "pkg-1", contributorId: "user-1", domain: "reddit.com" }]),
+        }),
       }),
     }),
   },

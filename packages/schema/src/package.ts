@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { apiBlockSchema, collectApiIssues } from "./api.js";
 import { toolDescriptorSchema } from "./tool.js";
-import { domainCoveredByPatterns, parseUrlPattern } from "./url-matching.js";
+import {
+  domainCoveredByPatterns,
+  isRegistrableHostname,
+  parseUrlPattern,
+  urlPatternsWithinDomain,
+} from "./url-matching.js";
 
 // Package format v1 — based on Joakim Selemyr's web-mcp-hub (MIT), extended
 // with minEngine (format evolution) and room for health/verification metadata.
@@ -21,7 +26,10 @@ export const domainSchema = z
   .string()
   .min(1)
   .max(253)
-  .transform((d) => d.toLowerCase().replace(/^www\./, ""));
+  .transform((d) => d.toLowerCase().replace(/^www\./, ""))
+  .refine(isRegistrableHostname, {
+    message: "must be a concrete hostname beneath a registrable domain, not a public suffix",
+  });
 
 /** Chrome extension `@match`-style pattern, e.g. "*://*.wikipedia.org/wiki/*". */
 export const urlPatternSchema = z
@@ -84,6 +92,13 @@ export const createPackageSchema = createPackageObjectSchema.superRefine((pkg, c
   for (const issue of collectApiIssues(pkg)) {
     ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
   }
+  if (!urlPatternsWithinDomain(pkg.domain, pkg.urlPatterns)) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Every urlPatterns host must be "${pkg.domain}" or one of its subdomains; global and public-suffix wildcards are not allowed.`,
+      path: ["urlPatterns"],
+    });
+  }
   // The lookup key `domain` must be reachable through the urlPatterns, or the
   // package publishes but no page can ever serve it (see domainCoveredByPatterns).
   if (!domainCoveredByPatterns(pkg.domain, pkg.urlPatterns)) {
@@ -125,6 +140,42 @@ export const publishVersionSchema = createPackageObjectSchema
       ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
     }
   });
+
+/**
+ * Version bodies do not carry a domain because it belongs to the parent
+ * package. The publication route supplies the stored parent domain here, so
+ * versioned URL patterns and API origins cannot escape it.
+ */
+export function publishVersionSchemaForDomain(domain: string) {
+  return createPackageObjectSchema
+    .pick({
+      version: true,
+      urlPatterns: true,
+      tools: true,
+      api: true,
+      changelog: true,
+      minEngine: true,
+    })
+    .superRefine((pkg, ctx) => {
+      for (const issue of collectApiIssues({ ...pkg, domain })) {
+        ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
+      }
+      if (!urlPatternsWithinDomain(domain, pkg.urlPatterns)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Every urlPatterns host must be "${domain}" or one of its subdomains; global and public-suffix wildcards are not allowed.`,
+          path: ["urlPatterns"],
+        });
+      }
+      if (!domainCoveredByPatterns(domain, pkg.urlPatterns)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `domain "${domain}" is not covered by any urlPatterns host, so it would be unreachable by lookup. Add a urlPattern whose host covers it (e.g. "*://${domain}/*").`,
+          path: ["urlPatterns"],
+        });
+      }
+    });
+}
 
 export type CreatePackageInput = z.infer<typeof createPackageSchema>;
 export type UpdatePackageMetaInput = z.infer<typeof updatePackageMetaSchema>;

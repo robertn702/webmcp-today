@@ -1,5 +1,6 @@
 import {
   domainLookupKeys,
+  packageWithinDomainScope,
   rankPackagesByUrl,
   type RevocationEntry,
 } from "@robertn702/webmcp-today-schema";
@@ -23,7 +24,9 @@ export function matchInstalled(index: InstallIndex, url: string): IndexEntry[] {
     return [];
   }
   const keys = domainLookupKeys(hostname);
-  const candidates = Object.values(index).filter((entry) => keys.includes(entry.domain));
+  const candidates = Object.values(index).filter(
+    (entry) => keys.includes(entry.domain) && packageWithinDomainScope(entry),
+  );
   return rankPackagesByUrl(candidates, url);
 }
 

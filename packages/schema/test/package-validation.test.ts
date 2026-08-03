@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createPackageSchema,
   publishVersionSchema,
+  publishVersionSchemaForDomain,
   updatePackageMetaSchema,
 } from "../src/index.js";
 
@@ -67,6 +68,49 @@ describe("createPackageSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects a global wildcard pattern", () => {
+    expect(createPackageSchema.safeParse({ ...baseConfig, urlPatterns: ["*://*/*"] }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects public suffix domains and wildcard hosts", () => {
+    expect(
+      createPackageSchema.safeParse({
+        ...baseConfig,
+        domain: "com",
+        urlPatterns: ["*://*.com/*"],
+      }).success,
+    ).toBe(false);
+    expect(
+      createPackageSchema.safeParse({
+        ...baseConfig,
+        domain: "example.co.uk",
+        urlPatterns: ["*://*.co.uk/*"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects patterns outside the visible package domain", () => {
+    expect(
+      createPackageSchema.safeParse({
+        ...baseConfig,
+        domain: "reddit.com",
+        urlPatterns: ["*://news.ycombinator.com/*"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts apex and subdomain patterns within the visible package domain", () => {
+    expect(
+      createPackageSchema.safeParse({
+        ...baseConfig,
+        domain: "example.com",
+        urlPatterns: ["*://example.com/*", "*://api.example.com/*", "*://*.example.com/*"],
+      }).success,
+    ).toBe(true);
+  });
+
   it("rejects an empty urlPatterns array", () => {
     const result = createPackageSchema.safeParse({ ...baseConfig, urlPatterns: [] });
     expect(result.success).toBe(false);
@@ -128,6 +172,25 @@ describe("createPackageSchema", () => {
       urlPatterns: ["*://*.reddit.com/*"],
     });
     expect(result.success).toBe(true);
+  });
+
+  it("enforces the parent package domain for version publication", () => {
+    const schema = publishVersionSchemaForDomain("reddit.com");
+    const version = {
+      version: 2,
+      urlPatterns: ["*://*.reddit.com/*"],
+      tools: [baseTool],
+      api: { baseUrl: "https://www.reddit.com", endpoints: {} },
+    };
+    expect(schema.safeParse(version).success).toBe(true);
+    expect(schema.safeParse({ ...version, urlPatterns: ["*://*/*"] }).success).toBe(false);
+    expect(
+      schema.safeParse({ ...version, urlPatterns: ["*://news.ycombinator.com/*"] }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({ ...version, api: { baseUrl: "https://evil.example.com", endpoints: {} } })
+        .success,
+    ).toBe(false);
   });
 
   it("checks coverage against the normalized domain (www-stripped)", () => {

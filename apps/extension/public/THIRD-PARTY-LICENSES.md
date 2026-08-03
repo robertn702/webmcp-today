@@ -17,6 +17,7 @@ someone browsing the repository.
 | `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0    | https://github.com/jmespath-community/typescript-jmespath |
 | `@noble/hashes`                | 2.2.0                                  | MIT        | https://github.com/paulmillr/noble-hashes                 |
 | `canonicalize`                 | 3.0.0                                  | Apache-2.0 | https://github.com/erdtman/canonicalize                   |
+| `tldts`                        | 7.4.10                                 | MIT        | https://github.com/remusao/tldts                          |
 
 ### MPL-2.0 notice
 

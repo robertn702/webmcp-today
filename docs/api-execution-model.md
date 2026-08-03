@@ -132,8 +132,8 @@ And a tool binds to an endpoint:
 
 Field semantics:
 
-- **`baseUrl`** — hard-enforced same-origin. Must match one of the hosts implied by the
-  package's `urlPatterns`; the executor refuses any derived URL whose origin differs.
+- **`baseUrl`** — hard-enforced same-origin. Must be the package's declared domain or
+  one of its subdomains; the executor refuses any derived URL whose origin differs.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
   GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
   `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along
@@ -297,9 +297,10 @@ a subscription has no place to stream to.
 
 The single load-bearing invariant, so it gets its own section:
 
-- `api.baseUrl` must be same-origin with a host covered by the package's `urlPatterns`.
-  Validated at publish (schema-level) and again at execution (executor-level) — a
-  registry-side bug must not be enough to break the invariant.
+- `api.baseUrl` must be the package's declared domain or one of its subdomains; every
+  `urlPatterns` host is constrained to that same visible scope. Validated at publish
+  (schema-level) and again when an extension installs or matches stored package data —
+  a registry-side bug or legacy body must not be enough to break the invariant.
 - The executor constructs the final URL itself from `baseUrl` + `path` + `query`;
   path/query templates are bound from _validated_ tool input, and the resolved URL is
   re-checked against `baseUrl`'s origin after binding (placeholder values cannot
@@ -310,9 +311,8 @@ The single load-bearing invariant, so it gets its own section:
   the point: tools act as the logged-in user _on that site_, and only there.
 
 Cross-origin APIs (a site whose data lives on `api.otherhost.com`) are deliberately not
-supported in v1 — the package's `urlPatterns` would need to cover the API host and the
-tool only works while the user has a session there. Worth revisiting if real packages
-demand it; the invariant gets looser, so it needs its own design.
+supported in v1. Same-site APIs such as `api.example.com` are allowed; unrelated origins
+need an explicit future design because the invariant gets looser.
 
 ## Trust model
 
@@ -362,7 +362,7 @@ data — so it is buildable today and is not blocked on the spike.
 
 1. ~~**`packages/schema`: zod for the `api` block + tests.**~~ **Done.** Endpoint/auth/
    document/projection schemas, placeholder↔inputSchema cross-validation (mirroring the
-   `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔`urlPatterns` check.
+   `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔package-domain check.
 2. ~~**Executor derived-call engine** (extension).~~ **Done**, except APQ: request
    construction, token sources (with TTL), `returns` projection, `errorPath` failure.
    `persistedQuery: true` still throws rather than silently sending a full query, and

@@ -2,7 +2,7 @@ import { compile } from "@jmespath-community/jmespath";
 import { z } from "zod";
 import type { ToolDescriptor } from "./tool.js";
 import { unknownPlaceholders } from "./templates.js";
-import { hostCoversHostname, parseUrlPattern } from "./url-matching.js";
+import { hostnameWithinDomain } from "./url-matching.js";
 
 // Tier-1 API execution model — a package declares a site's HTTP surface as data
 // and the executor derives the request. See docs/api-execution-model.md.
@@ -181,6 +181,8 @@ export interface ApiValidationIssue {
  * fields its references are checked against. Structurally satisfied by both the
  * full create-package shape and the publish-version subset. */
 export interface ApiValidationTarget {
+  /** Omitted only by the generic version-body schema; routes supply it. */
+  domain?: string;
   urlPatterns: string[];
   tools: ToolDescriptor[];
   api?: ApiBlock;
@@ -215,7 +217,7 @@ function scanTemplateValue(
  * it into a superRefine without ctx-typing gymnastics. */
 export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssue[] {
   const issues: ApiValidationIssue[] = [];
-  const { api, tools, urlPatterns } = target;
+  const { api, tools } = target;
 
   // 1. Tool endpoint bindings resolve; 2. their placeholders resolve.
   for (const [i, tool] of tools.entries()) {
@@ -318,22 +320,19 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
     }
   }
 
-  // 6. Same-origin: baseUrl host must be covered by a urlPatterns host. Host
-  // coverage only (not path/scheme) — the invariant is origin, per the design.
+  // 6. Same-origin: baseUrl host must be the visible package domain or one of
+  // its subdomains. The generic version-body schema has no parent domain, so
+  // the route uses publishVersionSchemaForDomain for this security boundary.
   let baseHost: string | null = null;
   try {
     baseHost = new URL(api.baseUrl).hostname.toLowerCase();
   } catch {
     baseHost = null; // invalid URL already flagged by the baseUrl field refine.
   }
-  if (baseHost !== null) {
-    const covered = urlPatterns.some((pattern) => {
-      const parsed = parseUrlPattern(pattern);
-      return parsed !== null && hostCoversHostname(parsed.host, baseHost);
-    });
-    if (!covered) {
+  if (baseHost !== null && target.domain !== undefined) {
+    if (!hostnameWithinDomain(baseHost, target.domain)) {
       issues.push({
-        message: `api.baseUrl host "${baseHost}" is not covered by any urlPatterns host (same-origin enforcement).`,
+        message: `api.baseUrl host "${baseHost}" must be "${target.domain}" or one of its subdomains (same-origin enforcement).`,
         path: ["api", "baseUrl"],
       });
     }

@@ -71,10 +71,10 @@ describe("PATCH /api/packages/:id — domain coverage guard", () => {
     expect(state.updates).toEqual([]);
   });
 
-  it("accepts a domain covered by a *.host pattern", async () => {
+  it("rejects narrowing the visible domain while a wildcard still covers sibling subdomains", async () => {
     const response = await patch({ domain: "old.reddit.com" });
-    expect(response.status).toBe(200);
-    expect(state.updates).toEqual([{ domain: "old.reddit.com" }]);
+    expect(response.status).toBe(422);
+    expect(state.updates).toEqual([]);
   });
 
   it("accepts the apex domain a *.host pattern covers", async () => {
