@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const nativeHostDescription = "WebMCP Today local bridge";
 export const developmentExtensionId = "peaiababjjehplphfkhefdlgefaaemkl";
-export const releaseExtensionId = "lldklnhkedjeiggmdfligbcpdebgaaji";
+export const releaseExtensionId = "kngdblibgfakdkfgbbolnmgajaacchgb";
 
 export type Browser = "brave" | "chrome";
 

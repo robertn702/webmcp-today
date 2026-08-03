@@ -23,7 +23,7 @@
     },
     "apps/extension": {
       "name": "@webmcp-today/extension",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@robertn702/webmcp-today-engine": "workspace:*",
         "@robertn702/webmcp-today-schema": "workspace:*",

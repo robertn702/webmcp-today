@@ -49,7 +49,7 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   public key is the repo **variable** `WXT_EXTENSION_KEY` (a variable, not a
   secret — it ships inside `manifest.json`, and secrets would be masked in
   logs for no gain). Release extension ID:
-  `lldklnhkedjeiggmdfligbcpdebgaaji` — it must be in Vercel's
+  `kngdblibgfakdkfgbbolnmgajaacchgb` — it must be in Vercel's
   `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS` or install buttons report the extension
   absent. Losing `key.pem` is not fatal (the manifest only carries the public
   half) but changing the key changes the ID and orphans every existing install.

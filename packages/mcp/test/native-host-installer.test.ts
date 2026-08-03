@@ -23,6 +23,10 @@ afterEach(async () => {
 });
 
 describe("public macOS native-host installer", () => {
+  it("uses the documented release identity", () => {
+    expect(releaseExtensionId).toBe("kngdblibgfakdkfgbbolnmgajaacchgb");
+  });
+
   it("installs the release host durably for Chrome and Brave", async () => {
     const chrome = await testDeps();
     const chromeResult = await installBridge(chrome.deps, { browser: "chrome" });
