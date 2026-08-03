@@ -6,9 +6,9 @@ repository is private on its current plan.
 
 ## Before making the repository public
 
-1. Merge the repository controls for #101 and #100. Confirm `SECURITY.md`,
-   `.github/dependabot.yml`, and `.github/workflows/codeql.yml` are present on
-   `main`; #100 separately hardens the existing Actions workflows.
+1. Merge the repository controls for #101 and #100. Confirm `SECURITY.md` and
+   `.github/dependabot.yml` are present on `main`; #100 separately hardens the
+   existing Actions workflows.
 2. Re-run the publication-safety audit against the exact commit that will become
    public. Include Git history, issues, pull requests, Actions logs and
    artifacts, releases, repository variables, and public-facing documentation.
@@ -32,10 +32,9 @@ repository is private on its current plan.
    vulnerability** control is visible in the repository Security tab and that
    `https://github.com/robertn702/webmcp-today/security/policy` renders
    `SECURITY.md`.
-4. Enable CodeQL using the committed advanced workflow, then wait for its first
-   default-branch run. Confirm the Security tab shows active CodeQL analysis for
-   JavaScript/TypeScript. Triage every initial alert rather than dismissing it
-   in bulk.
+4. Enable CodeQL default setup for JavaScript/TypeScript, then wait for its
+   first default-branch run. Confirm the Security tab shows active CodeQL
+   analysis. Triage every initial alert rather than dismissing it in bulk.
 5. Wait for secret scanning's historical scan to complete. Review every alert;
    if an alert is a real credential, revoke or rotate it before resolving the
    alert. Treat a historical finding as an incident even if the relevant commit
