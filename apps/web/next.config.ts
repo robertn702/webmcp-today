@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@webmcp-today/db"],
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "www.robertniimi.com" }],
+  },
 };
 
 export default withSentryConfig(nextConfig, {
