@@ -50,9 +50,9 @@ export default function PackageFormatPage() {
           <Field name="urlPatterns" type="string[], 1–20 · required">
             Chrome <Code>@match</Code>-style patterns: <Code>scheme://host/path</Code>. Scheme is{" "}
             <Code>*</Code>, <Code>http</Code>, or <Code>https</Code>; host is <Code>*</Code>,{" "}
-            <Code>*.example.com</Code> (the apex and any subdomain), or an exact hostname; path
-            starts with <Code>/</Code> and may contain <Code>*</Code>. Where more than one package
-            matches a page, the more specific pattern ranks higher.
+            <Code>*.acme.com</Code> (the apex and any subdomain), or an exact hostname; path starts
+            with <Code>/</Code> and may contain <Code>*</Code>. Where more than one package matches
+            a page, the more specific pattern ranks higher.
           </Field>
           <Field name="title" type="string, 1–200 · required">
             What the registry lists it as.

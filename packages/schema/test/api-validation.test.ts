@@ -141,12 +141,12 @@ describe("api block cross-validation", () => {
   it("scans body templates (rejects unknown, accepts valid)", () => {
     const withBody = (body: Record<string, string>) => ({
       version: 1,
-      domain: "example.com",
-      urlPatterns: ["*://example.com/*"],
+      domain: "acme.com",
+      urlPatterns: ["*://acme.com/*"],
       title: "x",
       description: "x",
       api: {
-        baseUrl: "https://example.com",
+        baseUrl: "https://acme.com",
         endpoints: { create: { method: "POST", path: "/api/create", body } },
       },
       tools: [
@@ -359,6 +359,10 @@ describe("api block cross-validation", () => {
   it("runs the same api cross-validation on publishVersionSchema", () => {
     const version = { version: 2, urlPatterns: base.urlPatterns, tools: base.tools, api: base.api };
     expect(publishVersionSchema.safeParse(version).success).toBe(true);
+    const apiSubdomain = structuredClone(version);
+    apiSubdomain.urlPatterns = ["*://reddit.com/*"];
+    apiSubdomain.api.baseUrl = "https://api.reddit.com";
+    expect(publishVersionSchema.safeParse(apiSubdomain).success).toBe(true);
     const broken = structuredClone(version);
     const tool = broken.tools[0];
     if (!tool) throw new Error("fixture missing tool");

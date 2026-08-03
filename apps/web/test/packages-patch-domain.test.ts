@@ -66,7 +66,7 @@ describe("PATCH /api/packages/:id — domain coverage guard", () => {
   });
 
   it("rejects a domain the latest version's urlPatterns do not cover", async () => {
-    const response = await patch({ domain: "example.com" });
+    const response = await patch({ domain: "ycombinator.com" });
     expect(response.status).toBe(422);
     expect(state.updates).toEqual([]);
   });

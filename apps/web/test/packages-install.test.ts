@@ -10,14 +10,17 @@ const state = vi.hoisted(
   (): {
     userId: string | null;
     packageExists: boolean;
-    latest: { id: string; version: number } | null;
-    versionsById: Record<string, { id: string; version: number }>;
+    latest: { id: string; version: number; urlPatterns: string[]; api: null } | null;
+    versionsById: Record<string, { id: string; version: number; urlPatterns: string[]; api: null }>;
     installs: { userId: string; packageId: string; versionId: string }[];
   } => ({
     userId: "user-1",
     packageExists: true,
-    latest: { id: "ver-2", version: 2 },
-    versionsById: { "ver-1": { id: "ver-1", version: 1 }, "ver-2": { id: "ver-2", version: 2 } },
+    latest: { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null },
+    versionsById: {
+      "ver-1": { id: "ver-1", version: 1, urlPatterns: ["*://acme.com/*"], api: null },
+      "ver-2": { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null },
+    },
     installs: [],
   }),
 );
@@ -31,7 +34,8 @@ vi.mock("@/lib/db", () => ({
     select: () => ({
       from: () => ({
         where: () => ({
-          limit: () => Promise.resolve(state.packageExists ? [{ id: "pkg-1" }] : []),
+          limit: () =>
+            Promise.resolve(state.packageExists ? [{ id: "pkg-1", domain: "acme.com" }] : []),
         }),
       }),
     }),
@@ -84,7 +88,7 @@ describe("PUT /api/packages/:id/install", () => {
   beforeEach(() => {
     state.userId = "user-1";
     state.packageExists = true;
-    state.latest = { id: "ver-2", version: 2 };
+    state.latest = { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null };
     state.installs = [];
   });
 
@@ -112,6 +116,18 @@ describe("PUT /api/packages/:id/install", () => {
   it("404s when the requested version does not exist", async () => {
     const response = await put("pkg-1", { versionId: "ver-9" });
     expect(response.status).toBe(404);
+  });
+
+  it("does not pin a legacy version that exceeds the package domain", async () => {
+    state.versionsById["ver-legacy"] = {
+      id: "ver-legacy",
+      version: 3,
+      urlPatterns: ["*://*/*"],
+      api: null,
+    };
+    const response = await put("pkg-1", { versionId: "ver-legacy" });
+    expect(response.status).toBe(404);
+    expect(state.installs).toEqual([]);
   });
 
   it("401s when unauthenticated", async () => {

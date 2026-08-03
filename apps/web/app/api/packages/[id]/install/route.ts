@@ -1,3 +1,4 @@
+import { packageWithinDomainScope } from "@robertn702/webmcp-today-schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -23,12 +24,9 @@ export async function PUT(
   const userId = await getAuthUserId(request);
   if (!userId) return jsonError(401, "Authentication required");
 
-  const exists = await db
-    .select({ id: packages.id })
-    .from(packages)
-    .where(eq(packages.id, id))
-    .limit(1);
-  if (exists.length === 0) return jsonError(404, "Package not found");
+  const rows = await db.select().from(packages).where(eq(packages.id, id)).limit(1);
+  const pkg = rows[0];
+  if (!pkg) return jsonError(404, "Package not found");
 
   const body = await parseBody(request, installBodySchema);
   if (!body.ok) return body.response;
@@ -37,6 +35,15 @@ export async function PUT(
     ? await getVersionById(id, body.data.versionId)
     : await getLatestVersion(id);
   if (!version) return jsonError(404, "Version not found for this package");
+  if (
+    !packageWithinDomainScope({
+      domain: pkg.domain,
+      urlPatterns: version.urlPatterns,
+      ...(version.api === null ? {} : { api: version.api }),
+    })
+  ) {
+    return jsonError(404, "Version not found for this package");
+  }
 
   await installPackage(userId, id, version.id);
   return NextResponse.json({ ok: true, versionId: version.id, version: version.version });

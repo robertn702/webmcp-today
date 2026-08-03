@@ -7,8 +7,8 @@ function entry(overrides: Partial<IndexEntry> & Pick<IndexEntry, "packageId">): 
   return {
     versionId: `${overrides.packageId}-v1`,
     version: 1,
-    domain: "example.com",
-    urlPatterns: ["*://example.com/*"],
+    domain: "acme.com",
+    urlPatterns: ["*://acme.com/*"],
     title: overrides.packageId,
     installedAt: "2026-07-27T00:00:00.000Z",
     source: "registry",
@@ -24,7 +24,7 @@ function index(...entries: IndexEntry[]): InstallIndex {
 describe("matchInstalled", () => {
   it("matches an install on its exact domain and pattern", () => {
     const idx = index(entry({ packageId: "a" }));
-    const matched = matchInstalled(idx, "https://example.com/page");
+    const matched = matchInstalled(idx, "https://acme.com/page");
     expect(matched.map((e) => e.packageId)).toEqual(["a"]);
   });
 
@@ -45,13 +45,13 @@ describe("matchInstalled", () => {
       entry({ packageId: "a" }),
       entry({ packageId: "b", domain: "other.net", urlPatterns: ["*://other.net/*"] }),
     );
-    const matched = matchInstalled(idx, "https://example.com/");
+    const matched = matchInstalled(idx, "https://acme.com/");
     expect(matched.map((e) => e.packageId)).toEqual(["a"]);
   });
 
   it("drops installs whose domain matches but urlPatterns do not", () => {
-    const idx = index(entry({ packageId: "a", urlPatterns: ["*://example.com/docs/*"] }));
-    expect(matchInstalled(idx, "https://example.com/blog/post")).toEqual([]);
+    const idx = index(entry({ packageId: "a", urlPatterns: ["*://acme.com/docs/*"] }));
+    expect(matchInstalled(idx, "https://acme.com/blog/post")).toEqual([]);
   });
 
   it("fails closed for legacy installs whose pattern exceeds their visible domain", () => {
@@ -59,11 +59,11 @@ describe("matchInstalled", () => {
       entry({ packageId: "global", urlPatterns: ["*://*/*"] }),
       entry({
         packageId: "misleading",
-        domain: "example.com",
+        domain: "acme.com",
         urlPatterns: ["*://news.ycombinator.com/*"],
       }),
     );
-    expect(matchInstalled(idx, "https://example.com/page")).toEqual([]);
+    expect(matchInstalled(idx, "https://acme.com/page")).toEqual([]);
     expect(matchInstalled(idx, "https://news.ycombinator.com/")).toEqual([]);
   });
 
@@ -71,16 +71,16 @@ describe("matchInstalled", () => {
     const idx = index(
       entry({
         packageId: "wild",
-        domain: "example.com",
-        urlPatterns: ["*://*.example.com/*"],
+        domain: "acme.com",
+        urlPatterns: ["*://*.acme.com/*"],
       }),
       entry({
         packageId: "exact",
-        domain: "example.com",
-        urlPatterns: ["*://example.com/*"],
+        domain: "acme.com",
+        urlPatterns: ["*://acme.com/*"],
       }),
     );
-    const matched = matchInstalled(idx, "https://example.com/page");
+    const matched = matchInstalled(idx, "https://acme.com/page");
     expect(matched.map((e) => e.packageId)).toEqual(["exact", "wild"]);
   });
 

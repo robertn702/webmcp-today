@@ -104,7 +104,7 @@ export function SubmitForm() {
         onChange={(e) => setJson(e.target.value)}
         rows={20}
         spellCheck={false}
-        placeholder='{"version": 1, "domain": "example.com", "urlPatterns": ["*://example.com/*"], "title": "...", "description": "...", "tools": []}'
+        placeholder='{"version": 1, "domain": "acme.com", "urlPatterns": ["*://acme.com/*"], "title": "...", "description": "...", "tools": []}'
         className="font-mono text-xs"
       />
       {error && (

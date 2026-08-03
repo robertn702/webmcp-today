@@ -18,17 +18,17 @@ const baseTool = {
 
 const baseConfig = {
   version: 1,
-  domain: "Example.com",
-  urlPatterns: ["*://example.com/search*"],
+  domain: "Acme.com",
+  urlPatterns: ["*://acme.com/search*"],
   title: "Example search",
-  description: "Search tools for example.com",
+  description: "Search tools for acme.com",
   tools: [baseTool],
 };
 
 describe("createPackageSchema", () => {
   it("normalizes domain (lowercase, strips www.)", () => {
-    const parsed = createPackageSchema.parse({ ...baseConfig, domain: "WWW.Example.com" });
-    expect(parsed.domain).toBe("example.com");
+    const parsed = createPackageSchema.parse({ ...baseConfig, domain: "WWW.Acme.com" });
+    expect(parsed.domain).toBe("acme.com");
   });
 
   it("requires an author-declared positive-integer version", () => {
@@ -91,6 +91,32 @@ describe("createPackageSchema", () => {
     ).toBe(false);
   });
 
+  it.each([
+    "service.localhost",
+    "service.test",
+    "service.example",
+    "service.onion",
+    "service.onion.",
+    "foo.home.arpa",
+    "resolver.arpa",
+    "resolver.arpa.",
+    "ipv4only.arpa",
+    "service.in-addr.arpa",
+    "service.ip6.arpa",
+    "jira.internal",
+    "example.com",
+    "api.example.net",
+    "www.example.org",
+  ])("rejects special-use and unrecognized local domain %s", (domain) => {
+    expect(
+      createPackageSchema.safeParse({
+        ...baseConfig,
+        domain,
+        urlPatterns: [`*://${domain}/*`],
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects patterns outside the visible package domain", () => {
     expect(
       createPackageSchema.safeParse({
@@ -105,8 +131,8 @@ describe("createPackageSchema", () => {
     expect(
       createPackageSchema.safeParse({
         ...baseConfig,
-        domain: "example.com",
-        urlPatterns: ["*://example.com/*", "*://api.example.com/*", "*://*.example.com/*"],
+        domain: "acme.com",
+        urlPatterns: ["*://acme.com/*", "*://api.acme.com/*", "*://*.acme.com/*"],
       }).success,
     ).toBe(true);
   });
@@ -196,8 +222,8 @@ describe("createPackageSchema", () => {
   it("checks coverage against the normalized domain (www-stripped)", () => {
     const result = createPackageSchema.safeParse({
       ...baseConfig,
-      domain: "www.example.com",
-      urlPatterns: ["*://example.com/*"],
+      domain: "www.acme.com",
+      urlPatterns: ["*://acme.com/*"],
     });
     expect(result.success).toBe(true);
   });

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import * as React from "react";
 import { InstallButton } from "@/components/install-button";
 import { Badge } from "@/components/ui/badge";
-import { getPackageById, getVersionById } from "@/lib/packages-repo";
+import { getPackageAtVersion, getPackageById } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
 
@@ -34,23 +35,31 @@ export default async function PackagePage({
 
   // ?install=<versionId> is the MCP handoff link (install_package's installUrl) —
   // pre-arm the button at that exact version instead of the page's latest.
-  const installTarget = install ? await getVersionById(id, install) : null;
-  const targetVersionId = installTarget?.id ?? pkg.versionId;
+  const installTarget = install ? await getPackageAtVersion(id, install) : null;
+  const displayedPackage = installTarget ?? pkg;
+  const targetVersionId = installTarget?.versionId ?? pkg.versionId;
   const targetVersion = installTarget?.version ?? pkg.version;
 
   return (
     <div className="max-w-2xl">
-      <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">{pkg.domain}</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">{pkg.title}</h1>
-      <p className="mt-2 font-mono text-xs text-muted-foreground">
-        by {pkg.contributor} · v{pkg.version} · updated{" "}
-        {new Date(pkg.updatedAt).toLocaleDateString()}
+      <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">
+        {displayedPackage.domain}
       </p>
-      <p className="mt-4 font-mono text-sm text-muted-foreground">{pkg.urlPatterns.join(", ")}</p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{pkg.description}</p>
-      {pkg.changelog && (
+      <h1 className="mt-3 font-display text-4xl tracking-tight">{displayedPackage.title}</h1>
+      <p className="mt-2 font-mono text-xs text-muted-foreground">
+        by {displayedPackage.contributor} · v{displayedPackage.version} · updated{" "}
+        {new Date(displayedPackage.updatedAt).toLocaleDateString()}
+      </p>
+      <p className="mt-4 font-mono text-sm text-muted-foreground">
+        {displayedPackage.urlPatterns.join(", ")}
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        {displayedPackage.description}
+      </p>
+      {displayedPackage.changelog && (
         <p className="mt-2 text-xs text-muted-foreground">
-          <span className="font-semibold">What changed in v{pkg.version}:</span> {pkg.changelog}
+          <span className="font-semibold">What changed in v{displayedPackage.version}:</span>{" "}
+          {displayedPackage.changelog}
         </p>
       )}
       <div className="mt-4">
@@ -73,9 +82,9 @@ export default async function PackagePage({
         </p>
       </div>
 
-      <h2 className="mt-10 text-sm font-semibold">Tools ({pkg.tools.length})</h2>
+      <h2 className="mt-10 text-sm font-semibold">Tools ({displayedPackage.tools.length})</h2>
       <ul className="mt-4 flex flex-col gap-4">
-        {pkg.tools.map((tool) => (
+        {displayedPackage.tools.map((tool) => (
           <li key={tool.name} className="rounded-2xl border bg-card p-4">
             <div className="flex items-baseline gap-2">
               <code className="font-semibold">{tool.name}</code>

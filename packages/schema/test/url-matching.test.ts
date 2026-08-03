@@ -154,17 +154,15 @@ describe("package scope", () => {
   it("allows an apex and subdomain scope", () => {
     expect(
       packageWithinDomainScope({
-        domain: "example.com",
-        urlPatterns: ["*://example.com/*", "*://*.example.com/*"],
-        api: { baseUrl: "https://api.example.com" },
+        domain: "acme.com",
+        urlPatterns: ["*://acme.com/*", "*://*.acme.com/*"],
+        api: { baseUrl: "https://api.acme.com" },
       }),
     ).toBe(true);
   });
 
   it("rejects global, public-suffix, misleading, and unrelated API scopes", () => {
-    expect(packageWithinDomainScope({ domain: "example.com", urlPatterns: ["*://*/*"] })).toBe(
-      false,
-    );
+    expect(packageWithinDomainScope({ domain: "acme.com", urlPatterns: ["*://*/*"] })).toBe(false);
     expect(packageWithinDomainScope({ domain: "com", urlPatterns: ["*://*.com/*"] })).toBe(false);
     expect(
       packageWithinDomainScope({
