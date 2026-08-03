@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import Link from "next/link";
 import { UserButton } from "@/components/auth/user/user-button";
 import { DesktopNavLinks } from "@/components/desktop-nav";
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

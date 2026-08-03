@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "What the WebMCP Today extension and website store, what they send, and what they never see.",
 };
 
-const LAST_UPDATED = "29 July 2026";
+const LAST_UPDATED = "3 August 2026";
 
 export default function PrivacyPage() {
   return (
@@ -79,9 +79,18 @@ export default function PrivacyPage() {
           We store all of this to run the service for you, which is the legal basis for processing
           it. Account data is kept until you ask us to delete it.
         </p>
-        <p>The service runs on three processors:</p>
+        <p>
+          The website also uses Vercel Web Analytics to understand aggregate website traffic. It is
+          cookie-free and uses anonymized data. It applies to the website&apos;s deployed hosts,
+          including Vercel Preview deployments. The extension does not use it or send analytics,
+          telemetry, error reports, browsing history, page contents, or per-URL activity.
+        </p>
+        <p>The service uses these processors:</p>
         <ul className="flex list-disc flex-col gap-2 pl-4">
-          <li>Vercel (hosting). Its servers log IP addresses, as any web server does.</li>
+          <li>
+            Vercel (hosting and website-only Web Analytics). Its servers log IP addresses, as any
+            web server does.
+          </li>
           <li>Neon (database).</li>
           <li>
             Sentry (error monitoring, web app only, not in the extension). An error report can
@@ -97,8 +106,9 @@ export default function PrivacyPage() {
       <Section n={3} title="What we don't collect">
         <p>
           The extension sends us no browsing history, page contents, or per-URL activity. We do not
-          sell or share your personal information, and nothing goes to anyone beyond the processors
-          listed above.
+          sell or share your personal information. Vercel, Neon, and Sentry process website data as
+          described above. GitHub handles GitHub sign-in under its own privacy policy. The extension
+          sends data only as described in section 1.
         </p>
       </Section>
 
