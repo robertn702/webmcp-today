@@ -8,14 +8,55 @@ permissions: {}
 
 jobs:
   delete-branch:
-    # Fork PR branch names are attacker-controlled. Preview branches are only
-    # created for this repository's branches, so never give a fork-triggered
-    # run access to the Neon credential.
+    # Preview branches are only created for this repository's branches. Fork
+    # pull_request runs do not receive secrets, but skip them before use so a
+    # future trigger change cannot widen the Neon credential's exposure.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3.2.1
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch: preview/${{ github.head_ref }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+      # The upstream delete-branch action expands its branch input directly
+      # into Bash source. Resolve the exact branch ID through Neon's API so the
+      # PR branch name stays data, never shell syntax.
+      - name: Delete preview branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          PREVIEW_BRANCH: preview/${{ github.head_ref }}
+        run: |
+          branches="$(curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer $NEON_API_KEY" \
+            --get --data-urlencode "search=$PREVIEW_BRANCH" \
+            --url "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")"
+          if ! branch_id="$(jq --raw-output --arg branch "$PREVIEW_BRANCH" \
+            '[.branches[] | select(.name == $branch) | .id] | if length > 1 then error("multiple matching branches") else .[0] // "" end' \
+            <<<"$branches")"; then
+            echo "::error::Neon returned an invalid branch response."
+            exit 1
+          fi
+          if [ -z "$branch_id" ]; then
+            echo "Preview branch $PREVIEW_BRANCH does not exist; nothing to delete."
+            exit 0
+          fi
+
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+          for attempt in 1 2 3; do
+            status="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+              --request DELETE \
+              --header "Authorization: Bearer $NEON_API_KEY" \
+              --url "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$branch_id" || true)"
+            case "$status" in
+              200 | 404)
+                exit 0
+                ;;
+              423 | 503)
+                if [ "$attempt" -lt 3 ]; then
+                  sleep "$attempt"
+                  continue
+                fi
+                ;;
+            esac
+            cat "$response_file" >&2
+            echo "::error::Neon preview branch deletion failed with HTTP $status."
+            exit 1
+          done
