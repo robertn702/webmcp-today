@@ -14,32 +14,41 @@ on:
         description: Existing extension-v* tag to re-release
         required: true
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Creating and updating the GitHub Release needs contents: write. Keep that
+    # capability isolated from every other workflow and job.
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag || github.ref }}
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
 
       - name: Check tag matches package version
         id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          tag="${{ inputs.tag || github.ref_name }}"
-          pkg=$(node -p "require('./apps/extension/package.json').version")
-          if [ "$tag" != "extension-v$pkg" ]; then
-            echo "::error::tag $tag does not match apps/extension/package.json version $pkg (expected extension-v$pkg)"
+          if [[ ! "$RELEASE_TAG" =~ ^extension-v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::tag $RELEASE_TAG is not a valid extension release tag"
             exit 1
           fi
-          echo "version=$pkg" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          pkg="$(node -p "require('./apps/extension/package.json').version")"
+          expected_tag="extension-v$pkg"
+          if [ "$RELEASE_TAG" != "$expected_tag" ]; then
+            echo "::error::tag $RELEASE_TAG does not match apps/extension/package.json version $pkg (expected $expected_tag)"
+            exit 1
+          fi
+          printf 'version=%s\n' "$pkg" >> "$GITHUB_OUTPUT"
+          printf 'tag=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
       # A tag can be cut from any commit, so re-run the gates rather than
       # trusting main's green run.
@@ -74,13 +83,19 @@ jobs:
       # bug against a specific build.
       - name: Stable-name copy for the /latest/download URL
         working-directory: apps/extension/.output
-        run: cp "webmcp-today-${{ steps.version.outputs.version }}-chrome.zip" webmcp-today-chrome.zip
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: cp -- "webmcp-today-${VERSION}-chrome.zip" webmcp-today-chrome.zip
 
       - name: Checksums
         working-directory: apps/extension/.output
-        run: sha256sum *.zip > SHA256SUMS
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          sha256sum -- "webmcp-today-${VERSION}-chrome.zip" webmcp-today-chrome.zip > SHA256SUMS
+          sha256sum --check --strict SHA256SUMS
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: Extension v${{ steps.version.outputs.version }}
@@ -106,4 +121,7 @@ jobs:
             new release manually. Chrome will also prompt about developer-mode
             extensions on each launch; that is expected for off-store installs.
 
-            Verify the download against `SHA256SUMS`.
+            `SHA256SUMS` checks that a downloaded ZIP's bytes match this release.
+            It is generated and uploaded by this same release workflow, so it is
+            an integrity check, not a detached signature or independent proof of
+            publisher identity.

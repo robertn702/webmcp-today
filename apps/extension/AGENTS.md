@@ -42,7 +42,10 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   `git tag extension-v<version> && git push origin extension-v<version>`.
   The workflow fails if the tag and package version disagree, re-runs
   typecheck/lint/test (a tag can come off any commit), and attaches the ZIP
-  plus `SHA256SUMS`. `workflow_dispatch` with an existing tag re-runs it.
+  plus `SHA256SUMS`. The checksum file verifies downloaded bytes only: because
+  the same workflow uploads it, it is not a detached signature or independent
+  proof of publisher identity. `workflow_dispatch` with an existing tag re-runs
+  it.
 - **Release keypair != dev keypair.** The base64 public release key is the repo
   **variable** `WXT_EXTENSION_KEY` (a variable, not a secret: it ships inside
   `manifest.json`). Its resulting extension ID must be included in the deployed
