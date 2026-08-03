@@ -1,4 +1,4 @@
-import { packageListResponseSchema } from "@robertn702/webmcp-today-schema";
+import { packageLookupResponseSchema, rankPackagesByUrl } from "@robertn702/webmcp-today-schema";
 
 // Popup discovery suggestions, replacing the old bundled-fallback package
 // list: these are real registry packages with ids/versionIds, so a
@@ -16,6 +16,9 @@ export interface Suggestion {
 export interface SuggestionsDeps {
   fetchFn: (url: string) => Promise<Response>;
   origin: string;
+  /** Active tab URL. Suggestions are scoped and pattern-filtered by the
+   * registry's normal URL lookup path. */
+  url: string | undefined;
 }
 
 /** `ok: false` means the fetch itself failed (offline, non-2xx, bad body) —
@@ -24,26 +27,40 @@ export interface SuggestionsDeps {
 export type SuggestionsResult = { ok: true; packages: Suggestion[] } | { ok: false };
 
 export async function fetchSuggestions(deps: SuggestionsDeps): Promise<SuggestionsResult> {
+  let target: URL;
+  try {
+    if (deps.url === undefined) return { ok: true, packages: [] };
+    target = new URL(deps.url);
+  } catch {
+    return { ok: true, packages: [] };
+  }
+  if (target.protocol !== "http:" && target.protocol !== "https:") {
+    return { ok: true, packages: [] };
+  }
+
   let raw: unknown;
   try {
-    const response = await deps.fetchFn(`${deps.origin}/api/packages?pageSize=6`);
+    const params = new URLSearchParams({ url: target.href });
+    const response = await deps.fetchFn(`${deps.origin}/api/packages/lookup?${params}`);
     if (!response.ok) return { ok: false };
     raw = await response.json();
   } catch {
     return { ok: false };
   }
 
-  const parsed = packageListResponseSchema.safeParse(raw);
+  const parsed = packageLookupResponseSchema.safeParse(raw);
   if (!parsed.success) return { ok: false };
 
   return {
     ok: true,
-    packages: parsed.data.packages.map((pkg) => ({
-      packageId: pkg.id,
-      versionId: pkg.versionId,
-      version: pkg.version,
-      title: pkg.title,
-      domain: pkg.domain,
-    })),
+    packages: rankPackagesByUrl(parsed.data.packages, target.href)
+      .slice(0, 6)
+      .map((pkg) => ({
+        packageId: pkg.id,
+        versionId: pkg.versionId,
+        version: pkg.version,
+        title: pkg.title,
+        domain: pkg.domain,
+      })),
   };
 }
