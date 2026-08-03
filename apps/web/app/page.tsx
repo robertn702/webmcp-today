@@ -269,21 +269,31 @@ export default async function LandingPage() {
 
       {/* ----------------------------------------------------------------- hire me */}
       <section className="border-t bg-muted/30">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-6 sm:py-7">
-          <div className="relative hidden h-11 w-9 shrink-0 sm:block" aria-hidden>
-            <Image
-              src="https://www.robertniimi.com/space-suit-200.png"
-              alt=""
-              className="absolute top-0 left-2 h-10 w-auto object-contain"
-              height={128}
-              width={83}
-            />
-            <span className="absolute bottom-0 left-4 h-4 border-l-2 border-brand/70" />
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-5 sm:py-6">
+          <div className="hidden w-9 shrink-0 sm:block" aria-hidden>
+            <div className="cafe-rocketman-hover relative h-15 w-7">
+              <Image
+                src="https://www.robertniimi.com/space-suit-200.png"
+                alt=""
+                className="relative z-10 h-10 w-auto object-contain"
+                height={128}
+                width={83}
+              />
+              <Image
+                src="https://www.robertniimi.com/flame.gif"
+                alt=""
+                className="absolute top-8 left-0 z-0 h-6 w-6 rotate-180 opacity-90"
+                height={26}
+                width={26}
+                unoptimized
+              />
+            </div>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Hire me:</span> Robert Niimi is a
-              full-stack engineer and former founder exploring senior product engineering roles.
+            <p className="font-mono text-[11px] tracking-[0.16em] text-brand uppercase">Hire me</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Robert Niimi is a full-stack engineer and former founder exploring senior product
+              engineering roles.
             </p>
           </div>
           <a

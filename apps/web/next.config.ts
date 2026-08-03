@@ -4,7 +4,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   transpilePackages: ["@webmcp-today/db"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "www.robertniimi.com" }],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.robertniimi.com",
+        pathname: "/space-suit-200.png",
+      },
+    ],
   },
 };
 
