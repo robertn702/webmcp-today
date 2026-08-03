@@ -37,6 +37,11 @@ export const packageListResponseSchema = z.object({
   pageSize: z.number().int().min(1),
 });
 
+/** `GET /api/packages/lookup?url=` returns the packages matching one page URL. */
+export const packageLookupResponseSchema = z.object({
+  packages: z.array(webMcpPackageSchema),
+});
+
 export const statsResponseSchema = z.object({
   totalPackages: z.number().int().min(0),
   /** Domain coverage, not adoption — trust is derived, not counted (see installCount). */

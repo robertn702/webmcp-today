@@ -314,6 +314,7 @@ async function buildPopupState(): Promise<PopupState> {
     const result = await fetchSuggestions({
       fetchFn: (url) => fetch(url),
       origin: REGISTRY_ORIGIN,
+      url: tab?.url,
     });
     // Never suggest what's already installed — redundant rows read as bugs.
     if (result.ok) {

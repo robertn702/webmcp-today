@@ -17,7 +17,10 @@ function fetchStub(response: unknown | "network-error" | number) {
   };
 }
 
-function pkg(id: string): WebMcpPackage {
+function pkg(
+  id: string,
+  { domain = "example.com", urlPatterns = [`*://${domain}/*`] }: Partial<WebMcpPackage> = {},
+): WebMcpPackage {
   return webMcpPackageSchema.parse({
     id,
     versionId: `${id}-v1`,
@@ -25,8 +28,8 @@ function pkg(id: string): WebMcpPackage {
     contributor: "someone",
     createdAt: "2026-07-26T00:00:00.000Z",
     updatedAt: "2026-07-26T00:00:00.000Z",
-    domain: "example.com",
-    urlPatterns: ["*://example.com/*"],
+    domain,
+    urlPatterns,
     title: `Package ${id}`,
     description: "Fixture package",
     tools: [
@@ -40,33 +43,48 @@ function pkg(id: string): WebMcpPackage {
 }
 
 describe("fetchSuggestions", () => {
-  it("requests pageSize=6 from the given origin and maps the package list", async () => {
-    const { fetchFn, calls } = fetchStub({
-      packages: [pkg("a"), pkg("b")],
-      total: 2,
-      page: 1,
-      pageSize: 6,
+  it("uses active-page lookup and excludes unrelated responses defensively", async () => {
+    const calls: string[] = [];
+    const matching = pkg("matching", {
+      domain: "reddit.com",
+      urlPatterns: ["*://*.reddit.com/r/*"],
+    });
+    const wrongPath = pkg("wrong-path", {
+      domain: "reddit.com",
+      urlPatterns: ["*://*.reddit.com/wiki/*"],
+    });
+    // The old unscoped request would have surfaced this globally newest package.
+    const recentlyUpdatedElsewhere = pkg("recently-updated-elsewhere", {
+      domain: "example.com",
+    });
+    const fetchFn = async (url: string) => {
+      calls.push(url);
+      const lookupUrl = new URL(url).searchParams.get("url");
+      const packages =
+        lookupUrl === "https://old.reddit.com/r/programming"
+          ? [recentlyUpdatedElsewhere, wrongPath, matching]
+          : [];
+      return new Response(JSON.stringify({ packages }));
+    };
+
+    const result = await fetchSuggestions({
+      fetchFn,
+      origin: ORIGIN,
+      url: "https://old.reddit.com/r/programming",
     });
 
-    const result = await fetchSuggestions({ fetchFn, origin: ORIGIN });
-
-    expect(calls).toEqual([`${ORIGIN}/api/packages?pageSize=6`]);
+    expect(calls).toEqual([
+      `${ORIGIN}/api/packages/lookup?url=https%3A%2F%2Fold.reddit.com%2Fr%2Fprogramming`,
+    ]);
     expect(result).toEqual({
       ok: true,
       packages: [
         {
-          packageId: "a",
-          versionId: "a-v1",
+          packageId: "matching",
+          versionId: "matching-v1",
           version: 1,
-          title: "Package a",
-          domain: "example.com",
-        },
-        {
-          packageId: "b",
-          versionId: "b-v1",
-          version: 1,
-          title: "Package b",
-          domain: "example.com",
+          title: "Package matching",
+          domain: "reddit.com",
         },
       ],
     });
@@ -76,21 +94,54 @@ describe("fetchSuggestions", () => {
   // `{ ok: true, packages: [] }` via the empty-list branch below.
   it("reports failure distinctly when offline, never a silent empty list", async () => {
     const { fetchFn } = fetchStub("network-error");
-    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN })).toEqual({ ok: false });
+    expect(
+      await fetchSuggestions({ fetchFn, origin: ORIGIN, url: "https://example.com/" }),
+    ).toEqual({
+      ok: false,
+    });
   });
 
   it("reports failure on a non-2xx response", async () => {
     const { fetchFn } = fetchStub(503);
-    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN })).toEqual({ ok: false });
+    expect(
+      await fetchSuggestions({ fetchFn, origin: ORIGIN, url: "https://example.com/" }),
+    ).toEqual({
+      ok: false,
+    });
   });
 
   it("reports failure on a schema mismatch", async () => {
     const { fetchFn } = fetchStub({ nonsense: true });
-    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN })).toEqual({ ok: false });
+    expect(
+      await fetchSuggestions({ fetchFn, origin: ORIGIN, url: "https://example.com/" }),
+    ).toEqual({
+      ok: false,
+    });
   });
 
   it("succeeds with an empty array when the registry genuinely has nothing", async () => {
-    const { fetchFn } = fetchStub({ packages: [], total: 0, page: 1, pageSize: 6 });
-    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN })).toEqual({ ok: true, packages: [] });
+    const { fetchFn } = fetchStub({ packages: [] });
+    expect(
+      await fetchSuggestions({ fetchFn, origin: ORIGIN, url: "https://example.com/" }),
+    ).toEqual({
+      ok: true,
+      packages: [],
+    });
+  });
+
+  it("does not fetch suggestions for an unsupported or missing tab URL", async () => {
+    const { fetchFn, calls } = fetchStub({ packages: [] });
+
+    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN, url: "chrome://extensions" })).toEqual(
+      {
+        ok: true,
+        packages: [],
+      },
+    );
+    expect(await fetchSuggestions({ fetchFn, origin: ORIGIN, url: undefined })).toEqual({
+      ok: true,
+      packages: [],
+    });
+    expect(calls).toEqual([]);
   });
 });
