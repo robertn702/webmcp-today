@@ -192,6 +192,15 @@ html.dark {
   }
 }
 
+@keyframes cafe-rocketman-hover {
+  from {
+    transform: translateY(5px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 .cafe-rise {
   animation: cafe-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -204,6 +213,10 @@ html.dark {
 .cafe-progress {
   transform-origin: left;
   animation: cafe-progress linear forwards;
+}
+
+.cafe-rocketman-hover {
+  animation: cafe-rocketman-hover 2s alternate ease-in-out infinite;
 }
 
 /* Two offset warm pools instead of a flat background, so the hero has depth. */
@@ -226,7 +239,8 @@ html.dark {
 @media (prefers-reduced-motion: reduce) {
   .cafe-rise,
   .cafe-flow-dash,
-  .cafe-progress {
+  .cafe-progress,
+  .cafe-rocketman-hover {
     animation: none;
   }
 }
