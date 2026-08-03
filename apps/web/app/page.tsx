@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SiGithub } from "react-icons/si";
@@ -109,6 +110,43 @@ export default async function LandingPage() {
             title="Keep the version you approved"
             body="The extension stores one immutable version in your browser. A new publish cannot change what your agent can do until you choose to update."
           />
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------- work with Robert */}
+      <section className="border-b bg-muted/30">
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-14 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-10 lg:py-16">
+          <div className="relative hidden h-20 w-16 shrink-0 sm:block" aria-hidden>
+            <Image
+              src="https://www.robertniimi.com/space-suit-200.png"
+              alt=""
+              className="absolute top-0 left-5 h-16 w-auto object-contain"
+              height={128}
+              width={83}
+            />
+            <span className="absolute bottom-0 left-8 h-7 border-l-2 border-brand/70" />
+            <span className="absolute bottom-0 left-6 h-3 border-l-2 border-brand/35" />
+            <span className="absolute bottom-0 left-10 h-4 border-l-2 border-brand/35" />
+          </div>
+          <div className="max-w-2xl border-l-2 border-brand/30 pl-5">
+            <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">
+              Work with the builder
+            </p>
+            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+              Building a product like this?
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+              WebMCP Today is built by Robert Niimi, a full-stack engineer and former founder.
+              He&apos;s exploring senior product engineering roles where shipping thoughtful tools
+              matters.
+            </p>
+          </div>
+          <Button asChild variant="outline" className="h-11 shrink-0 gap-2 px-5 text-[0.95rem]">
+            <a href="https://www.robertniimi.com" rel="noreferrer" target="_blank">
+              See Robert&apos;s work
+              <ArrowRight data-icon="inline-end" />
+            </a>
+          </Button>
         </div>
       </section>
 
