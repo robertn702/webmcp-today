@@ -12,7 +12,7 @@ assets.
 the ZIP bytes attached to that GitHub Release:
 
 ```bash
-sha256sum --check --strict SHA256SUMS
+sha256sum --check --strict --ignore-missing SHA256SUMS
 ```
 
 It is generated and uploaded by the same workflow as the ZIP. It detects a
@@ -38,10 +38,11 @@ record for the manual work.
    to create and approve pull requests** disabled.
 2. In the same Actions settings, change **Actions permissions** from allowing
    all actions to **Allow select actions and reusable workflows**. Permit only
-   `actions/*`, `oven-sh/setup-bun`, `neondatabase/delete-branch-action`, and
-   `softprops/action-gh-release`; then enable **Require actions to be pinned to
-   a full-length commit SHA**. The workflows already use full SHAs, with the
-   reviewed release version documented on each line.
+   `actions/*`, `oven-sh/setup-bun`, and `softprops/action-gh-release`; then
+   enable **Require actions to be pinned to a full-length commit SHA**. The
+   workflows already use full SHAs, with the reviewed release version documented
+   on each line. Review Dependabot action updates before merging; adding a new
+   action also requires an allowlist update in that same reviewed change.
 3. Create an active `main` branch ruleset. Require pull requests, require the
    `ci` status check, and block branch deletion and force pushes. Give bypass
    access only to the repository owner or an explicitly designated release
@@ -52,8 +53,10 @@ record for the manual work.
    tag from invoking the release workflow or changing a published tag's source.
 5. Create a protected `extension-release` environment with a required reviewer
    and move `WXT_EXTENSION_KEY` there only if the release process can tolerate
-   an approval gate. This is a defense in depth measure for the release
-   identity; the release workflow remains functional without it.
+   an approval gate. In the same change, add `environment: extension-release`
+   to the release job so `vars.WXT_EXTENSION_KEY` resolves from that environment.
+   This is a defense in depth measure for the release identity; the release
+   workflow remains functional without it.
 6. Trigger a release from a disposable, protected test tag only after the
    rulesets are active. Confirm its run completes tag/version validation,
    typecheck, lint, tests, ZIP generation, checksum verification, and release
