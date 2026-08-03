@@ -292,8 +292,8 @@ export default async function LandingPage() {
           <div className="min-w-0 flex-1">
             <p className="font-mono text-[11px] tracking-[0.16em] text-brand uppercase">Hire me</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Robert Niimi is a full-stack engineer and former founder exploring senior product
-              engineering roles.
+              Robert Niimi is a full-stack engineer and former founder with 10+ years of experience,
+              exploring front-end and product engineering roles.
             </p>
           </div>
           <a
