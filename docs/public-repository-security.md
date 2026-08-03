@@ -6,9 +6,8 @@ repository is private on its current plan.
 
 ## Before making the repository public
 
-1. Merge the repository controls for #101 and #100. Confirm `SECURITY.md` and
-   `.github/dependabot.yml` are present on `main`; #100 separately hardens the
-   existing Actions workflows.
+1. Confirm `SECURITY.md` is present on `main` and the existing Actions workflows
+   have been hardened before the visibility change.
 2. Re-run the publication-safety audit against the exact commit that will become
    public. Include Git history, issues, pull requests, Actions logs and
    artifacts, releases, repository variables, and public-facing documentation.
@@ -26,8 +25,8 @@ repository is private on its current plan.
 2. Immediately open Settings > Code security and analysis. Enable the dependency
    graph if it is not already enabled, Dependabot alerts, Dependabot security
    updates, automated security fixes, secret scanning, and push protection for
-   supported secrets. The committed `dependabot.yml` adds weekly Bun workspace
-   version updates; it does not turn on vulnerability alerts or security updates.
+   supported secrets. This project intentionally does not configure Dependabot
+   version-update pull requests; alerts and security updates do not require it.
 3. Enable private vulnerability reporting. Verify that the **Report a
    vulnerability** control is visible in the repository Security tab and that
    `https://github.com/robertn702/webmcp-today/security/policy` renders
@@ -44,11 +43,11 @@ repository is private on its current plan.
 
 ## Repository And Deployment Protections
 
-1. Apply the `main` and `extension-v*` rulesets specified by #100 after the
-   visibility flip. GitHub disables all push rulesets during a private-to-public
-   conversion, so create or re-enable them only after the change and verify
-   their enforcement state. This runbook does not replace #100's Actions
-   allowlist, SHA-pinning, release-permission, or tag-protection work.
+1. Create or re-enable `main` and `extension-v*` rulesets after the visibility
+   flip. GitHub disables all push rulesets during a private-to-public conversion,
+   so verify their enforcement state after the change. Require pull requests,
+   the CI check, and protection from force pushes or deletion for `main`; restrict
+   creation, update, and deletion of `extension-v*` tags to the release owner.
 2. Confirm default GitHub Actions workflow permissions remain read-only and that
    Actions cannot approve pull-request reviews. As of this audit, both settings
    are already correct.

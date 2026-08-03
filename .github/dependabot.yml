@@ -1,8 +1,0 @@
-version: 2
-
-updates:
-  # The root text bun.lock resolves all workspace manifests.
-  - package-ecosystem: bun
-    directory: /
-    schedule:
-      interval: weekly
