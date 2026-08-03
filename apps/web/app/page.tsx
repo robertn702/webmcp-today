@@ -264,8 +264,8 @@ export default async function LandingPage() {
 
       {/* ----------------------------------------------------------------- hire me */}
       <section className="border-t bg-muted/30">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-5 sm:flex-nowrap sm:py-6">
-          <div className="w-9 shrink-0" aria-hidden>
+        <div className="mx-auto grid max-w-5xl grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-5 gap-y-3 px-4 py-5 sm:grid-cols-[2.25rem_minmax(0,1fr)_auto] sm:gap-y-0 sm:py-6">
+          <div className="row-span-2" aria-hidden>
             <div className="cafe-rocketman-hover relative h-15 w-7">
               <Image
                 src="https://www.robertniimi.com/space-suit-200.png"
@@ -284,7 +284,7 @@ export default async function LandingPage() {
               />
             </div>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <p className="font-mono text-[11px] tracking-[0.16em] text-brand uppercase">Hire me</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Robert Niimi is a full-stack engineer and former founder with 10+ years of experience,
@@ -295,7 +295,7 @@ export default async function LandingPage() {
             href="https://www.robertniimi.com"
             rel="noreferrer"
             target="_blank"
-            className="inline-flex basis-full items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground sm:basis-auto sm:shrink-0"
+            className="col-start-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground sm:col-start-auto"
           >
             See Robert&apos;s work
             <ArrowRight data-icon="inline-end" className="size-4" />
