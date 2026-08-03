@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         hostname: "www.robertniimi.com",
         pathname: "/space-suit-200.png",
       },
+      {
+        protocol: "https",
+        hostname: "www.robertniimi.com",
+        pathname: "/flame.gif",
+      },
     ],
   },
 };
