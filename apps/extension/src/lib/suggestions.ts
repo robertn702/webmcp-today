@@ -22,8 +22,8 @@ export interface SuggestionsDeps {
 }
 
 /** `ok: false` means the fetch itself failed (offline, non-2xx, bad body) —
- * kept distinct from `ok: true, packages: []`, which means the registry was
- * reached and genuinely has nothing to suggest. */
+ * kept distinct from `ok: true, packages: []`, which means either no usable
+ * tab URL or no registry packages matching a usable URL. */
 export type SuggestionsResult = { ok: true; packages: Suggestion[] } | { ok: false };
 
 export async function fetchSuggestions(deps: SuggestionsDeps): Promise<SuggestionsResult> {
@@ -37,10 +37,12 @@ export async function fetchSuggestions(deps: SuggestionsDeps): Promise<Suggestio
   if (target.protocol !== "http:" && target.protocol !== "https:") {
     return { ok: true, packages: [] };
   }
+  // URL-pattern matching ignores credentials, ports, search, and fragments; never send them.
+  const lookupUrl = `${target.origin}${target.pathname}`;
 
   let raw: unknown;
   try {
-    const params = new URLSearchParams({ url: target.href });
+    const params = new URLSearchParams({ url: lookupUrl });
     const response = await deps.fetchFn(`${deps.origin}/api/packages/lookup?${params}`);
     if (!response.ok) return { ok: false };
     raw = await response.json();
@@ -53,7 +55,7 @@ export async function fetchSuggestions(deps: SuggestionsDeps): Promise<Suggestio
 
   return {
     ok: true,
-    packages: rankPackagesByUrl(parsed.data.packages, target.href)
+    packages: rankPackagesByUrl(parsed.data.packages, lookupUrl)
       .slice(0, 6)
       .map((pkg) => ({
         packageId: pkg.id,

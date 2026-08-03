@@ -70,7 +70,7 @@ describe("fetchSuggestions", () => {
     const result = await fetchSuggestions({
       fetchFn,
       origin: ORIGIN,
-      url: "https://old.reddit.com/r/programming",
+      url: "https://user:pass@old.reddit.com/r/programming?token=secret#access_token=secret",
     });
 
     expect(calls).toEqual([
