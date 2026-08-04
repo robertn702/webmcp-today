@@ -3,7 +3,7 @@
 > Status: **tier 1 is built and shipping** (`packages/schema/src/api.ts`,
 > `packages/engine/src/api-executor.ts`, `packages/curated-packages/data/reddit.com.json`);
 > tiers 2–3 remain proposals. Where this doc and the code disagree, the code wins.
-> Related: `SPEC.md` (package format v1), `docs/erd.md` (installs/version pinning),
+> Related: `AGENTS.md` (package format), `docs/erd.md` (installs/version pinning),
 > `packages/schema/src/` (execution descriptors).
 
 ## Motivation

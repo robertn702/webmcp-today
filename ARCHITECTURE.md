@@ -4,14 +4,14 @@ Community registry of third-party **WebMCP packages** injected into sites that
 haven't implemented WebMCP — "Greasyfork for the agentic web". This document is the
 map of how the pieces fit together. Companion docs:
 
-| Need                     | File                                                                         |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| Stack + conventions      | `AGENTS.md`                                                                  |
-| Data model (ERD)         | `docs/erd.md`                                                                |
-| API execution model      | `docs/api-execution-model.md`                                                |
-| Package format (history) | `SPEC.md` (historical — code + `AGENTS.md` win on disagreements)             |
-| Web app specifics        | `apps/web/AGENTS.md`                                                         |
-| Extension specifics      | `apps/extension/AGENTS.md` + `apps/extension/ARCHITECTURE.md` (internal map) |
+| Need                | File                                                                         |
+| ------------------- | ---------------------------------------------------------------------------- |
+| Stack + conventions | `AGENTS.md`                                                                  |
+| Data model (ERD)    | `docs/erd.md`                                                                |
+| API execution model | `docs/api-execution-model.md`                                                |
+| Package format      | `packages/schema/src/` + `AGENTS.md`                                         |
+| Web app specifics   | `apps/web/AGENTS.md`                                                         |
+| Extension specifics | `apps/extension/AGENTS.md` + `apps/extension/ARCHITECTURE.md` (internal map) |
 
 ## System overview
 

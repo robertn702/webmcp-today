@@ -12,7 +12,7 @@ query and execute WebMCP tools using content scripts"
 [agent security](https://developer.chrome.com/docs/agents/security)). Nothing
 sanctions an extension _registering_ tools on a page that didn't opt in, which
 is our core mechanism. Tools carry no provenance today, so injected tools are
-indistinguishable from first-party ones (SPEC.md → Background).
+indistinguishable from first-party ones.
 
 - [webmachinelearning/webmcp#74](https://github.com/webmachinelearning/webmcp/issues/74)
   — the live thread; the WECG rep asks "should extensions be able to expose
@@ -77,9 +77,9 @@ Only legacy sites sending `Origin-Agent-Cluster: ?0` fail. Chrome's WebMCP docs
 confirm: "WebMCP is only available in origin-isolated documents… If a document
 has `document.domain` enabled, WebMCP APIs are disabled."
 
-SPEC.md → Background conflated this with the testing flag: the flag provides
-the API without an origin-trial token, it doesn't relax origin isolation.
-(AGENTS.md already states this correctly.) No tracking needed.
+The testing flag provides the API without an origin-trial token; it does not
+relax origin isolation. (AGENTS.md already states this correctly.) No tracking
+needed.
 
 ## The founding bet
 
