@@ -15,17 +15,18 @@ It does not enable WebMCP, run JavaScript, proxy CDP, read cookies, or expose an
 HTTP port. Package API execution stays inside the page content script; a
 destructive package tool still blocks on the browser's `window.confirm`.
 
-## macOS setup from source
+## macOS setup
 
-The MCP and schema packages are not published to npm yet. Build this checkout and
-add its `dist/index.js` to your MCP client with Node, not Bun:
+The first-party native bridge supports macOS Chrome and Brave. Once this package is
+published, install it globally with Node 20 or newer. Bridge setup intentionally rejects
+ephemeral package-manager caches:
 
 ```bash
-bunx turbo run build --filter="@webmcp-today/mcp-bridge..."
-node /absolute/path/to/webmcp-today/packages/mcp/dist/index.js
+npm install --global @webmcp-today/mcp-bridge@0.1.0
+webmcp-today-mcp
 ```
 
-After restarting the MCP client, ask it to call
+Configure your MCP client to run `webmcp-today-mcp`, then restart it. Ask it to call
 `setup_webmcp_bridge` with `confirm: true` and `browser: "chrome"` (or `"brave"`).
 The tool copies the bundled host to `~/.config/webmcp-today/native-host-public` and writes
 only WebMCP Today's native-messaging manifest(s). Setup uses the official release extension

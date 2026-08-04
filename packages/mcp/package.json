@@ -9,11 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/robertn702/webmcp-today.git",
+    "url": "git+https://github.com/robertn702/webmcp-today.git",
     "directory": "packages/mcp"
   },
   "bin": {
-    "webmcp-today-mcp": "./dist/index.js"
+    "webmcp-today-mcp": "dist/index.js"
   },
   "exports": {
     ".": {
@@ -24,16 +24,22 @@
   "files": [
     "dist",
     "bin",
-    "LICENSE"
+    "LICENSE",
+    "LICENSES",
+    "THIRD-PARTY-LICENSES.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/bundle-native-host.mjs",
+    "prepack": "bunx turbo run build --filter=@webmcp-today/mcp-bridge...",
     "typecheck": "tsc --noEmit",
     "test": "bun run build && vitest run"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "@webmcp-today/schema": "workspace:*",
+    "@webmcp-today/schema": "0.1.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
