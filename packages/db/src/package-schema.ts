@@ -1,4 +1,4 @@
-import type { ApiBlock, ToolDescriptor } from "@robertn702/webmcp-today-schema";
+import type { ApiBlock, ToolDescriptor } from "@webmcp-today/schema";
 import { sql } from "drizzle-orm";
 import {
   bigserial,

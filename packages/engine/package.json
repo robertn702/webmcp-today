@@ -1,9 +1,12 @@
 {
-  "name": "@robertn702/webmcp-today-engine",
+  "name": "@webmcp-today/engine",
   "version": "0.1.0",
   "description": "Execution engine for WebMCP Today — runs a package's declarative api block as HTTP requests",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/robertn702/webmcp-today.git",
@@ -26,7 +29,7 @@
   },
   "dependencies": {
     "@jmespath-community/jmespath": "1.3.0",
-    "@robertn702/webmcp-today-schema": "workspace:*"
+    "@webmcp-today/schema": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

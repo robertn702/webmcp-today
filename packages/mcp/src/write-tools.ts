@@ -2,7 +2,7 @@ import {
   createPackageSchema,
   publishVersionSchema,
   updatePackageMetaSchema,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { RegistryClient } from "./client.js";
@@ -21,7 +21,7 @@ export function registerWriteTools(server: McpServer, client: RegistryClient): v
     "publish_package",
     {
       description:
-        "Publish a new WebMCP package to the registry as a fresh package whose version field must declare 1 (validated against @robertn702/webmcp-today-schema). Requires an API key.",
+        "Publish a new WebMCP package to the registry as a fresh package whose version field must declare 1 (validated against @webmcp-today/schema). Requires an API key.",
       inputSchema: { package: createPackageSchema.describe("The package to publish") },
     },
     async ({ package: pkg }) => jsonResult(await client.create(pkg)),

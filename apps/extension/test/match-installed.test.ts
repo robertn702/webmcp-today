@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RevocationEntry } from "@robertn702/webmcp-today-schema";
+import type { RevocationEntry } from "@webmcp-today/schema";
 import { findRevocation, matchInstalled } from "../src/lib/match-installed.js";
 import type { IndexEntry, InstallIndex } from "../src/lib/store-schema.js";
 

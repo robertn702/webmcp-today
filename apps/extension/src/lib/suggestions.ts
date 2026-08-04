@@ -1,4 +1,4 @@
-import { packageLookupResponseSchema, rankPackagesByUrl } from "@robertn702/webmcp-today-schema";
+import { packageLookupResponseSchema, rankPackagesByUrl } from "@webmcp-today/schema";
 
 // Popup discovery suggestions, replacing the old bundled-fallback package
 // list: these are real registry packages with ids/versionIds, so a

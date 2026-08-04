@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@robertn702/webmcp-today-engine": "workspace:*",
-    "@robertn702/webmcp-today-schema": "workspace:*",
+    "@webmcp-today/engine": "workspace:*",
+    "@webmcp-today/schema": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

@@ -160,7 +160,7 @@ erDiagram
   content.
 - **No `(domain, url_pattern)` uniqueness — by design.** Packages are opinions, not
   registrations: rival packages may target the same site. Pattern specificity ranks
-  them at lookup time (`rankPackagesByUrl` in `@robertn702/webmcp-today-schema`);
+  them at lookup time (`rankPackagesByUrl` in `@webmcp-today/schema`);
   an abandoned package never blocks a fresh replacement.
 - **`installs` records account-side pins, not a trust signal.** `WHERE user_id = ?`
   is what the MCP server's `install_package` writes (and what the handoff link on

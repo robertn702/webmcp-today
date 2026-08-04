@@ -9,20 +9,20 @@ The registry is live at [webmcp.today](https://webmcp.today).
 
 ## Packages
 
-| Path              | What                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| `packages/schema` | `@robertn702/webmcp-today-schema` — zod package format (local pre-launch)                                    |
-| `packages/engine` | `@robertn702/webmcp-today-engine` — API execution engine (local pre-launch)                                  |
-| `packages/db`     | Drizzle + Neon schema and client                                                                             |
-| `packages/mcp`    | `@robertn702/webmcp-today-mcp` — registry MCP server + local bridge for live WebMCP tools (local pre-launch) |
-| `apps/web`        | Next.js registry UI + public REST API                                                                        |
-| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                                                        |
+| Path              | What                                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| `packages/schema` | `@webmcp-today/schema` — zod package format (local pre-launch)                                           |
+| `packages/engine` | `@webmcp-today/engine` — API execution engine (local pre-launch)                                         |
+| `packages/db`     | Drizzle + Neon schema and client                                                                         |
+| `packages/mcp`    | `@webmcp-today/mcp-bridge` — registry MCP server + local bridge for live WebMCP tools (local pre-launch) |
+| `apps/web`        | Next.js registry UI + public REST API                                                                    |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                                                    |
 
 ## Quickstart
 
 ```bash
 bun install
-bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."
+bunx turbo run build --filter="@webmcp-today/mcp-bridge..."
 bun run typecheck && bun run lint && bun run test
 
 # web (needs apps/web/.env — see .env.example)
@@ -42,7 +42,7 @@ cd apps/extension && bun run dev
 
 ```bash
 bun install
-bunx turbo run build --filter="@robertn702/webmcp-today-mcp..." # creates the opencode.json MCP entrypoint
+bunx turbo run build --filter="@webmcp-today/mcp-bridge..." # creates the opencode.json MCP entrypoint
 cp apps/web/.env.example apps/web/.env   # then fill real values
 ```
 

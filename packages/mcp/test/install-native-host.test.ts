@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { LOCAL_BRIDGE_NATIVE_HOST_NAME } from "@robertn702/webmcp-today-schema";
+import { LOCAL_BRIDGE_NATIVE_HOST_NAME } from "@webmcp-today/schema";
 import {
   developmentExtensionId,
   nativeHostPaths,

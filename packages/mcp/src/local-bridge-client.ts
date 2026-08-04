@@ -10,7 +10,7 @@ import {
   localBridgeSocketHelloSchema,
   type LocalBridgeRequest,
   type LocalBridgeResponse,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import { connect, type Socket } from "node:net";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";

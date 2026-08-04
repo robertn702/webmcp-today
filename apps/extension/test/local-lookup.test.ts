@@ -8,8 +8,8 @@ import {
   type RevokedDoc,
 } from "../src/lib/store-schema.js";
 import { createFakeStorageArea, type FakeStorageArea } from "./fake-storage-area.js";
-import type { RevocationEntry } from "@robertn702/webmcp-today-schema";
-import { apiContentHash } from "@robertn702/webmcp-today-schema";
+import type { RevocationEntry } from "@webmcp-today/schema";
+import { apiContentHash } from "@webmcp-today/schema";
 
 const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.today" };
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";

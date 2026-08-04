@@ -1,4 +1,4 @@
-import type { WebMcpPackage } from "@robertn702/webmcp-today-schema";
+import type { WebMcpPackage } from "@webmcp-today/schema";
 import type { packages, packageVersions } from "@webmcp-today/db";
 
 type PackageRow = typeof packages.$inferSelect;

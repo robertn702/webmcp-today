@@ -3,7 +3,7 @@ import {
   packageWithinDomainScope,
   webMcpPackageSchema,
   type WebMcpPackage,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import {
   INDEX_KEY,
   PKG_KEY_PREFIX,

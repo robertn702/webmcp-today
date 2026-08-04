@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-today-schema";
+import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@webmcp-today/schema";
 import { startNativeBridge, type NativePortLike } from "../src/lib/native-bridge.js";
 import { createLocalBridgeRouter } from "../src/lib/local-bridge-router.js";
 

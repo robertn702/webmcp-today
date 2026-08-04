@@ -156,7 +156,7 @@ package(s) matched this URL` → bridge `list_webmcp_tools` shows the tools.
 - `src/entrypoints/popup/` + the action badge — per-tab status, the install
   list (with uninstall), and the paused/recovery states. Never inject UI into
   the page.
-- The executor lives in `packages/engine` (`@robertn702/webmcp-today-engine`, MIT) —
+- The executor lives in `packages/engine` (`@webmcp-today/engine`, MIT) —
   extracted from `src/lib/` for license separation (docs/DECISIONS.md 2026-07-30):
   `api-executor.ts` is the only executor (DOM mode was cut pre-launch,
   `docs/DECISIONS.md` 2026-07-28): binds `{{param}}` templates, acquires auth

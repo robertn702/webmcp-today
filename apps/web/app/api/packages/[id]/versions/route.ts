@@ -1,4 +1,4 @@
-import { publishVersionSchemaForDomain } from "@robertn702/webmcp-today-schema";
+import { publishVersionSchemaForDomain } from "@webmcp-today/schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";

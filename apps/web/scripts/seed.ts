@@ -2,7 +2,7 @@
  * Seed the registry with the curated packages from @webmcp-today/curated-packages.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
-import { apiContentHash } from "@robertn702/webmcp-today-schema";
+import { apiContentHash } from "@webmcp-today/schema";
 import { createDb, packages, packageVersions, user } from "@webmcp-today/db";
 import { curatedPackages } from "@webmcp-today/curated-packages";
 import { and, eq } from "drizzle-orm";

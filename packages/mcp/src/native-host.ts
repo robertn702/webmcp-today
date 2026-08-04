@@ -12,7 +12,7 @@ import {
   localBridgeSocketDispatchAckSchema,
   localBridgeSocketDispatchingSchema,
   localBridgeSocketHelloSchema,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import { randomBytes } from "node:crypto";
 import { chmod, mkdir, rename, symlink, unlink, writeFile } from "node:fs/promises";
 import { createServer, type Server, type Socket } from "node:net";

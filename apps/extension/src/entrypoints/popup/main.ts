@@ -1,7 +1,4 @@
-import {
-  bridgeInstallResponseSchema,
-  type BridgeInstallResponse,
-} from "@robertn702/webmcp-today-schema";
+import { bridgeInstallResponseSchema, type BridgeInstallResponse } from "@webmcp-today/schema";
 import { browser } from "wxt/browser";
 import {
   INSTALL_SUGGESTION_MESSAGE_TYPE,

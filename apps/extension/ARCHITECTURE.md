@@ -35,7 +35,7 @@ flowchart TB
         REG["register-tools.ts"]
         LCONTENT["local-bridge-content.ts"]
         NAV["navigation.ts"]
-        EXEC["@robertn702/webmcp-today-engine<br/>(packages/engine)"]
+        EXEC["@webmcp-today/engine<br/>(packages/engine)"]
         PKG --> REG
         NAV --> REG
         REG --> EXEC

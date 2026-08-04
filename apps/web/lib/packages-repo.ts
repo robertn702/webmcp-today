@@ -1,4 +1,4 @@
-import { packageWithinDomainScope, type WebMcpPackage } from "@robertn702/webmcp-today-schema";
+import { packageWithinDomainScope, type WebMcpPackage } from "@webmcp-today/schema";
 import { installs, packages, packageVersions, user } from "@webmcp-today/db";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";

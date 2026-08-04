@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { webMcpPackageSchema, type WebMcpPackage } from "@robertn702/webmcp-today-schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@webmcp-today/schema";
 import type { PageLoadPackages } from "../src/lib/local-lookup.js";
 import type { ModelContextLike } from "../src/lib/model-context.js";
 import { runRegistrationPass, type RegistrationDeps } from "../src/lib/register-tools.js";

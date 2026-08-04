@@ -27,8 +27,8 @@ export default function SubmitPage() {
           package format
         </Link>{" "}
         documents every field and ends with a complete example. It&apos;s validated against
-        @robertn702/webmcp-today-schema before upload and published as a new package at version 1.
-        There is no review queue. A package goes live as soon as it validates.
+        @webmcp-today/schema before upload and published as a new package at version 1. There is no
+        review queue. A package goes live as soon as it validates.
       </p>
 
       <div className="mt-6">

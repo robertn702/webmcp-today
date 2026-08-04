@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@robertn702/webmcp-today-schema": "workspace:*"
+    "@webmcp-today/schema": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.2",

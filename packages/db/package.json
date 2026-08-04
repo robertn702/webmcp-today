@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
-    "@robertn702/webmcp-today-schema": "workspace:*",
+    "@webmcp-today/schema": "workspace:*",
     "drizzle-orm": "^0.44.4"
   },
   "devDependencies": {

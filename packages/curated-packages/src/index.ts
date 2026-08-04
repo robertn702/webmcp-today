@@ -1,4 +1,4 @@
-import { createPackageSchema, type CreatePackageInput } from "@robertn702/webmcp-today-schema";
+import { createPackageSchema, type CreatePackageInput } from "@webmcp-today/schema";
 
 import rawGoogle from "../data/google.com.json";
 import rawHackerNews from "../data/news.ycombinator.com.json";

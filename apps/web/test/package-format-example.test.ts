@@ -5,7 +5,7 @@ import {
   ENGINE_VERSION,
   TOOL_DESCRIPTION_MAX,
   TOOL_NAME_MAX,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import { describe, expect, it } from "vitest";
 import examplePackage from "@/app/(registry)/docs/package-format/example-package.json";
 

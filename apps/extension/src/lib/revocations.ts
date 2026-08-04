@@ -1,7 +1,4 @@
-import {
-  revocationsResponseSchema,
-  type RevocationsResponse,
-} from "@robertn702/webmcp-today-schema";
+import { revocationsResponseSchema, type RevocationsResponse } from "@webmcp-today/schema";
 import {
   REVOKED_KEY,
   revokedDocSchema,
