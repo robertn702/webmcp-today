@@ -7,12 +7,6 @@
       "skillPath": "skills/agents-md/SKILL.md",
       "computedHash": "7ff79d6771cdf3db33606251eb15bbc5203b68a94b036ee471869842118ea02a"
     },
-    "better-auth-best-practices": {
-      "source": "better-auth/skills",
-      "sourceType": "github",
-      "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "61ba0ef64ed2e7c424401cc848ca33dd6d790a720c44727717dc0c5cba5fc122"
-    },
     "chrome-extensions": {
       "source": "googlechrome/modern-web-guidance",
       "sourceType": "github",
