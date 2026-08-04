@@ -6,7 +6,7 @@ import {
   type ContentBridgeResponse,
   type LocalBridgeDocument,
   type LocalBridgeToolDescriptor,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import type { ToolConsumerModelContextLike } from "./model-context.js";
 
 export interface LocalBridgeContentDeps {

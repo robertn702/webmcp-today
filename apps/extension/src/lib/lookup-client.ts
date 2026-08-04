@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { webMcpPackageSchema } from "@robertn702/webmcp-today-schema";
+import { webMcpPackageSchema } from "@webmcp-today/schema";
 import { browser } from "wxt/browser";
 import { lookupBlockedSchema } from "./local-lookup.js";
 

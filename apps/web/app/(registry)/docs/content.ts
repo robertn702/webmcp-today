@@ -6,7 +6,7 @@ export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
 export const BUILD_LOCAL_BRIDGE = `cd /absolute/path/to/webmcp-today
-bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."`;
+bunx turbo run build --filter="@webmcp-today/mcp-bridge..."`;
 
 export const MCP_CONFIG = `{
   "$schema": "https://opencode.ai/config.json",
@@ -54,8 +54,8 @@ Requirements:
 - Project the response with returns so the tool returns only what it promises.
 - Save the result as webmcp-package.json in the repository root.
 - Validate it from the repository root with:
-  bun run --filter @robertn702/webmcp-today-schema build
-  bun -e 'import { createPackageSchema } from "@robertn702/webmcp-today-schema"; const pkg = await Bun.file("webmcp-package.json").json(); console.log(createPackageSchema.parse(pkg));'
+  bun run --filter @webmcp-today/schema build
+  bun -e 'import { createPackageSchema } from "@webmcp-today/schema"; const pkg = await Bun.file("webmcp-package.json").json(); console.log(createPackageSchema.parse(pkg));'
 - Show the final JSON, the exact request it makes, and a live read-only test result.
 
 Do not publish yet. Stop after validation and the live test so I can review the package.`;
@@ -64,7 +64,7 @@ export const PUBLISH_PACKAGE_PROMPT = `Publish the reviewed webmcp-package.json 
 
 Requirements:
 - Read https://webmcp.today/terms and summarize the grant I am about to accept.
-- Confirm webmcp-package.json declares version 1 and validate it against @robertn702/webmcp-today-schema.
+- Confirm webmcp-package.json declares version 1 and validate it against @webmcp-today/schema.
 - Require WEBMCP_TODAY_API_KEY to be present in the environment. Never print the key.
 - Show me the target URL and package title, then ask for confirmation before the POST.
 - On approval, POST webmcp-package.json to https://webmcp.today/api/packages with Authorization: Bearer $WEBMCP_TODAY_API_KEY.

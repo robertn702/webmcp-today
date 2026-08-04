@@ -1,4 +1,4 @@
-import { LOCAL_BRIDGE_NATIVE_HOST_NAME } from "@robertn702/webmcp-today-schema";
+import { LOCAL_BRIDGE_NATIVE_HOST_NAME } from "@webmcp-today/schema";
 import { constants } from "node:fs";
 import * as fs from "node:fs/promises";
 import { homedir } from "node:os";
@@ -197,7 +197,7 @@ export async function writeNativeHostInstallation(
     await deps.fs.access(nativeHostPath, constants.R_OK);
   } catch {
     throw new Error(
-      'Built native host is missing. Run `bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."` first.',
+      'Built native host is missing. Run `bunx turbo run build --filter="@webmcp-today/mcp-bridge..."` first.',
     );
   }
 

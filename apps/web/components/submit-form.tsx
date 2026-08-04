@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "@better-auth-ui/react";
-import { createPackageSchema } from "@robertn702/webmcp-today-schema";
+import { createPackageSchema } from "@webmcp-today/schema";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

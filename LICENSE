@@ -15,8 +15,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 The following parts of this repository are NOT covered by this license. They
 are licensed under the MIT License and each carries its own LICENSE file:
 
-  - packages/schema            @robertn702/webmcp-today-schema
-  - packages/mcp               @robertn702/webmcp-today-mcp
+  - packages/schema            @webmcp-today/schema
+  - packages/engine            @webmcp-today/engine
+  - packages/mcp               @webmcp-today/mcp-bridge
   - packages/curated-packages  @webmcp-today/curated-packages
   - apps/extension             @webmcp-today/extension
 

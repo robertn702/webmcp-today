@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import { describe, expect, it, vi } from "vitest";
-import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-today-schema";
+import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@webmcp-today/schema";
 import { LocalBridgeClient } from "../src/local-bridge-client.js";
 
 class FakeSocket extends EventEmitter {

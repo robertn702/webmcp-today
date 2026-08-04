@@ -1,4 +1,4 @@
-import { revocationsResponseSchema } from "@robertn702/webmcp-today-schema";
+import { revocationsResponseSchema } from "@webmcp-today/schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/revocations/route";
 

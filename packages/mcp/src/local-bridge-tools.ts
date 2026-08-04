@@ -3,7 +3,7 @@ import {
   localBridgeRequestSchema,
   type LocalBridgeRequest,
   type LocalBridgeResponse,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { LocalBridgeClient } from "./local-bridge-client.js";

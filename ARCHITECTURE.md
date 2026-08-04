@@ -70,9 +70,9 @@ flowchart LR
   removes only that session's private socket/config, so connection success determines
   availability rather than the presence of a potentially stale discovery path.
 - **`packages/schema`** — the keystone. The zod package format every consumer validates
-  against; published as `@robertn702/webmcp-today-schema`.
+  against; published as `@webmcp-today/schema`.
 - **`packages/engine`** — the execution engine
-  (`@robertn702/webmcp-today-engine`, MIT): turns a package's declarative `api`
+  (`@webmcp-today/engine`, MIT): turns a package's declarative `api`
   block into same-origin HTTP requests, plus the `minEngine` gate. Extracted from
   the extension for license separation (`docs/DECISIONS.md` 2026-07-30); the
   extension is its only consumer today.
@@ -190,7 +190,7 @@ sequenceDiagram
     participant ST as chrome.storage.local
 
     C->>W: POST /api/packages (session cookie or Bearer API key)
-    W->>W: zod-validate against @robertn702/webmcp-today-schema
+    W->>W: zod-validate against @webmcp-today/schema
     W->>D: insert packages + package_versions v1
     C->>W: POST /api/packages/:id/versions (owner only)
     W->>D: append version N+1 (never mutates N)
@@ -257,10 +257,10 @@ webmcp-today/
 │   ├── web/            # Next.js — registry UI + public REST API (port 3000)
 │   └── extension/      # WXT — package lookup + tool injection (dev port 5173)
 ├── packages/
-│   ├── schema/            # @robertn702/webmcp-today-schema — zod package format (published)
+│   ├── schema/            # @webmcp-today/schema — zod package format (published)
 │   ├── db/                # Drizzle + Neon — schema + client
 │   ├── curated-packages/  # @webmcp-today/curated-packages — curated first-party packages (registry seed source)
-│   └── mcp/               # @robertn702/webmcp-today-mcp — MCP server (published)
+│   └── mcp/               # @webmcp-today/mcp-bridge — MCP server (published)
 └── docs/               # erd.md, api-execution-model.md, DECISIONS.md
 ```
 

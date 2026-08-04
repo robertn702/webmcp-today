@@ -1,8 +1,4 @@
-import {
-  BRIDGE_PROTOCOL_VERSION,
-  ENGINE_VERSION,
-  bridgeRequestSchema,
-} from "@robertn702/webmcp-today-schema";
+import { BRIDGE_PROTOCOL_VERSION, ENGINE_VERSION, bridgeRequestSchema } from "@webmcp-today/schema";
 import { defineBackground } from "wxt/utils/define-background";
 import { browser } from "wxt/browser";
 import {

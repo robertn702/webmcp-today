@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ENGINE_VERSION } from "@robertn702/webmcp-today-schema";
+import { ENGINE_VERSION } from "@webmcp-today/schema";
 import { requiredEngineLevel, supportsPackageEngine } from "../src/engine-gate.js";
 
 describe("engine-gate", () => {

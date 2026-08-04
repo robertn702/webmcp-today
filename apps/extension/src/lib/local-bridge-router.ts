@@ -9,7 +9,7 @@ import {
   type LocalBridgeError,
   type LocalBridgeRequest,
   type LocalBridgeResponse,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 
 export interface LocalBridgeRouterDeps {
   /** The active tab in the last-focused browser window: the user's selected target. */

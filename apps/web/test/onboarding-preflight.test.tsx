@@ -5,7 +5,7 @@ import { curatedPackages } from "@webmcp-today/curated-packages";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
-import type { BridgePingResponse } from "@robertn702/webmcp-today-schema";
+import type { BridgePingResponse } from "@webmcp-today/schema";
 
 vi.mock("@/lib/extension-bridge", () => ({
   pingExtension: () => Promise.resolve({ status: "absent" }),

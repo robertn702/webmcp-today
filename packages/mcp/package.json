@@ -1,9 +1,12 @@
 {
-  "name": "@robertn702/webmcp-today-mcp",
+  "name": "@webmcp-today/mcp-bridge",
   "version": "0.1.0",
   "description": "MCP server for the WebMCP Today registry and local browser bridge — manage packages and list or execute live WebMCP tools",
   "type": "module",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/robertn702/webmcp-today.git",
@@ -30,7 +33,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "@robertn702/webmcp-today-schema": "workspace:*",
+    "@webmcp-today/schema": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

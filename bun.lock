@@ -25,8 +25,8 @@
       "name": "@webmcp-today/extension",
       "version": "1.0.1",
       "dependencies": {
-        "@robertn702/webmcp-today-engine": "workspace:*",
-        "@robertn702/webmcp-today-schema": "workspace:*",
+        "@webmcp-today/engine": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
         "zod": "^4.0.0",
       },
       "devDependencies": {
@@ -43,7 +43,6 @@
         "@better-auth-ui/core": "^1.6.27",
         "@better-auth-ui/react": "^1.6.27",
         "@better-auth/api-key": "^1.6.25",
-        "@robertn702/webmcp-today-schema": "workspace:*",
         "@sentry/nextjs": "^10",
         "@t3-oss/env-nextjs": "^0.13.8",
         "@tanstack/react-pacer": "^0.22.1",
@@ -51,6 +50,7 @@
         "@vercel/analytics": "^2.0.1",
         "@webmcp-today/curated-packages": "workspace:*",
         "@webmcp-today/db": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
         "better-auth": "^1.3.4",
         "bowser": "^2.14.1",
         "class-variance-authority": "^0.7.1",
@@ -84,7 +84,7 @@
       "name": "@webmcp-today/curated-packages",
       "version": "0.0.1",
       "dependencies": {
-        "@robertn702/webmcp-today-schema": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.2",
@@ -96,7 +96,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@neondatabase/serverless": "^1.0.1",
-        "@robertn702/webmcp-today-schema": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
         "drizzle-orm": "^0.44.4",
       },
       "devDependencies": {
@@ -106,11 +106,11 @@
       },
     },
     "packages/engine": {
-      "name": "@robertn702/webmcp-today-engine",
+      "name": "@webmcp-today/engine",
       "version": "0.1.0",
       "dependencies": {
         "@jmespath-community/jmespath": "1.3.0",
-        "@robertn702/webmcp-today-schema": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.2",
@@ -118,14 +118,14 @@
       },
     },
     "packages/mcp": {
-      "name": "@robertn702/webmcp-today-mcp",
+      "name": "@webmcp-today/mcp-bridge",
       "version": "0.1.0",
       "bin": {
         "webmcp-today-mcp": "./dist/index.js",
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.0",
-        "@robertn702/webmcp-today-schema": "workspace:*",
+        "@webmcp-today/schema": "workspace:*",
         "zod": "^4.0.0",
       },
       "devDependencies": {
@@ -136,7 +136,7 @@
       },
     },
     "packages/schema": {
-      "name": "@robertn702/webmcp-today-schema",
+      "name": "@webmcp-today/schema",
       "version": "0.1.0",
       "dependencies": {
         "@jmespath-community/jmespath": "1.3.0",
@@ -720,12 +720,6 @@
 
     "@react-email/text": ["@react-email/text@0.1.6", "", { "peerDependencies": { "react": "^18.0 || ^19.0 || ^19.0.0-rc" } }, "sha512-TYqkioRS45wTR5il3dYk/SbUjjEdhSwh9BtRNB99qNH1pXAwA45H7rAuxehiu8iJQJH0IyIr+6n62gBz9ezmsw=="],
 
-    "@robertn702/webmcp-today-engine": ["@robertn702/webmcp-today-engine@workspace:packages/engine"],
-
-    "@robertn702/webmcp-today-mcp": ["@robertn702/webmcp-today-mcp@workspace:packages/mcp"],
-
-    "@robertn702/webmcp-today-schema": ["@robertn702/webmcp-today-schema@workspace:packages/schema"],
-
     "@rollup/plugin-commonjs": ["@rollup/plugin-commonjs@28.0.1", "", { "dependencies": { "@rollup/pluginutils": "^5.0.1", "commondir": "^1.0.1", "estree-walker": "^2.0.2", "fdir": "^6.2.0", "is-reference": "1.2.1", "magic-string": "^0.30.3", "picomatch": "^4.0.2" }, "peerDependencies": { "rollup": "^2.68.0||^3.0.0||^4.0.0" }, "optionalPeers": ["rollup"] }, "sha512-+tNWdlWKbpB3WgBN7ijjYkq9X5uhjmcvyjEght4NmH5fAU++zfQzAJ6wumLS+dNcvwEZhKx2Z+skY8m7v0wGSA=="],
 
     "@rollup/pluginutils": ["@rollup/pluginutils@5.4.0", "", { "dependencies": { "@types/estree": "^1.0.0", "estree-walker": "^2.0.2", "picomatch": "^4.0.2" }, "peerDependencies": { "rollup": "^1.20.0||^2.0.0||^3.0.0||^4.0.0" }, "optionalPeers": ["rollup"] }, "sha512-MfPp06CjRLfXQ3wY0R8vJDYBy/MvVcc9OulEfR0B8Iv9ko+GCNaRZ+EpJYFl27LhKsZK0o420sYCRHCjfCgeUg=="],
@@ -1012,7 +1006,13 @@
 
     "@webmcp-today/db": ["@webmcp-today/db@workspace:packages/db"],
 
+    "@webmcp-today/engine": ["@webmcp-today/engine@workspace:packages/engine"],
+
     "@webmcp-today/extension": ["@webmcp-today/extension@workspace:apps/extension"],
+
+    "@webmcp-today/mcp-bridge": ["@webmcp-today/mcp-bridge@workspace:packages/mcp"],
+
+    "@webmcp-today/schema": ["@webmcp-today/schema@workspace:packages/schema"],
 
     "@webmcp-today/web": ["@webmcp-today/web@workspace:apps/web"],
 

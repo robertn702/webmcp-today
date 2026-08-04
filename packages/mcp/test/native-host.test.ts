@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, describe, expect, it } from "vitest";
-import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@robertn702/webmcp-today-schema";
+import { LOCAL_BRIDGE_PROTOCOL_VERSION } from "@webmcp-today/schema";
 import { LocalBridgeClient } from "../src/local-bridge-client.js";
 import { NativeHost } from "../src/native-host.js";
 

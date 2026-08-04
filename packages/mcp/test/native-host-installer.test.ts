@@ -80,7 +80,7 @@ describe("public macOS native-host installer", () => {
     await expect(installBridge(bun.deps, { browser: "chrome" })).rejects.toThrow("Node, not Bun");
 
     const cached = await testDeps({
-      packageRoot: "/tmp/.npm/_npx/abc/node_modules/@robertn702/webmcp-today-mcp",
+      packageRoot: "/tmp/.npm/_npx/abc/node_modules/@webmcp-today/mcp-bridge",
     });
     await expect(installBridge(cached.deps, { browser: "chrome" })).rejects.toThrow("ephemeral");
     await expect(

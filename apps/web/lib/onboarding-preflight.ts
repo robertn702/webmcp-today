@@ -1,4 +1,4 @@
-import type { BridgePingResponse } from "@robertn702/webmcp-today-schema";
+import type { BridgePingResponse } from "@webmcp-today/schema";
 import type { BridgeResult } from "@/lib/extension-bridge";
 
 export type BrowserGuidance =

@@ -1,4 +1,4 @@
-import { packageWithinDomainScope, updatePackageMetaSchema } from "@robertn702/webmcp-today-schema";
+import { packageWithinDomainScope, updatePackageMetaSchema } from "@webmcp-today/schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";

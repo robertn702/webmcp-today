@@ -11,8 +11,8 @@ import {
   type BridgeUninstallResponse,
   type InstallState,
   type RevocationEntry,
-} from "@robertn702/webmcp-today-schema";
-import { supportsPackageEngine } from "@robertn702/webmcp-today-engine";
+} from "@webmcp-today/schema";
+import { supportsPackageEngine } from "@webmcp-today/engine";
 import type { InstallsStore, LoadPackageResult, SchemaVersionState } from "./installs-store.js";
 import { findRevocation } from "./match-installed.js";
 import { isAllowedRegistryOrigin } from "./registry-origins.js";

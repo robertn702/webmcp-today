@@ -93,7 +93,7 @@ definitions.
 
 - GitHub repo to create: `robertn702/webmcp-today` (public)
 - Local path: `~/git/robertn702/webmcp-today`
-- npm scope: `@robertn702` (all published packages)
+- npm scope: `@webmcp-today` (all published packages)
 
 ```
 webmcp-today/
@@ -101,9 +101,9 @@ webmcp-today/
 │   ├── web/            # Next.js — registry UI + public REST API
 │   └── extension/      # WXT — config lookup + tool injection
 ├── packages/
-│   ├── schema/         # @robertn702/webmcp-today-schema — zod config format (published)
+│   ├── schema/         # @webmcp-today/schema — zod config format (published)
 │   ├── db/             # Drizzle + Neon — schema + client
-│   └── mcp/            # @robertn702/webmcp-today-mcp — MCP server (published)
+│   └── mcp/            # @webmcp-today/mcp-bridge — MCP server (published)
 └── (turbo + bun workspaces)
 ```
 

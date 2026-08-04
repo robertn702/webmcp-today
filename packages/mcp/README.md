@@ -21,7 +21,7 @@ The MCP and schema packages are not published to npm yet. Build this checkout an
 add its `dist/index.js` to your MCP client with Node, not Bun:
 
 ```bash
-bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."
+bunx turbo run build --filter="@webmcp-today/mcp-bridge..."
 node /absolute/path/to/webmcp-today/packages/mcp/dist/index.js
 ```
 
@@ -49,7 +49,7 @@ enable WebMCP, run JavaScript, proxy CDP, or expose an HTTP port.
 1. Build the MCP package and its schema dependency:
 
    ```bash
-   bunx turbo run build --filter="@robertn702/webmcp-today-mcp..."
+   bunx turbo run build --filter="@webmcp-today/mcp-bridge..."
    ```
 
 2. Build/load the extension. Local builds use the fixed development extension

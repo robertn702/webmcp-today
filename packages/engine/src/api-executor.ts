@@ -1,5 +1,5 @@
 import { search, type JSONValue } from "@jmespath-community/jmespath";
-import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@robertn702/webmcp-today-schema";
+import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@webmcp-today/schema";
 import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./result.js";
 

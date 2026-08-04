@@ -3,7 +3,7 @@ import {
   type CreatePackageInput,
   type PublishVersionInput,
   type UpdatePackageMetaInput,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 import { installs, packages, packageVersions } from "@webmcp-today/db";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db";

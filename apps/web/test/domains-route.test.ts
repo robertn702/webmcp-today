@@ -1,4 +1,4 @@
-import { domainsResponseSchema } from "@robertn702/webmcp-today-schema";
+import { domainsResponseSchema } from "@webmcp-today/schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/domains/route";
 

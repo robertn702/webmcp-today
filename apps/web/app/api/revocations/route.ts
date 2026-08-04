@@ -1,4 +1,4 @@
-import type { RevocationEntry } from "@robertn702/webmcp-today-schema";
+import type { RevocationEntry } from "@webmcp-today/schema";
 import { NextResponse } from "next/server";
 import { getLatestRevocationId, listRevocationsSince } from "@/lib/revocations-repo";
 

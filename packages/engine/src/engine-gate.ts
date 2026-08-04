@@ -1,4 +1,4 @@
-import { ENGINE_VERSION } from "@robertn702/webmcp-today-schema";
+import { ENGINE_VERSION } from "@webmcp-today/schema";
 
 // minEngine enforcement. A version's `minEngine` is the capability level its
 // content requires; the executor's own level is ENGINE_VERSION (schema budgets).

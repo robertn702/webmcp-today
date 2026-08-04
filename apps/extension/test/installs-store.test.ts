@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiContentHash } from "@robertn702/webmcp-today-schema";
+import { apiContentHash } from "@webmcp-today/schema";
 import {
   createInstallsStore,
   type InstallOptions,

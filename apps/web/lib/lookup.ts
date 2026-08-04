@@ -1,8 +1,4 @@
-import {
-  domainLookupKeys,
-  rankPackagesByUrl,
-  type WebMcpPackage,
-} from "@robertn702/webmcp-today-schema";
+import { domainLookupKeys, rankPackagesByUrl, type WebMcpPackage } from "@webmcp-today/schema";
 import { packages } from "@webmcp-today/db";
 import { inArray } from "drizzle-orm";
 import { db } from "./db";

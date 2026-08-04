@@ -6,7 +6,7 @@ import { startNavigationWatcher } from "../lib/navigation.js";
 import { runRegistrationPass, type RegistrationDeps } from "../lib/register-tools.js";
 import { STATUS_MESSAGE_TYPE, type PageStatus } from "../lib/status.js";
 import { LocalBridgeContent } from "../lib/local-bridge-content.js";
-import { contentBridgeRequestSchema } from "@robertn702/webmcp-today-schema";
+import { contentBridgeRequestSchema } from "@webmcp-today/schema";
 import { INDEX_KEY, REVOKED_KEY } from "../lib/store-schema.js";
 
 export default defineContentScript({

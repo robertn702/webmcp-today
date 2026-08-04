@@ -6,7 +6,7 @@ import {
   localBridgeErrorResponseSchema,
   localBridgeResponseSchema,
   type LocalBridgeResponse,
-} from "@robertn702/webmcp-today-schema";
+} from "@webmcp-today/schema";
 
 export interface NativePortLike {
   onDisconnect: { addListener(listener: () => void): void };

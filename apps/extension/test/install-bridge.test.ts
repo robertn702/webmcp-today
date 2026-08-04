@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiContentHash, type RevocationEntry } from "@robertn702/webmcp-today-schema";
+import { apiContentHash, type RevocationEntry } from "@webmcp-today/schema";
 import { handleBridgeRequest, type BridgeDeps } from "../src/lib/install-bridge.js";
 import { createInstallsStore, type SchemaVersionState } from "../src/lib/installs-store.js";
 import { INDEX_KEY, REVOKED_KEY, pkgKey, type RevokedDoc } from "../src/lib/store-schema.js";

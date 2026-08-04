@@ -106,7 +106,7 @@ sequenceDiagram
 ```
 
 The matching logic already exists twice and moves wholesale to the client: `domainLookupKeys` +
-`rankPackagesByUrl` from `@robertn702/webmcp-today-schema` are what
+`rankPackagesByUrl` from `@webmcp-today/schema` are what
 `apps/extension/src/lib/packages.ts:42` already does for the bundled set and what
 `apps/web/lib/lookup.ts:31` does server-side. No new matching code — the server-side copy simply
 stops being on the hot path.
@@ -322,7 +322,7 @@ have — the landing copy says so explicitly at
 **Recommendation: keep the tool, re-scope the description, and add a handoff link.** The MCP
 package tools were freely renamed pre-publish (see `docs/DECISIONS.md` 2026-07-26) — nothing is
 on npm yet, so there is no "breaks saved agent prompts" cost to weigh here. That freedom won't
-last: once `@robertn702/webmcp-today-mcp` actually ships, a rename does break saved agent prompts,
+last: once `@webmcp-today/mcp-bridge` actually ships, a rename does break saved agent prompts,
 so treat this as the last free rename. The description is what the model actually reads, so the
 description is what must stop lying:
 
