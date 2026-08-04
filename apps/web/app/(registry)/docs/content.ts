@@ -5,15 +5,14 @@ export const REDDIT_PACKAGE_DOMAIN = "reddit.com";
 export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
-export const BUILD_LOCAL_BRIDGE = `cd /absolute/path/to/webmcp-today
-bunx turbo run build --filter="@webmcp-today/mcp-bridge..."`;
+export const INSTALL_MCP_BRIDGE = "npm install --global @webmcp-today/mcp-bridge@0.1.0";
 
 export const MCP_CONFIG = `{
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "webmcp-today": {
       "type": "local",
-      "command": ["node", "/absolute/path/to/webmcp-today/packages/mcp/dist/index.js"]
+      "command": ["webmcp-today-mcp"]
     }
   }
 }`;
@@ -24,7 +23,7 @@ Your job:
 - Preserve unrelated MCP servers and configuration.
 - Download and extract the extension ZIP from ${EXTENSION_RELEASE_URL}. Do not build the extension from source.
 - Pause for browser-only actions: enabling Developer mode, choosing Load unpacked, and selecting the extracted extension folder; enabling WebMCP if the readiness check says it is unavailable; opening and selecting https://www.reddit.com/r/webdev/ in my normal browser; and reviewing/installing the Reddit package from the extension popup.
-- Configure the first-party WebMCP Today MCP server from the local repository build.
+- Install the first-party WebMCP Today MCP bridge with \`npm install --global @webmcp-today/mcp-bridge@0.1.0\`, then configure it as \`webmcp-today-mcp\` without replacing other MCP servers.
 - After restarting the MCP client, call setup_webmcp_bridge with browser "chrome" and confirm: true. Use browser "brave" for Brave. This is the only bridge-install step; do not run a manual installer command.
 - Call get_webmcp_bridge_status after setup. If it is not ready, diagnose its returned bridge-owned paths and permissions before proceeding.
 - Use list_connected_webmcp_tabs, list_webmcp_tools, and execute_webmcp_tool for the verification.

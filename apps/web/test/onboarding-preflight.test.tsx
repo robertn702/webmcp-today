@@ -137,7 +137,7 @@ describe("bridge quickstart", () => {
     expect(REDDIT_DEMO_URL).toBe("https://www.reddit.com/r/webdev/");
     expect(FIRST_TOOL_PROMPT).toContain(FIRST_TOOL_NAME);
     expect(FIRST_TOOL_PROMPT).toContain(REDDIT_DEMO_URL);
-    expect(MCP_CONFIG).toContain("packages/mcp/dist/index.js");
+    expect(MCP_CONFIG).toContain("webmcp-today-mcp");
     expect(EXTENSION_RELEASE_URL).toBe(
       "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip",
     );
@@ -147,6 +147,7 @@ describe("bridge quickstart", () => {
     expect(QUICKSTART_PROMPT).toContain("Load unpacked");
     expect(QUICKSTART_PROMPT).toContain("setup_webmcp_bridge");
     expect(QUICKSTART_PROMPT).toContain("get_webmcp_bridge_status");
+    expect(QUICKSTART_PROMPT).toContain("npm install --global @webmcp-today/mcp-bridge@0.1.0");
     expect(QUICKSTART_PROMPT).not.toContain("bun install");
     expect(QUICKSTART_PROMPT).not.toContain("@webmcp-today/extension...");
   });
@@ -170,6 +171,7 @@ describe("bridge quickstart", () => {
     expect(quickstart).toContain("EXTENSION_RELEASE_URL");
     expect(quickstart).toContain("Developer mode");
     expect(quickstart).toContain("Load unpacked");
+    expect(quickstart).toContain("requires macOS and Chrome or Brave");
     expect(quickstart).not.toContain("BUILD_EXTENSION");
     expect(quickstart).not.toContain("chrome-mv3");
     expect(quickstart).not.toContain("Chrome DevTools MCP");
