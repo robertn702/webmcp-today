@@ -22,12 +22,12 @@ SOFTWARE.
 
 ---
 
-Portions of this software are ported from Joakim Selemyr's MIT-licensed
+Portions of this software are ported from Joakim Saelemyr's MIT-licensed
 projects, which teach the WebMCP tool-config format and executor this project
 builds on:
 
   - web-mcp-hub       https://github.com/Joakim-Sael/web-mcp-hub
   - webmcp-extension  https://github.com/Joakim-Sael/webmcp-extension
 
-Copyright (c) Joakim Selemyr. Licensed under the MIT License. The above
+Copyright (c) 2025 Joakim Saelemyr. Licensed under the MIT License. The above
 copyright notice and permission notice apply to those portions as well.
