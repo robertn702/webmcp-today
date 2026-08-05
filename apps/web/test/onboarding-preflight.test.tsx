@@ -16,8 +16,11 @@ import { WebMcpReadinessView } from "@/components/webmcp-readiness";
 import {
   FIRST_TOOL_NAME,
   FIRST_TOOL_PROMPT,
+  DOWNLOAD_EXTENSION,
   EXTENSION_RELEASE_URL,
-  MCP_CONFIG,
+  EXTENSION_RELEASES_URL,
+  MCP_CLIENT_CONFIGS,
+  MCP_CLIENT_CONFIG_PROMPT,
   QUICKSTART_PROMPT,
   REDDIT_DEMO_URL,
   REDDIT_PACKAGE_DOMAIN,
@@ -113,7 +116,7 @@ describe("bridge quickstart", () => {
     expect(extensionCheckpoint({ status: "ok", data: PING_OK })).toBe("ready");
   });
 
-  it("renders copy-only runtime remediation and an explicit native-host limitation", () => {
+  it("renders copy-only browser runtime remediation without bridge setup", () => {
     const unavailable = readinessView("unavailable", "waiting", "waiting");
     expect(unavailable).toContain("chrome://flags/#enable-webmcp-testing");
     expect(unavailable).toContain('aria-label="Copy chrome://flags/#enable-webmcp-testing"');
@@ -121,8 +124,9 @@ describe("bridge quickstart", () => {
 
     const ready = readinessView("ready", "ready", "ready");
     expect(ready).toContain("The extension answered this site and its storage is readable.");
-    expect(ready).toContain("The website cannot detect a native host or your MCP configuration.");
-    expect(ready).toContain("list_connected_webmcp_tabs");
+    expect(ready).not.toContain("native host");
+    expect(ready).not.toContain("MCP configuration");
+    expect(ready).not.toContain("list_connected_webmcp_tabs");
   });
 
   it("keeps the verified first call grounded in the seeded read-only Reddit tool", () => {
@@ -137,14 +141,39 @@ describe("bridge quickstart", () => {
     expect(REDDIT_DEMO_URL).toBe("https://www.reddit.com/r/webdev/");
     expect(FIRST_TOOL_PROMPT).toContain(FIRST_TOOL_NAME);
     expect(FIRST_TOOL_PROMPT).toContain(REDDIT_DEMO_URL);
-    expect(MCP_CONFIG).toContain("webmcp-today-mcp");
     expect(EXTENSION_RELEASE_URL).toBe(
-      "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip",
+      "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-extension.zip",
+    );
+    expect(DOWNLOAD_EXTENSION).toContain(EXTENSION_RELEASE_URL);
+    expect(DOWNLOAD_EXTENSION).toContain("unzip webmcp-today-extension.zip");
+    expect(EXTENSION_RELEASES_URL).toBe(
+      "https://github.com/robertn702/webmcp-today/releases/latest",
     );
     expect(QUICKSTART_PROMPT).toContain(EXTENSION_RELEASE_URL);
     expect(QUICKSTART_PROMPT).toContain("Download and extract the extension ZIP");
     expect(QUICKSTART_PROMPT).toContain("Developer mode");
     expect(QUICKSTART_PROMPT).toContain("Load unpacked");
+    expect(QUICKSTART_PROMPT).toContain("## Prerequisites");
+    expect(QUICKSTART_PROMPT).toContain("## 4. Verify the live tool call");
+    expect(QUICKSTART_PROMPT).toContain("webmcp-today-mcp");
+    expect(QUICKSTART_PROMPT).toContain(MCP_CLIENT_CONFIG_PROMPT);
+    expect(QUICKSTART_PROMPT).toContain("execute_webmcp_tool");
+    expect(FIRST_TOOL_PROMPT).toContain("execute_webmcp_tool");
+    expect(MCP_CLIENT_CONFIGS.map((client) => client.name)).toEqual([
+      "OpenCode",
+      "Claude Code",
+      "Codex",
+      "Cursor",
+      "VS Code",
+    ]);
+    expect(MCP_CLIENT_CONFIGS.map((client) => client.configuration)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('"command": ["webmcp-today-mcp"]'),
+        expect.stringContaining("claude mcp add --transport stdio"),
+        expect.stringContaining('command = "webmcp-today-mcp"'),
+        expect.stringContaining('"type": "stdio"'),
+      ]),
+    );
     expect(QUICKSTART_PROMPT).toContain("setup_webmcp_bridge");
     expect(QUICKSTART_PROMPT).toContain("get_webmcp_bridge_status");
     expect(QUICKSTART_PROMPT).toContain("npm install --global @webmcp-today/mcp-bridge@0.1.0");
@@ -169,9 +198,23 @@ describe("bridge quickstart", () => {
     expect(quickstart).toContain("get_webmcp_bridge_status");
     expect(quickstart).toContain("no package-only fallback");
     expect(quickstart).toContain("EXTENSION_RELEASE_URL");
+    expect(quickstart).toContain("EXTENSION_RELEASES_URL");
+    expect(quickstart).toContain("DOWNLOAD_EXTENSION");
+    expect(quickstart).toContain("McpClientConfigs");
     expect(quickstart).toContain("Developer mode");
     expect(quickstart).toContain("Load unpacked");
     expect(quickstart).toContain("requires macOS and Chrome or Brave");
+    expect(quickstart).toContain('<CopyButton text={QUICKSTART_PROMPT} label="Copy page" />');
+    expect(quickstart).not.toContain("Copy complete Markdown instructions");
+    expect(quickstart).not.toContain("Copy OpenCode configuration");
+    expect(quickstart).not.toContain("Copy first-tool prompt");
+    expect(quickstart).toContain('id="load-extension"');
+    expect(quickstart).toContain('id="configure-mcp-client"');
+    expect(quickstart).toContain('id="install-reddit-package"');
+    expect(quickstart).toContain('id="make-first-tool-call"');
+    expect(quickstart).toContain("scroll-mt-20");
+    expect(quickstart).toContain("href={`#${id}`}");
+    expect(quickstart).not.toContain('className="mt-10 border-l-2 border-brand/30 pl-5"');
     expect(quickstart).not.toContain("BUILD_EXTENSION");
     expect(quickstart).not.toContain("chrome-mv3");
     expect(quickstart).not.toContain("Chrome DevTools MCP");

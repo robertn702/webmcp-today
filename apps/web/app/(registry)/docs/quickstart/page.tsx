@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CopyBlock } from "@/components/copy-block";
+import { CopyBlock, CopyButton } from "@/components/copy-block";
+import { McpClientConfigs } from "@/components/mcp-client-configs";
 import { WebMcpReadiness } from "@/components/webmcp-readiness";
 import {
+  DOWNLOAD_EXTENSION,
   INSTALL_MCP_BRIDGE,
   EXTENSION_RELEASE_URL,
+  EXTENSION_RELEASES_URL,
   FIRST_TOOL_NAME,
   FIRST_TOOL_PROMPT,
-  MCP_CONFIG,
   QUICKSTART_PROMPT,
   REDDIT_DEMO_URL,
   REDDIT_TOOL_COUNT,
@@ -27,7 +29,10 @@ export default function QuickstartPage() {
       <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">
         Bridge quickstart
       </p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">Make your first live tool call</h1>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-4xl tracking-tight">Make your first live tool call</h1>
+        <CopyButton text={QUICKSTART_PROMPT} label="Copy page" />
+      </div>
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
         This path uses the WebMCP Today extension in your existing supported Chromium browser and a
         local MCP bridge. It keeps package installation and destructive confirmations in the browser
@@ -53,31 +58,28 @@ export default function QuickstartPage() {
 
       <WebMcpReadiness />
 
-      <section className="mt-8 border-l-2 border-brand/30 pl-5">
-        <h2 className="text-lg font-semibold">Let an agent guide the safe parts</h2>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          This prompt keeps configuration additive and pauses for the browser actions only you can
-          approve.
-        </p>
-        <CopyBlock label="Copy quickstart prompt">{QUICKSTART_PROMPT}</CopyBlock>
-      </section>
-
-      <Step number="1" title="Load WebMCP Today in the browser you already use">
+      <Step id="load-extension" number="1" title="Load WebMCP Today in your browser">
         <p>
           Download the <a href={EXTENSION_RELEASE_URL}>WebMCP Today extension ZIP</a> and extract
           it. Then open the browser&apos;s extensions page, enable Developer mode,{" "}
           {"choose Load unpacked,"} and select the extracted folder. The extension must remain
           enabled in the same browser that will hold your target tab.
         </p>
+        <CopyBlock label="sh">{DOWNLOAD_EXTENSION}</CopyBlock>
         <p>
-          Install the Reddit package from its popup rather than relying on a registry-page Install
-          button. If the readiness check says either WebMCP API is unavailable, use its copy-only
-          settings path, enable WebMCP testing, relaunch, and check again. Do not enable it
-          preemptively when the runtime check already passes.
+          Prefer a manual download? Use the{" "}
+          <a href={EXTENSION_RELEASES_URL} className="text-foreground underline underline-offset-4">
+            latest release on GitHub
+          </a>{" "}
+          instead.
         </p>
       </Step>
 
-      <Step number="2" title="Install the MCP bridge and configure your client">
+      <Step
+        id="configure-mcp-client"
+        number="2"
+        title="Install the MCP bridge and configure your client"
+      >
         <p>
           Install the published MCP bridge globally, then add its command to your MCP client. After
           restarting the client, ask it to call
@@ -86,21 +88,26 @@ export default function QuickstartPage() {
           writes only this bridge&apos;s per-user native-messaging manifest; it does not expose an
           HTTP service.
         </p>
-        <CopyBlock>{INSTALL_MCP_BRIDGE}</CopyBlock>
+        <CopyBlock label="sh">{INSTALL_MCP_BRIDGE}</CopyBlock>
         <p>
-          Add the server without replacing your other MCP servers, then restart or reload the
-          client. This OpenCode example invokes the globally installed command.
+          Select your MCP client, then add the local server without replacing your other MCP
+          servers:
         </p>
-        <CopyBlock label="Copy OpenCode configuration">{MCP_CONFIG}</CopyBlock>
+        <McpClientConfigs />
         <p>
-          Call <Code>get_webmcp_bridge_status</Code> after setup, then continue only when it reports
-          ready. The server exposes <Code>list_connected_webmcp_tabs</Code>,{" "}
-          <Code>list_webmcp_tools</Code>, and <Code>execute_webmcp_tool</Code>. The webpage cannot
-          see a native host or MCP client: the successful tab-list call is the real handoff check.
+          Restart or reload your MCP client, then call <Code>get_webmcp_bridge_status</Code> after
+          setup and continue only when it reports ready. The server exposes{" "}
+          <Code>list_connected_webmcp_tabs</Code>, <Code>list_webmcp_tools</Code>, and{" "}
+          <Code>execute_webmcp_tool</Code>. The webpage cannot see a native host or MCP client: the
+          successful tab-list call is the real handoff check.
         </p>
       </Step>
 
-      <Step number="3" title="Open Reddit and explicitly install its package">
+      <Step
+        id="install-reddit-package"
+        number="3"
+        title="Open Reddit and explicitly install its package"
+      >
         <p>
           In your normal browser, open <Code>{REDDIT_DEMO_URL}</Code> and make that tab visible and
           selected. Open the WebMCP Today extension popup, inspect the suggested Reddit package, and
@@ -113,7 +120,11 @@ export default function QuickstartPage() {
         </p>
       </Step>
 
-      <Step number="4" title="List live tools and make the read-only call">
+      <Step
+        id="make-first-tool-call"
+        number="4"
+        title="List live tools and make the read-only call"
+      >
         <p>
           Ask the MCP client to list connected tabs, then list the tools in the selected Reddit tab.
           A successful installed package contributes {REDDIT_TOOL_COUNT} Reddit tools, including
@@ -121,7 +132,7 @@ export default function QuickstartPage() {
           <Code>{'{"subreddit":"webdev","limit":5}'}</Code>, passing the document and tools
           generations returned from the tool-list call.
         </p>
-        <CopyBlock label="Copy first-tool prompt">{FIRST_TOOL_PROMPT}</CopyBlock>
+        <CopyBlock>{FIRST_TOOL_PROMPT}</CopyBlock>
         <p>
           <strong className="font-semibold text-foreground">Success:</strong> five current post
           titles and permalinks return from Reddit&apos;s own JSON API. This is generic WebMCP tool
@@ -148,11 +159,25 @@ export default function QuickstartPage() {
   );
 }
 
-function Step({ number, title, children }: { number: string; title: string; children: ReactNode }) {
+function Step({
+  id,
+  number,
+  title,
+  children,
+}: {
+  id: string;
+  number: string;
+  title: string;
+  children: ReactNode;
+}) {
   return (
-    <section className="mt-10 border-l-2 border-brand/30 pl-5">
+    <section className="mt-10">
       <p className="font-mono text-[11px] tracking-[0.18em] text-brand uppercase">Step {number}</p>
-      <h2 className="mt-2 text-lg font-semibold">{title}</h2>
+      <h2 id={id} className="scroll-mt-20 mt-2 text-lg font-semibold">
+        <a href={`#${id}`} className="hover:underline hover:underline-offset-4">
+          {title}
+        </a>
+      </h2>
       <div className="mt-3 flex flex-col gap-3 text-sm leading-relaxed text-muted-foreground">
         {children}
       </div>

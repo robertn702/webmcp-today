@@ -107,8 +107,8 @@ export function WebMcpReadinessView({
         Check this browser first
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        The first three checks use this page&apos;s actual browser and extension APIs. The site
-        cannot inspect native messaging, so the final handoff is verified from your MCP client.
+        These checks use this page&apos;s actual browser and extension APIs. They do not inspect
+        your MCP client or native messaging setup.
       </p>
 
       <ol className="mt-5 flex flex-col gap-5 border-l-2 border-brand/30 pl-5">
@@ -152,12 +152,6 @@ export function WebMcpReadinessView({
           )}
           {extension === "unreadable" &&
             "The extension answered but cannot read its storage. Reinstall or update it, then check again."}
-        </Checkpoint>
-
-        <Checkpoint complete={false} title="The local bridge and MCP client can hand off">
-          The website cannot detect a native host or your MCP configuration. Install the macOS host,
-          restart your MCP client, select a normal target tab, then call{" "}
-          <code>list_connected_webmcp_tabs</code>. A returned tab is the bridge check.
         </Checkpoint>
       </ol>
 
