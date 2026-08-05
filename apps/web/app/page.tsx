@@ -120,7 +120,7 @@ export default async function LandingPage() {
             First run
           </p>
           <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-            One browser, three steps
+            Make a live tool call from your MCP client
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Load the extension in your existing supported Chromium browser, connect the local MCP
@@ -136,7 +136,7 @@ export default async function LandingPage() {
             </a>
             , extract it, then load its folder in the browser&apos;s Developer mode.
           </RunStep>
-          <RunStep number="2" title="Connect the local bridge">
+          <RunStep number="2" title="Connect the MCP server to your browser">
             Check the actual WebMCP runtime, install the native host on macOS, and connect the
             first-party MCP server to your existing browser.
           </RunStep>
@@ -166,11 +166,11 @@ export default async function LandingPage() {
               Trust model
             </p>
             <h2 className="mt-4 font-display text-4xl tracking-tight sm:text-5xl">
-              Read it before you run it.
+              Built around a trust model you can inspect
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              A package registers tools on pages you&apos;re signed into. Each claim below names the
-              mechanism that backs it.
+              A package registers tools on pages you&apos;re signed into. You can inspect the
+              source, package contents, version history, and API origin before installing it.
             </p>
           </div>
 
@@ -196,7 +196,7 @@ export default async function LandingPage() {
               has no step that executes code, so installing one can&apos;t run arbitrary code in
               your page.
             </TrustFact>
-            <TrustFact title="Updates can’t ambush you">
+            <TrustFact title="Updates require your approval">
               Your install is{" "}
               <a
                 href="https://github.com/robertn702/webmcp-today/blob/main/packages/db/src/package-schema.ts"
