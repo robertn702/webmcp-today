@@ -1,13 +1,23 @@
 export const EXTENSION_RELEASE_URL =
-  "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip";
+  "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-extension.zip";
+export const EXTENSION_RELEASES_URL = "https://github.com/robertn702/webmcp-today/releases/latest";
 export const REDDIT_DEMO_URL = "https://www.reddit.com/r/webdev/";
 export const REDDIT_PACKAGE_DOMAIN = "reddit.com";
 export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
 export const INSTALL_MCP_BRIDGE = "npm install --global @webmcp-today/mcp-bridge@0.1.0";
+export const DOWNLOAD_EXTENSION = `curl -L -O ${EXTENSION_RELEASE_URL}
+unzip webmcp-today-extension.zip -d webmcp-today-extension`;
 
-export const MCP_CONFIG = `{
+export const MCP_CLIENT_CONFIGS = [
+  {
+    id: "opencode",
+    name: "OpenCode",
+    location: "opencode.json",
+    instruction: "Add this to",
+    format: "json",
+    configuration: `{
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "webmcp-today": {
@@ -15,29 +25,123 @@ export const MCP_CONFIG = `{
       "command": ["webmcp-today-mcp"]
     }
   }
-}`;
+}`,
+  },
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    location: "your terminal",
+    instruction: "Run this once in your terminal:",
+    format: "sh",
+    configuration: "claude mcp add --transport stdio --scope user webmcp-today -- webmcp-today-mcp",
+  },
+  {
+    id: "codex",
+    name: "Codex",
+    location: "~/.codex/config.toml",
+    instruction: "Add this to",
+    format: "toml",
+    configuration: `[mcp_servers.webmcp-today]
+command = "webmcp-today-mcp"`,
+  },
+  {
+    id: "cursor",
+    name: "Cursor",
+    location: "~/.cursor/mcp.json",
+    instruction: "Add this to",
+    format: "json",
+    configuration: `{
+  "mcpServers": {
+    "webmcp-today": {
+      "type": "stdio",
+      "command": "webmcp-today-mcp"
+    }
+  }
+}`,
+  },
+  {
+    id: "vs-code",
+    name: "VS Code",
+    location: ".vscode/mcp.json",
+    instruction: "Add this to",
+    format: "json",
+    configuration: `{
+  "servers": {
+    "webmcp-today": {
+      "type": "stdio",
+      "command": "webmcp-today-mcp"
+    }
+  }
+}`,
+  },
+] as const;
 
-export const QUICKSTART_PROMPT = `Walk me through the WebMCP Today bridge quickstart at https://webmcp.today/docs/quickstart.
+export const MCP_CLIENT_CONFIG_PROMPT = MCP_CLIENT_CONFIGS.map(
+  (client) => `### ${client.name} (${client.location})
 
-Your job:
+\`\`\`${client.format}
+${client.configuration}
+\`\`\``,
+).join("\n\n");
+
+export const QUICKSTART_PROMPT = `# WebMCP Today bridge quickstart
+
+Help me make a first live, read-only WebMCP tool call. Work through these instructions in order and diagnose a failed step before continuing.
+
+## Prerequisites
+
+- I need macOS, Chrome or Brave, and Node 20 or newer.
 - Preserve unrelated MCP servers and configuration.
-- Download and extract the extension ZIP from ${EXTENSION_RELEASE_URL}. Do not build the extension from source.
-- Pause for browser-only actions: enabling Developer mode, choosing Load unpacked, and selecting the extracted extension folder; enabling WebMCP if the readiness check says it is unavailable; opening and selecting https://www.reddit.com/r/webdev/ in my normal browser; and reviewing/installing the Reddit package from the extension popup.
-- Install the first-party WebMCP Today MCP bridge with \`npm install --global @webmcp-today/mcp-bridge@0.1.0\`, then configure it as \`webmcp-today-mcp\` without replacing other MCP servers.
-- After restarting the MCP client, call setup_webmcp_bridge with browser "chrome" and confirm: true. Use browser "brave" for Brave. This is the only bridge-install step; do not run a manual installer command.
-- Call get_webmcp_bridge_status after setup. If it is not ready, diagnose its returned bridge-owned paths and permissions before proceeding.
-- Use list_connected_webmcp_tabs, list_webmcp_tools, and execute_webmcp_tool for the verification.
-- After I confirm the selected Reddit tab is open, use it. If reddit_subreddit_hot is missing, ask me to install the Reddit package in the extension popup and wait for confirmation.
-- Call reddit_subreddit_hot with {"subreddit":"webdev","limit":5} and show five titles and permalinks.
+- The WebMCP Today extension, bridge, and package format are in public beta.
 
-Do not substitute DOM scraping, coordinate clicks, or arbitrary page execution for a missing WebMCP tool. If a step fails, diagnose that step before continuing.`;
+## 1. Check the browser and load the extension
+
+1. Have me open https://webmcp.today/docs/quickstart in the normal Chrome or Brave browser I will use.
+2. Ask me to use its browser-readiness check. Only if it reports WebMCP unavailable, have me open the supplied browser settings path, enable WebMCP testing, relaunch the browser, and check again.
+3. Download and extract the extension ZIP. Do not build the extension from source:
+
+\`\`\`sh
+${DOWNLOAD_EXTENSION}
+\`\`\`
+   For a manual download, use ${EXTENSION_RELEASES_URL}.
+4. Pause for me to enable Developer mode, choose Load unpacked, and select the extracted extension folder. The extension must remain enabled in the browser holding the target tab.
+
+## 2. Install and configure the bridge
+
+1. Run:
+
+\`\`\`sh
+${INSTALL_MCP_BRIDGE}
+\`\`\`
+
+2. Add a local stdio MCP server named \`webmcp-today\` that runs \`webmcp-today-mcp\` to the configuration for the client I use. Preserve my other MCP servers.
+
+${MCP_CLIENT_CONFIG_PROMPT}
+
+3. Have me restart or reload that MCP client.
+4. Call \`setup_webmcp_bridge\` with \`{"browser":"chrome","confirm":true}\`. Use \`"brave"\` instead of \`"chrome"\` if I use Brave. This confirmation-gated tool is the only bridge-install step; do not run a manual installer command.
+5. Call \`get_webmcp_bridge_status\`. If it is not ready, diagnose the returned bridge-owned paths and permissions before proceeding.
+
+## 3. Install Reddit in the selected tab
+
+1. Pause for me to open and select ${REDDIT_DEMO_URL} in my normal browser.
+2. Pause for me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. This is a browser-owned consent action that I must perform.
+
+## 4. Verify the live tool call
+
+1. Call \`list_connected_webmcp_tabs\`, then \`list_webmcp_tools\` for the selected Reddit tab.
+2. If \`${FIRST_TOOL_NAME}\` is missing, ask me to install or repair the Reddit package in the extension popup and wait for confirmation before listing tools again.
+3. Call \`execute_webmcp_tool\` with the selected tab ID; the document and tool-list generations; the \`${FIRST_TOOL_NAME}\` tool name and origin; and \`{"subreddit":"webdev","limit":5}\` as input.
+4. Show the five returned titles and permalinks.
+
+Do not substitute DOM scraping, coordinate clicks, or arbitrary page execution for a missing WebMCP tool.`;
 
 export const FIRST_TOOL_PROMPT = `Use the WebMCP Today MCP server to verify a live, read-only Reddit call.
 
 1. I have selected the normal browser tab at ${REDDIT_DEMO_URL}.
 2. Call list_connected_webmcp_tabs, then list_webmcp_tools for that tab.
 3. If ${FIRST_TOOL_NAME} is missing, ask me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. Wait for my confirmation, then list tools again in the same tab.
-4. Call ${FIRST_TOOL_NAME} with {"subreddit":"webdev","limit":5}, using the document and tool-list generations returned by list_webmcp_tools.
+4. Call execute_webmcp_tool with the tab id, document generation, tools generation, and ${FIRST_TOOL_NAME} origin returned by list_webmcp_tools. Pass ${FIRST_TOOL_NAME} as toolName and {"subreddit":"webdev","limit":5} as input.
 5. Show five returned titles and permalinks.
 
 Do not substitute DOM scraping or arbitrary page execution for the missing tool.`;

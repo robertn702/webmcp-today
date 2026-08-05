@@ -79,24 +79,28 @@ jobs:
           cd apps/extension
           bun run zip
 
+      # WXT labels its Chromium build with `-chrome`, but the unpacked ZIP is
+      # also the build users load in Brave. Publish browser-neutral asset names.
       # Docs link to the version-less name via
-      # https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-chrome.zip
+      # https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-extension.zip
       # — GitHub's /latest redirect resolves by exact asset filename, so a
       # versioned name would break the link on every release. The versioned ZIP
       # stays attached too: it's the citable artifact when someone reports a
       # bug against a specific build.
-      - name: Stable-name copy for the /latest/download URL
+      - name: Browser-neutral release assets
         working-directory: apps/extension/.output
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: cp -- "webmcp-today-${VERSION}-chrome.zip" webmcp-today-chrome.zip
+        run: |
+          mv -- "webmcp-today-extension-${VERSION}-chrome.zip" "webmcp-today-extension-${VERSION}.zip"
+          cp -- "webmcp-today-extension-${VERSION}.zip" webmcp-today-extension.zip
 
       - name: Checksums
         working-directory: apps/extension/.output
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          sha256sum -- "webmcp-today-${VERSION}-chrome.zip" webmcp-today-chrome.zip > SHA256SUMS
+          sha256sum -- "webmcp-today-extension-${VERSION}.zip" webmcp-today-extension.zip > SHA256SUMS
           sha256sum --check --strict SHA256SUMS
 
       - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
@@ -108,8 +112,8 @@ jobs:
           # releases ever land (npm publishing), mark those make_latest: false.
           make_latest: true
           files: |
-            apps/extension/.output/webmcp-today-${{ steps.version.outputs.version }}-chrome.zip
-            apps/extension/.output/webmcp-today-chrome.zip
+            apps/extension/.output/webmcp-today-extension-${{ steps.version.outputs.version }}.zip
+            apps/extension/.output/webmcp-today-extension.zip
             apps/extension/.output/SHA256SUMS
           body: |
             Self-hosted build of the WebMCP Today extension, for use while the
@@ -117,13 +121,13 @@ jobs:
 
             ## Install
 
-            1. Download `webmcp-today-${{ steps.version.outputs.version }}-chrome.zip` below and unzip it.
-            2. Open `chrome://extensions`, enable **Developer mode**.
+            1. Download `webmcp-today-extension-${{ steps.version.outputs.version }}.zip` below and unzip it.
+            2. Open `chrome://extensions` in Chrome or `brave://extensions` in Brave, then enable **Developer mode**.
             3. **Load unpacked** → select the unzipped folder.
-            4. Enable WebMCP at `chrome://flags/#enable-webmcp-testing` and restart Chrome.
+            4. Only if the quickstart's browser-readiness check reports WebMCP unavailable, enable WebMCP testing at `chrome://flags/#enable-webmcp-testing` or `brave://flags/#enable-webmcp-testing`, then relaunch the browser.
 
-            Chrome does not auto-update extensions installed this way — grab a
-            new release manually. Chrome will also prompt about developer-mode
+            Chrome and Brave do not auto-update extensions installed this way — grab a
+            new release manually. They will also prompt about developer-mode
             extensions on each launch; that is expected for off-store installs.
 
             `SHA256SUMS` checks that a downloaded ZIP's bytes match this release.
