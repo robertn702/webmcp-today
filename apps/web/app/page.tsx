@@ -49,7 +49,7 @@ export default async function LandingPage() {
 
             <h1 className="cafe-rise mt-6 font-display text-5xl leading-[0.95] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-7xl">
               Make any site agent-ready with
-              <em className="text-brand not-italic"> WebMCP</em>.
+              <em className="text-brand not-italic"> WebMCP Today</em>.
             </h1>
 
             <p className="cafe-rise mt-6 max-w-xl text-base leading-relaxed text-muted-foreground [animation-delay:160ms] sm:text-lg">
