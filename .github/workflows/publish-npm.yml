@@ -1,12 +1,11 @@
 name: Publish npm packages
 
-# Tag-triggered, decoupled from the extension release tag. Publish the next
-# version of @webmcp-today/schema + @webmcp-today/mcp-bridge with:
-#   git tag npm-v0.1.2 && git push origin npm-v0.1.2
-# The tag version must equal both publishable package versions and the bridge
-# must pin the same schema version — check-npm-release.mjs enforces all three
-# and fails the run rather than publishing a mismatched set. The tag is
-# protected by a tag ruleset, so it can only be cut from a reviewed commit.
+# Tag-triggered, decoupled from the extension release tag. Publish one package:
+#   git tag schema-v0.1.2 && git push origin schema-v0.1.2
+#   git tag mcp-v0.1.2 && git push origin mcp-v0.1.2
+# check-npm-release.mjs validates the target selected by the checked-out tag.
+# Tags are protected by a tag ruleset, so they can only be cut from reviewed
+# commits.
 #
 # npm authentication is GitHub Actions OIDC Trusted Publishing: the job
 # exchanges its id-token for an npm publication identity. No npm token, no
@@ -16,23 +15,9 @@ name: Publish npm packages
 # configuration this depends on.
 on:
   push:
-    tags: ["npm-v*"]
+    tags: ["schema-v*", "mcp-v*"]
   workflow_dispatch:
     inputs:
-      tag:
-        description: Existing npm-v* tag to publish (must equal the ref this runs from)
-        required: true
-      packages:
-        description: Which packages to publish
-        type: choice
-        default: both
-        options:
-          - both
-          # Recovery for the schema-published / mcp-failed case: re-runs the
-          # bridge publish only, with a guard that the schema version is
-          # already public. Republishing schema over an existing version fails,
-          # so a plain re-run cannot reach this state's fix.
-          - mcp
       dry-run:
         description: Pack and validate install/gates/build without uploading to npm (does not verify OIDC trust)
         type: boolean
@@ -52,8 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Resolve a dispatch input as a tag, never a same-named branch.
-          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          # Pin checkout to this run's immutable commit; tag validation below
+          # still uses github.ref_name.
+          ref: ${{ github.sha }}
           # Do not leave the repository token in .git/config for dependency
           # scripts invoked by install, checks, or the pack lifecycle.
           persist-credentials: false
@@ -68,17 +54,17 @@ jobs:
           # suppress npm's OIDC fallback.
           node-version: "24"
 
-      # Fail before the ~install: the check only needs the tag and the two
-      # committed package.json files.
+      # Fail before the install: the check only needs the tag and committed
+      # package.json files.
       - name: Check tag matches package versions
         env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             # The executed workflow file and the OIDC subject must both come
             # from the protected tag. Running dispatch from a branch would
             # execute an unreviewed copy of this file with the same publishing
-            # identity — this guard is defense in depth; the npm-publish
+            # identity. This guard is defense in depth; the npm-publish
             # environment's tag-only deployment scope is the authoritative
             # barrier (docs/release-security.md).
             if [ "$GITHUB_REF_TYPE" != "tag" ] || [ "$GITHUB_REF_NAME" != "$RELEASE_TAG" ]; then
@@ -103,33 +89,41 @@ jobs:
       - run: bun run test
       - run: node --test scripts/check-npm-release.test.mjs
 
+      - name: Build schema for publish
+        if: startsWith(github.ref_name, 'schema-v')
+        run: bunx turbo run build --filter=@webmcp-today/schema
+
       - name: Build MCP bridge for publish
+        if: startsWith(github.ref_name, 'mcp-v')
         # The trailing "..." includes the schema dependency in the build, so
         # the bridge's packed dist comes from this commit's schema.
         run: bunx turbo run build --filter=@webmcp-today/mcp-bridge...
 
-      # Recovery guard: a packages=mcp re-run must not silently re-upload an
-      # already-published schema, so fail loudly if the tag's schema version is
-      # absent from the registry instead.
-      - name: Verify schema version is already published
-        if: inputs.packages == 'mcp'
-        env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      - name: Verify MCP schema dependency is already published
+        if: startsWith(github.ref_name, 'mcp-v')
         run: |
-          version="${RELEASE_TAG#npm-v}"
-          if ! npm view "@webmcp-today/schema@${version}" >/dev/null 2>&1; then
-            echo "::error::packages=mcp recovery run but @webmcp-today/schema@${version} is not published — run packages=both first"
+          schema_version="$(node -p "require('./packages/mcp/package.json').dependencies['@webmcp-today/schema']")"
+          if ! npm view "@webmcp-today/schema@${schema_version}" >/dev/null 2>&1; then
+            echo "::error::@webmcp-today/schema@${schema_version} is not published"
             exit 1
           fi
 
-      # Publish schema first: the bridge installs against the exact schema
-      # version, which must already be public when the bridge's dependency
-      # resolves. A push-tag run (no inputs) always means both packages.
+      - name: Verify packed MCP bridge resolves its registry schema dependency
+        if: startsWith(github.ref_name, 'mcp-v')
+        working-directory: packages/mcp
+        run: |
+          tarball="$(npm pack --ignore-scripts --json | node --input-type=module -e 'let output = ""; for await (const chunk of process.stdin) output += chunk; const [{ filename }] = JSON.parse(output); process.stdout.write(filename);')"
+          prefix="$(mktemp -d)"
+          trap 'rm -rf "$prefix"' EXIT
+          npm install --prefix "$prefix" --ignore-scripts "./$tarball"
+          node --input-type=module -e 'await import(process.argv[1]);' "$prefix/node_modules/@webmcp-today/mcp-bridge/dist/native-host.js"
+
       - name: Publish @webmcp-today/schema
-        if: inputs.packages != 'mcp'
+        if: startsWith(github.ref_name, 'schema-v')
         working-directory: packages/schema
         run: npm publish --access public ${{ inputs['dry-run'] == true && '--dry-run' || '' }}
 
       - name: Publish @webmcp-today/mcp-bridge
+        if: startsWith(github.ref_name, 'mcp-v')
         working-directory: packages/mcp
         run: npm publish --access public ${{ inputs['dry-run'] == true && '--dry-run' || '' }}

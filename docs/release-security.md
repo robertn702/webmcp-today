@@ -9,12 +9,12 @@ grants its `GITHUB_TOKEN` `contents: write` only in the one job that uploads
 release assets.
 
 The npm publication workflow (`.github/workflows/publish-npm.yml`) re-runs the
-test suite on an `npm-v*` tag and publishes `@webmcp-today/schema` then
-`@webmcp-today/mcp-bridge` to npm. It authenticates through GitHub Actions OIDC
-Trusted Publishing, so no npm token exists anywhere in the repository or
-environment, and npm records publish provenance automatically. The publish job
-holds only `contents: read` and `id-token: write`, and every action is pinned
-to a full commit SHA.
+test suite on `schema-v*` and `mcp-v*` tags. A schema tag publishes only
+`@webmcp-today/schema`; an MCP tag publishes only `@webmcp-today/mcp-bridge`.
+It authenticates through GitHub Actions OIDC Trusted Publishing, so no npm token
+exists anywhere in the repository or environment, and npm records publish
+provenance automatically. The publish job holds only `contents: read` and
+`id-token: write`, and every action is pinned to a full commit SHA.
 
 ## Checksum scope
 
@@ -37,12 +37,20 @@ published only beside the ZIP would not add an independent trust root.
 
 ## npm Trusted Publishing
 
-Cut an `npm-v*` tag only from a reviewed, merged release commit whose
-`packages/schema` and `packages/mcp` versions match the tag and whose bridge
-pins that exact schema version. `scripts/check-npm-release.mjs` enforces all
-three and fails the run otherwise — the manual half is just pushing the tag.
-Published package versions are derived from the tag, so the version bump PR and
-the tag must move together.
+Cut either a `schema-v<semver>` tag for `@webmcp-today/schema` or an
+`mcp-v<semver>` tag for `@webmcp-today/mcp-bridge`, from a reviewed, merged
+release commit. The tag version must match the target package version.
+`scripts/check-npm-release.mjs` also checks the target package identity,
+repository URL, and publish configuration. An MCP release checks both package
+identities and requires an exact schema dependency pin, but the pin and schema
+package version may differ from the MCP tag version.
+
+When an MCP change updates its schema pin, publish that required schema version
+first under a `schema-v<semver>` tag, then cut the `mcp-v<semver>` tag. The MCP
+workflow verifies the exact pinned schema version is already public before it
+publishes the bridge. This also applies to dry runs: an MCP dry run requires its
+pinned schema version to already be public, so only a schema dry run can run
+before a new schema release.
 
 Authentication is GitHub Actions OIDC Trusted Publishing. The publish job
 mints a short-lived npm identity from GitHub's OIDC on each run; npm records
@@ -55,26 +63,15 @@ Do not add `NODE_AUTH_TOKEN`, an npm token, `--otp`, or a `--provenance` flag
 to the publish steps — the trust relationship, not a secret, is the credential.
 
 The workflow refuses `workflow_dispatch` unless it runs from the release tag
-itself (`github.ref_type` must be `tag` and the ref must equal the `tag`
-input). That guard is defense in depth only: a modified copy of the workflow
-on a branch can remove it, so the authoritative barrier is the `npm-publish`
+itself (`github.ref_type` must be `tag`). That guard is defense in depth only: a
+modified copy of the workflow on a branch can remove it, so the authoritative barrier is the `npm-publish`
 environment's deployment scope — restrict the environment to deploy **only
-from `npm-v*` tags, no branches, with admin bypass disabled** (Settings →
+from `schema-v*` and `mcp-v*` tags, no branches, with admin bypass disabled** (Settings →
 Environments → `npm-publish` → Deployment branches → "Selected branches and
 tags"). An unreviewed branch copy of the workflow never reaches the
 environment, and the required reviewer is the last line of defense for a
 legitimate tag run. Review the exact workflow file being executed before
 approving any run.
-
-### Partial-publication recovery
-
-npm publishes are immutable per version, so a run that published schema but
-failed the bridge cannot just be re-run on the same tag (schema republish
-fails). Re-run the tag with the `packages: mcp` dispatch input: the schema
-publish is skipped and a guard fails loudly unless
-`@webmcp-today/schema@<tag version>` is already on the registry. Diagnose the
-bridge failure from that run's logs, then re-run `packages: mcp` on the same
-immutable tag.
 
 ### One-time npm Trusted Publisher configuration
 
@@ -94,13 +91,11 @@ If the workflow filename, environment, owner, or repository in the trust record
 ever diverges from the workflow, publishes fail with an OIDC authentication
 error. Change the workflow, the npm records, and this runbook together.
 
-## GitHub Settings After Public Visibility
+## Required GitHub Production Settings
 
-This private repository's current plan rejects branch-protection configuration
-with `Upgrade to GitHub Pro or make this repository public`. Immediately after
-changing visibility, configure and verify the following in GitHub. These are
-repository settings, not versioned files, so this runbook is the source of
-record for the manual work.
+The following are active production requirements. They are repository settings,
+not versioned files, so this runbook is the source of record for the required
+manual configuration. Verify them before using a release workflow.
 
 1. In **Settings → Actions → General**, retain the default `GITHUB_TOKEN`
    permission as **Read repository contents** and keep **Allow GitHub Actions
@@ -112,26 +107,28 @@ record for the manual work.
    workflows already use full SHAs, with the reviewed release version documented
    on each line. Review Dependabot action updates before merging; adding a new
    action also requires an allowlist update in that same reviewed change.
-3. Create an active `main` branch ruleset. Require pull requests, require the
+3. Maintain an active `main` branch ruleset. Require pull requests, require the
    `ci` status check, and block branch deletion and force pushes. Give bypass
    access only to the repository owner or an explicitly designated release
    administrator.
-4. Create active tag rulesets targeting `extension-v*` and `npm-v*`. Block tag
+4. Ensure active tag rulesets protect `extension-v*`, `schema-v*`, and
+   `mcp-v*` before using this release workflow. Block tag
    creation, updates, and deletion for everyone except the repository owner or
    an explicitly designated release administrator. This prevents an unreviewed
    tag from invoking the release workflows or changing a published tag's source.
    Do not allow force-updating a release tag.
-5. Create a protected `extension-release` environment with a required reviewer
+5. Maintain a protected `extension-release` environment with a required reviewer
    and move `WXT_EXTENSION_KEY` there only if the release process can tolerate
    an approval gate. In the same change, add `environment: extension-release`
    to the release job so `vars.WXT_EXTENSION_KEY` resolves from that environment.
    This is a defense in depth measure for the release identity; the release
    workflow remains functional without it.
-6. Create a protected `npm-publish` environment. Enable **Required reviewers**
+6. Maintain a protected `npm-publish` environment. Enable **Required reviewers**
    (single release maintainer), **Prevent self-review**, and deselect **Allow
    administrators to bypass configured protection rules**. In **Deployment
-   branches → Selected branches and tags**, add one **Tag** rule matching
-   `npm-v*` and no branch rules, so only release tags can deploy to it. The
+   branches → Selected branches and tags**, update the live deployment policy
+   from `npm-v*` to **Tag** rules matching `schema-v*` and `mcp-v*`, with no
+   branch rules, before using this workflow. The
    npm publish job already declares `environment: npm-publish`, and the npm
    Trusted Publisher records reference the same name. Do not store an npm token
    there; OIDC is the credential path. Approve a run only after inspecting the
@@ -141,17 +138,15 @@ record for the manual work.
    typecheck, lint, tests, ZIP generation, checksum verification, and release
    upload. Delete the test release and tag only under the applicable release
    procedure. For npm, exercise the same gates tokenlessly with a
-   `workflow_dispatch` `dry-run` onto a disposable `npm-v*` tag before the
+   `workflow_dispatch` `dry-run` onto a disposable `schema-v*` or `mcp-v*` tag
+   before the
    first real publish. `npm publish --dry-run` packs (running the `prepack`
    build) without uploading, so it proves checkout, install, the release
    gates, and packaging — but it does **not** exercise the OIDC trust
    relationship, and npm does not verify a Trusted Publisher configuration
    until a real publish attempts authentication. Treat the first real publish
    as the trust verification: publish a single deliberate release, then
-   confirm `npm view @webmcp-today/schema@<v>` and
-   `npm view @webmcp-today/mcp-bridge@<v>` resolve and both carry provenance.
-   The `packages: mcp` recovery input covers the schema-published /
-   bridge-failed mid-state.
+   confirm the released package resolves and carries provenance.
 
 After changing these settings, inspect the Actions configuration and rulesets
 from the repository UI or API. Do not treat the presence of SHA pins in Git as
