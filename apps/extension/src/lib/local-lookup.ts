@@ -10,7 +10,13 @@ import type { StorageArea } from "./store-schema.js";
 // (risk R4): unreadable storage or a never-fetched revocation list means
 // nothing registers — and the diagnostics say so, never a silent zero.
 
-export const lookupBlockedSchema = z.enum(["no-revocation-list", "storage-unreadable"]);
+export const lookupBlockedSchema = z.enum([
+  "no-revocation-list",
+  "storage-unreadable",
+  // Produced only by the content-side lookup client when the background does
+  // not answer; resolveLocalLookup itself never returns this value.
+  "lookup-failed",
+]);
 export type LookupBlocked = z.infer<typeof lookupBlockedSchema>;
 
 export interface LookupDiagnostics {

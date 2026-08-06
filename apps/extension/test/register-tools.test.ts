@@ -254,4 +254,16 @@ describe("runRegistrationPass", () => {
 
     expect(statuses).toEqual([{ kind: "storage-unreadable" }]);
   });
+
+  it("preserves the prior status when the background lookup fails", async () => {
+    const { deps, statuses, getModelContext } = harness(
+      { packages: [], blocked: "lookup-failed" },
+      undefined,
+    );
+
+    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
+
+    expect(statuses).toEqual([]);
+    expect(getModelContext).not.toHaveBeenCalled();
+  });
 });

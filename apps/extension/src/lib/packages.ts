@@ -14,7 +14,7 @@ export async function getPackagesForUrl(url: string): Promise<PageLoadPackages> 
     console.warn(
       "[webmcp-today] Lookup failed — the extension background did not answer; no tools were registered.",
     );
-    return { packages: [] };
+    return { packages: [], blocked: "lookup-failed" };
   }
 
   const { packages, diagnostics } = result;
