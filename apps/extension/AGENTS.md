@@ -142,9 +142,9 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
 dev` + web on :3000 → open `/packages/<id>` → install → popup lists it →
   navigate to the target site → page console shows `[webmcp-today] 1 installed
 package(s) matched this URL` → bridge `list_webmcp_tools` shows the tools.
-- Storage lives in `chrome.storage.local` under four keys
-  (`src/lib/store-schema.ts`): `schemaVersion`, `index` (install metadata),
-  `pkg:<id>` (served bodies verbatim), `revoked` (kill list + cursor).
+- Storage lives in `chrome.storage.local` under a small set of keys
+  (`src/lib/store-schema.ts`): a schema version, an install index with per-package
+  bodies, the revoked kill list + cursor, and the discovery domain list.
   Read/write goes through `src/lib/installs-store.ts` over an injected
   `StorageArea` seam (`src/lib/storage.ts`); tests use
   `test/fake-storage-area.ts`, never `fakeBrowser`/`wxt/browser`.

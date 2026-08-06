@@ -45,7 +45,9 @@ export default defineConfig({
     // A public key pins local builds to one development extension ID. Release
     // CI supplies WXT_EXTENSION_KEY to use its distinct release identity.
     key: extensionKey,
-    permissions: ["storage", "alarms", "nativeMessaging"],
+    // Opening the action grants temporary access to the selected tab URL,
+    // which scopes popup package suggestions to the page the user is viewing.
+    permissions: ["storage", "alarms", "nativeMessaging", "activeTab"],
     // The 128 asset doubles as the Chrome Web Store icon.
     icons: {
       16: "icons/16.png",

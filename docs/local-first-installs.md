@@ -4,8 +4,8 @@
 > (docs/DECISIONS.md 2026-07-25). The storage model, local page-load path, install
 > bridge, revocation feed, domain sync, registry-backed suggestions, and install-count
 > retirement all landed; what remains is the permission surgery that makes
-> content-script injection per-origin. `ARCHITECTURE.md`, `docs/erd.md` and
-> `apps/web/components/landing/mode-flows.ts` now describe the post-step-6 world.
+> content-script injection per-origin. `ARCHITECTURE.md` and `docs/erd.md` now
+> describe the post-step-6 world; the landing page's mode-flow UI matches too.
 
 **The decision:** installed packages move into the extension's `chrome.storage.local`. No
 account is required to consume. Authentication is required only to publish.
@@ -30,9 +30,9 @@ Three facts about the extension as built:
    **Install therefore has no effect on what registers**: any package anyone published for a
    site you visit auto-registers, installed or not, account or not.
 
-Two landing-page trust claims are false because of (3) — `apps/web/app/page.tsx:194` ("Nothing
-shows up on a page you didn't already read") and `:198` ("Your install is pinned to one
-version"). Local installs make both true by construction rather than by promise:
+Two landing-page trust claims are false because of (3) — "Nothing shows up on a page you
+didn't already read" and "Your install is pinned to one version". Local installs make both
+true by construction rather than by promise:
 
 | Property                  | Today                                             | After                                     |
 | ------------------------- | ------------------------------------------------- | ----------------------------------------- |
@@ -126,8 +126,8 @@ Concretely:
   (`packages/schema/src/url-matching.ts:151`); `installCount` is serialized
   (`apps/web/lib/serialize.ts:28`) and displayed, but no code path has ever ordered by it —
   `apps/web/lib/lookup.ts:33` ranks by specificity and browse orders by `updatedAt`
-  (`apps/web/lib/packages-repo.ts:84`). `ARCHITECTURE.md:180` and `mode-flows.ts:77` overstate
-  this today; §7 resolves it.
+  (`apps/web/lib/packages-repo.ts:84`). `ARCHITECTURE.md`'s "Trust = install count" note and
+  the landing mode-flow UI overstate this today; §7 resolves it.
 
 **Keep the lookup in the background worker**, even though `storage.local` is readable from
 content scripts. One in-memory index cache shared by every tab beats N per-frame reads, the
@@ -293,9 +293,8 @@ The reasoning, in order of weight:
 2. It changes no ordering anywhere. `rankPackagesByUrl` ignores it
    (`packages/schema/src/url-matching.ts:151`), lookup ranks by specificity
    (`apps/web/lib/lookup.ts:33`), browse orders by `updatedAt`
-   (`apps/web/lib/packages-repo.ts:84`). It is displayed in three places only:
-   `apps/web/app/(registry)/packages/page.tsx:47`, `packages/[id]/page.tsx:37`, and the landing
-   hero sum (`apps/web/app/page.tsx:36`).
+   (`apps/web/lib/packages-repo.ts:84`). It is displayed in a few places only —
+   the browse and package pages, and the landing hero sum.
 3. Six packages, zero users. The number carries no information today, and the cheap version
    (a counter table plus a public unauthenticated `POST`) buys a number nobody can trust.
 
@@ -316,8 +315,7 @@ problems.
 
 With sync deferred, a terminal agent's `install_package` writes an `installs` row that no browser
 reads. The tool (`packages/mcp/src/write-tools.ts`) currently promises an effect it does not
-have — the landing copy says so explicitly at
-`apps/web/components/landing/mode-flows.ts:83`.
+have — the landing page's mode-flow copy says so explicitly.
 
 **Recommendation: keep the tool, re-scope the description, and add a handoff link.** The MCP
 package tools were freely renamed pre-publish (see `docs/DECISIONS.md` 2026-07-26) — nothing is
@@ -337,8 +335,8 @@ server change plus a query-param branch on the package page, and it makes Mode 0
 end-to-end with no sync: the agent finds or authors the package and pins it; the human's click
 is the consent step, which is where consent belongs anyway.
 
-Landing copy to rewrite **when the code lands**: `mode-flows.ts:83`–`:90` (the `api → ext` step
-describing the install pin).
+Landing copy to rewrite **when the code lands**: the landing mode-flow UI's `api → ext` step
+describing the install pin.
 
 ## 9. Dropping `<all_urls>`
 
@@ -409,7 +407,7 @@ Ordered. "Blast radius" is what breaks if the step is wrong.
 | 5   | **Domain list** — `GET /api/domains`, alarm, popup "N packages available here"                                                                                                                                     | `apps/web`, `apps/extension`        | Low: cosmetic if it fails; nothing depends on it                                     |
 | 6   | **Drop install count; reword MCP tools; handoff link** — stop populating `installCount`, stats route, browse/detail UI, `write-tools.ts:50`–`:83` descriptions, `install_package` returns the link                 | `apps/web`, `packages/mcp`          | Low, but `packages/mcp` is published — needs a changeset                             |
 | 7   | **Drop `<all_urls>`** (§9) — `optional_host_permissions`, popup grant flow, `registerContentScripts`, `permissions.onRemoved`, `declarativeContent` discovery                                                      | `apps/extension`                    | Highest: changes install UX and the CWS warning set                                  |
-| 8   | **Docs, when the code lands** (below)                                                                                                                                                                              | docs + `mode-flows.ts` + `page.tsx` | Documentation drift is the failure mode this row exists to prevent                   |
+| 8   | **Docs, when the code lands** (below)                                                                                                                                                                              | docs + landing copy + `page.tsx`    | Documentation drift is the failure mode this row exists to prevent                   |
 
 Steps 3 and 4 are the pair a user cannot receive separately: after 3 the extension has an empty
 install set and no way to fill it. Ship them as two PRs in one release.
@@ -417,17 +415,16 @@ install set and no way to fill it. Ship them as two PRs in one release.
 **Step 8, explicitly** — each of these describes today's design correctly and must change only
 when the matching step ships:
 
-- `ARCHITECTURE.md` "Runtime flow — tool registration" (`:85`–`:121`, the registry fetch and the
-  bundled-fallback branch) and "Data flow — publish, install, serve" (`:161`–`:190`, the
-  `installs`-pin story), plus "Trust = install count" (`:214`).
-- `docs/erd.md` reading notes — the derived-trust note (`:138`) and the `installs` double-duty
-  claim (`:140`).
-- `apps/web/components/landing/mode-flows.ts:83`–`:90`; and the two TrustFacts at
-  `apps/web/app/page.tsx:174`, `:178` — which step 3+4 finally make true, so they
+- `ARCHITECTURE.md` "Runtime flow — tool registration" (the registry fetch and the
+  bundled-fallback branch) and "Data flow — publish, install, serve" (the
+  `installs`-pin story), plus "Trust = install count".
+- `docs/erd.md` reading notes — the derived-trust note and the `installs` double-duty claim.
+- The landing mode-flow UI's install-step copy; and the two TrustFacts about
+  nothing showing up unread and installs being pinned — which step 3+4 finally make true, so they
   stop being aspirational rather than getting deleted.
-- `apps/extension/AGENTS.md` — the silent-fallback trap, the reddit-exclusion debugging signal
-  (`:51`), and the structure notes describing the background fetch (`:60`).
-- `apps/web/AGENTS.md` "Registry model (the served truth)" — the installs/pin paragraph (`:30`).
+- `apps/extension/AGENTS.md` — the silent-fallback trap, the reddit-exclusion debugging signal,
+  and the structure notes describing the background fetch.
+- `apps/web/AGENTS.md` "Registry model (the served truth)" — the installs/pin paragraph.
 
 ## Open questions
 

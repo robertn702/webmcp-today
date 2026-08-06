@@ -61,7 +61,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   Chrome's 1.5K is guidance, not enforcement, and the right budget is model-dependent
   (a 1M-context model should be far less conservative than a 256K one), so a single
   hard cap was the wrong default. Publish-time metadata caps (name 30, tool description
-  500, param description 150) are untouched and stay hard. The `returns` projection is
+  500, param description 1000) are untouched and stay hard. The `returns` projection is
   still valuable for output density, just not for fitting a fixed budget. The budget
   question is **deferred, not answered** (`docs/BACKLOG.md`).
 
@@ -211,14 +211,18 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   at build time. Rejected: a build-time constant for the fetch origin — it would be
   wrong in exactly the environment we test in.
 
-- 2026-07-28 — **Popup suggestions come from `GET /api/packages?pageSize=6`, not a
-  bundled `@webmcp-today/curated-packages` fallback.** Bundled packages are
-  `CreatePackageInput` — no `id`/`versionId` — so routing them through the local
-  install path would need synthetic ids that can never be revoked or updated. Fetching
-  the registry's own browse endpoint leaks nothing (no URL is involved), shows real
-  installable packages, keeps a single install path, and drops a dependency and ~30 KB
-  of bundle. Rejected: demoting the bundle to a first-run suggestion list — it would
-  have required a parallel install path with weaker guarantees than the registry one.
+- 2026-07-28 — **Popup suggestions come from `GET /api/packages/lookup?url=`, scoped to
+  the active tab, not a bundled `@webmcp-today/curated-packages` fallback.** Bundled
+  packages are `CreatePackageInput` — no `id`/`versionId` — so routing them through the
+  local install path would need synthetic ids that can never be revoked or updated.
+  Fetching the site-scoped lookup shows real installable packages, keeps a single
+  install path, and drops a dependency and ~30 KB of bundle. The `url` sent is
+  `origin + pathname` only — credentials, ports, search and fragments are stripped, so
+  suggestion lookups never leak secrets. Rejected: demoting the bundle to a first-run
+  suggestion list — it would have required a parallel install path with weaker
+  guarantees than the registry one. (An earlier draft of this decision used the
+  URL-free `?pageSize=6` browse endpoint; scoping suggestions to the active page won —
+  `4288c97` / #98.)
 
 - 2026-07-28 — **The revocations feed carries a `latest` field so the client cursor
   can self-heal.** `revocations.id` is a `bigserial` that restarts at 1 after a DB

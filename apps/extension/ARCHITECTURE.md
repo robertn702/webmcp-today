@@ -55,8 +55,10 @@ flowchart TB
 ```
 
 - **Background worker — the librarian.** Owns `chrome.storage.local`, handles
-  installs, resolves lookups, and makes _all_ of the extension's network calls (three
-  polls, on `chrome.alarms`). Never touches a page.
+  installs, resolves lookups, and makes the extension's registry-network calls (a
+  revocation poll, a domain-list poll, and on-demand popup lookups) on
+  `chrome.alarms`. Same-origin site API calls run in the content script. Never
+  touches a page.
 - **Content script — the registrar + executor.** Runs at `document_idle` on every
   page, asks the background "anything installed for this URL?", registers surviving
   tools with the page's WebMCP API, and executes them when an agent calls. All
@@ -175,13 +177,15 @@ flowchart LR
 
 ### ⑤ Safety & discovery flow — background polling → popup
 
-_The only network calls the extension makes, all on timers._
+_Registry polling runs on `chrome.alarms`; popup suggestions are fetched on demand
+when the popup opens. Page loads never hit the network — the background resolves
+every URL from `chrome.storage.local`._
 
 ```mermaid
 flowchart LR
-    ALARM["chrome.alarms<br/>(6h + startup + popup-open)"] --> REV["revocations.ts<br/>(GET /api/revocations?since=cursor)"]
+    ALARM["chrome.alarms<br/>(revocation + domain polls)"] --> REV["revocations.ts<br/>(GET /api/revocations?since=cursor)"]
     ALARM --> DOMS["domains.ts<br/>(GET /api/domains — badge)"]
-    ALARM --> SUG["suggestions.ts<br/>(popup discovery section)"]
+    POPUP["popup open"] --> SUG["suggestions.ts<br/>(on-demand lookup)"]
     REV --> ST[("chrome.storage.local")]
     DOMS --> ST
 ```
