@@ -112,4 +112,10 @@ describe("local bridge MCP tool handlers", () => {
     expect(executeWebmcpToolDescription).toContain("dispatch-failed");
     expect(executeWebmcpToolDescription).toContain("did not run and can be retried");
   });
+
+  it("guides the model to recover when the active tab changes", () => {
+    expect(executeWebmcpToolDescription).toContain("user-selected active visible Chrome/Brave tab");
+    expect(executeWebmcpToolDescription).toContain("tab is not eligible or available");
+    expect(executeWebmcpToolDescription).toContain("focus the target browser tab");
+  });
 });
