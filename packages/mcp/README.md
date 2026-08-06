@@ -17,20 +17,22 @@ destructive package tool still blocks on the browser's `window.confirm`.
 
 ## macOS setup
 
-The first-party native bridge supports macOS Chrome and Brave. Once this package is
-published, install it globally with Node 20 or newer. Bridge setup intentionally rejects
-ephemeral package-manager caches:
+The first-party native bridge supports macOS Chrome and Brave. With Node 20 or newer,
+configure your MCP client to invoke the pinned package through `npx`; it downloads the
+bridge on demand and copies the native host into a durable user-owned location during setup:
 
 ```bash
-npm install --global @webmcp-today/mcp-bridge@0.1.1
-webmcp-today-mcp
+npx --yes @webmcp-today/mcp-bridge@0.1.2
 ```
 
-Configure your MCP client to run `webmcp-today-mcp`, then restart it. Ask it to call
+Configure your MCP client to run `npx --yes @webmcp-today/mcp-bridge@0.1.2`, then restart it. Ask it to call
 `setup_webmcp_bridge` with `confirm: true` and `browser: "chrome"` (or `"brave"`).
 The tool copies the bundled host to `~/.config/webmcp-today/native-host-public` and writes
 only WebMCP Today's native-messaging manifest(s). Setup uses the official release extension
 ID by default; its only override is the documented development ID.
+
+Bun is unsupported for native-host setup; use Node rather than `bunx`. See
+[issue #127](https://github.com/robertn702/webmcp-today/issues/127).
 
 Use `get_webmcp_bridge_status` to inspect the installation. It reports paths and
 permissions but never exposes the bridge secret. Use `uninstall_webmcp_bridge` with
@@ -84,7 +86,8 @@ remote-debugging launch argument; it does not change WebMCP browser support.
 
 ## Packaging remaining
 
-This is a macOS-only Node development host, not a signed installer. The installer
+The published bridge package is public beta. Its native host is an unsigned, macOS-only
+Node-launched development host, not a signed installer. The installer
 writes a user-owned executable wrapper containing Node's absolute path so Chrome
 or Brave can launch it from Finder or the Dock. Native-host manifests and their
 wrappers are readable/executable (`0644`/`0755`) because Chromium's sandboxed

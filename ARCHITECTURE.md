@@ -66,6 +66,8 @@ flowchart LR
   install packages without a browser. It also exposes a narrow local bridge to
   list and execute live WebMCP tools in the user's selected browser tab. The
   native host only relays zod-validated messages; it is not a CDP/HTTP proxy. Its
+  pinned `npx` command runs under Node; setup may source the bundled host from the
+  ephemeral npx cache but copies it durably to `~/.config/webmcp-today`.
   stable discovery symlink is atomically replaced only when a session starts; shutdown
   removes only that session's private socket/config, so connection success determines
   availability rather than the presence of a potentially stale discovery path.

@@ -70,7 +70,7 @@ describe("public macOS native-host installer", () => {
     ).rejects.toThrow("official release or development");
   });
 
-  it("rejects non-macOS, Bun, and ephemeral package-cache setup before writing", async () => {
+  it("rejects non-macOS and Bun setup before writing", async () => {
     const linux = await testDeps({ platform: "linux" });
     await expect(installBridge(linux.deps, { browser: "chrome" })).rejects.toThrow("macOS only");
     await expect(getBridgeStatus(linux.deps, { browser: "chrome" })).rejects.toThrow("macOS only");
@@ -78,14 +78,34 @@ describe("public macOS native-host installer", () => {
 
     const bun = await testDeps({ isBun: true });
     await expect(installBridge(bun.deps, { browser: "chrome" })).rejects.toThrow("Node, not Bun");
+  });
 
-    const cached = await testDeps({
-      packageRoot: "/tmp/.npm/_npx/abc/node_modules/@webmcp-today/mcp-bridge",
-    });
-    await expect(installBridge(cached.deps, { browser: "chrome" })).rejects.toThrow("ephemeral");
-    await expect(
-      stat(path.join(cached.homeDirectory, ".config", "webmcp-today")),
-    ).rejects.toThrow();
+  it("copies a host from an ephemeral npx cache into durable bridge paths", async () => {
+    const cacheDirectory = await mkdtemp(path.join(tmpdir(), "webmcp-today-npx-cache-"));
+    temporaryDirectories.push(cacheDirectory);
+    const packageRoot = path.join(
+      cacheDirectory,
+      ".npm",
+      "_npx",
+      "7f25b4d2",
+      "node_modules",
+      "@webmcp-today",
+      "mcp-bridge",
+    );
+    const { deps, homeDirectory } = await testDeps({ packageRoot });
+
+    const installation = await installBridge(deps, { browser: "chrome" });
+
+    expect(await readFile(installation.hostPath, "utf8")).toBe("export {};\n");
+    expect(installation.hostPath).toBe(
+      path.join(homeDirectory, ".config", "webmcp-today", "native-host-public"),
+    );
+    await expect(stat(installation.wrapperPath)).resolves.toBeDefined();
+    await expect(stat(installation.manifestPath)).resolves.toBeDefined();
+    expect(await readFile(installation.wrapperPath, "utf8")).toContain(installation.hostPath);
+    expect(JSON.parse(await readFile(installation.manifestPath, "utf8")).path).toBe(
+      installation.wrapperPath,
+    );
   });
 
   it("reports known manifest identity and sane installation status", async () => {
@@ -278,9 +298,10 @@ async function testDeps(
 ) {
   const homeDirectory = await mkdtemp(path.join(tmpdir(), "webmcp-today-public-host-"));
   temporaryDirectories.push(homeDirectory);
-  const packageRoot = await mkdtemp(path.join(process.cwd(), ".native-host-package-"));
-  temporaryDirectories.push(packageRoot);
-  await fs.mkdir(path.join(packageRoot, "dist"));
+  const packageRoot =
+    overrides.packageRoot ?? (await mkdtemp(path.join(process.cwd(), ".native-host-package-")));
+  if (overrides.packageRoot === undefined) temporaryDirectories.push(packageRoot);
+  await fs.mkdir(path.join(packageRoot, "dist"), { recursive: true });
   await writeFile(path.join(packageRoot, "dist", "native-host.standalone.js"), "export {};\n");
   return {
     homeDirectory,

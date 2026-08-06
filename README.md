@@ -9,14 +9,14 @@ The registry is live at [webmcp.today](https://webmcp.today).
 
 ## Packages
 
-| Path              | What                                                                                                     |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| `packages/schema` | `@webmcp-today/schema` — zod package format (local pre-launch)                                           |
-| `packages/engine` | `@webmcp-today/engine` — API execution engine (local pre-launch)                                         |
-| `packages/db`     | Drizzle + Neon schema and client                                                                         |
-| `packages/mcp`    | `@webmcp-today/mcp-bridge` — registry MCP server + local bridge for live WebMCP tools (local pre-launch) |
-| `apps/web`        | Next.js registry UI + public REST API                                                                    |
-| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                                                    |
+| Path              | What                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| `packages/schema` | `@webmcp-today/schema` — published zod package format                                                       |
+| `packages/engine` | `@webmcp-today/engine` — API execution engine (local pre-launch)                                            |
+| `packages/db`     | Drizzle + Neon schema and client                                                                            |
+| `packages/mcp`    | `@webmcp-today/mcp-bridge` — published public-beta registry MCP server + local bridge for live WebMCP tools |
+| `apps/web`        | Next.js registry UI + public REST API                                                                       |
+| `apps/extension`  | WXT extension: package lookup + WebMCP tool injection                                                       |
 
 ## Quickstart
 
@@ -36,7 +36,7 @@ cd apps/extension && bun run dev
 
 ## Development
 
-**Prerequisites:** `bun@1.3.14` (pinned in root `package.json` `packageManager`), Node for Next.js/WXT and some CLIs.
+**Prerequisites:** `bun@1.3.14` (pinned in root `package.json` `packageManager`), Node for Next.js/WXT and some CLIs. The local MCP bridge requires Node 20 or newer.
 
 **Setup:**
 
@@ -59,7 +59,7 @@ bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:se
 
 - Web: `cd apps/web && bun run dev` → `http://localhost:3000` (Next.js). Extension's default registry URL points here.
 - Extension: `cd apps/extension && bun run dev` → WXT dev server on `http://localhost:5173`, launches a dedicated Chrome profile at `.wxt/chrome-profile/` with `--enable-features=WebMCP,WebMCPTesting` force-enabled (`chrome://flags` still shows "Default" — check `chrome://version`). One instance only — second crashes on profile lock and corrupts `.output/`. Model Context Tool Inspector is installed once into that profile and persists.
-- Local bridge: configure the native host in `packages/mcp/README.md`, then start `bun packages/mcp/dist/index.js`. Its MCP tools invoke live WebMCP tools in the selected normal Chrome tab without Chrome DevTools MCP, a remote-debugging port, or `chrome.debugger`. The WebMCP testing flag remains required in the current browser preview.
+- Local bridge: configure the native host in `packages/mcp/README.md`, then start `node packages/mcp/dist/index.js`. Its MCP tools invoke live WebMCP tools in the selected normal Chrome tab without Chrome DevTools MCP, a remote-debugging port, or `chrome.debugger`. The WebMCP testing flag remains required in the current browser preview.
 - Ports: web 3000 / WXT 5173. Find strays with `lsof -nP -i :3000 -i :5173`; killing a bun wrapper does NOT kill its node child.
 
 **Quality gates:** `bun run typecheck && bun run lint && bun run test` before every commit — same as CI (`.github/workflows/ci.yml` via `oven-sh/setup-bun@v2` `1.3.14` + `--frozen-lockfile`). Pre-commit runs `husky` + `lint-staged` (eslint + prettier on staged source, prettier on json/md/css/yaml) and enforces `CLAUDE.md -> AGENTS.md` symlink drift.

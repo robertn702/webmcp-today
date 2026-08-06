@@ -239,7 +239,6 @@ export async function installBridge(
   }: InstallBridgeOptions,
 ): Promise<InstallBridgeResult> {
   assertMacos(deps);
-  assertPersistentPackageRoot(deps.packageRoot);
   assertPublicExtensionId(extensionId);
 
   const sourceHostPath = deps.path.join(deps.packageRoot, "dist", "native-host.standalone.js");
@@ -386,25 +385,10 @@ export async function uninstallBridge(
   };
 }
 
-export function isPersistentPackageRoot(packageRoot: string): boolean {
-  const normalized = packageRoot.replaceAll("\\", "/");
-  return !["/.npm/_npx/", "/.bun/install/cache/", "/pnpm/.pnpm/", "/tmp/"].some((indicator) =>
-    normalized.includes(indicator),
-  );
-}
-
 function assertMacos(deps: Pick<NativeHostInstallerDeps, "platform" | "isBun">): void {
   if (deps.platform !== "darwin")
     throw new Error("The WebMCP Today bridge setup supports macOS only.");
   if (deps.isBun) throw new Error("The WebMCP Today bridge setup must run under Node, not Bun.");
-}
-
-function assertPersistentPackageRoot(packageRoot: string): void {
-  if (!isPersistentPackageRoot(packageRoot)) {
-    throw new Error(
-      "The WebMCP Today bridge cannot be installed from an ephemeral package-manager cache. Install the MCP package persistently, then retry.",
-    );
-  }
 }
 
 function assertExtensionId(extensionId: string): void {
