@@ -1,0 +1,135 @@
+name: Publish npm packages
+
+# Tag-triggered, decoupled from the extension release tag. Publish the next
+# version of @webmcp-today/schema + @webmcp-today/mcp-bridge with:
+#   git tag npm-v0.1.2 && git push origin npm-v0.1.2
+# The tag version must equal both publishable package versions and the bridge
+# must pin the same schema version — check-npm-release.mjs enforces all three
+# and fails the run rather than publishing a mismatched set. The tag is
+# protected by a tag ruleset, so it can only be cut from a reviewed commit.
+#
+# npm authentication is GitHub Actions OIDC Trusted Publishing: the job
+# exchanges its id-token for an npm publication identity. No npm token, no
+# NODE_AUTH_TOKEN, no --otp anywhere. Only works on a GitHub-hosted runner
+# with npm >= 11.5.1 and Node >= 22.14.0 (both pinned below).
+# docs/release-security.md is the runbook for the one-time npmjs and GitHub
+# configuration this depends on.
+on:
+  push:
+    tags: ["npm-v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing npm-v* tag to publish (must equal the ref this runs from)
+        required: true
+      packages:
+        description: Which packages to publish
+        type: choice
+        default: both
+        options:
+          - both
+          # Recovery for the schema-published / mcp-failed case: re-runs the
+          # bridge publish only, with a guard that the schema version is
+          # already public. Republishing schema over an existing version fails,
+          # so a plain re-run cannot reach this state's fix.
+          - mcp
+      dry-run:
+        description: Pack and validate install/gates/build without uploading to npm (does not verify OIDC trust)
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Protected environment (required reviewer) and the npm Trusted Publisher
+    # must agree on this name: it is part of the OIDC subject npm checks.
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Resolve a dispatch input as a tag, never a same-named branch.
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          # Do not leave the repository token in .git/config for dependency
+          # scripts invoked by install, checks, or the pack lifecycle.
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          # Trusted publishing requires Node >= 22.14.0 (npm docs); the 24
+          # major rides LTS and clears the floor. registry-url is deliberately
+          # unset — it would write an empty _authToken into ~/.npmrc and
+          # suppress npm's OIDC fallback.
+          node-version: "24"
+
+      # Fail before the ~install: the check only needs the tag and the two
+      # committed package.json files.
+      - name: Check tag matches package versions
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            # The executed workflow file and the OIDC subject must both come
+            # from the protected tag. Running dispatch from a branch would
+            # execute an unreviewed copy of this file with the same publishing
+            # identity — this guard is defense in depth; the npm-publish
+            # environment's tag-only deployment scope is the authoritative
+            # barrier (docs/release-security.md).
+            if [ "$GITHUB_REF_TYPE" != "tag" ] || [ "$GITHUB_REF_NAME" != "$RELEASE_TAG" ]; then
+              echo "::error::workflow_dispatch must run from the release tag itself (selected ref must be $RELEASE_TAG)"
+              exit 1
+            fi
+          fi
+          node scripts/check-npm-release.mjs "$RELEASE_TAG"
+
+      # npm's OIDC trusted-publisher flow needs >= 11.5.1; the runner's stock
+      # npm is older. Installed fresh on every run from the public registry —
+      # no credentials involved.
+      - name: Install npm CLI for Trusted Publishing
+        run: npm install --global npm@11.5.1
+
+      - run: bun install --frozen-lockfile
+
+      # A tag can be cut from any commit, so re-run the gates rather than
+      # trusting main's green run.
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+      - run: node --test scripts/check-npm-release.test.mjs
+
+      - name: Build MCP bridge for publish
+        # The trailing "..." includes the schema dependency in the build, so
+        # the bridge's packed dist comes from this commit's schema.
+        run: bunx turbo run build --filter=@webmcp-today/mcp-bridge...
+
+      # Recovery guard: a packages=mcp re-run must not silently re-upload an
+      # already-published schema, so fail loudly if the tag's schema version is
+      # absent from the registry instead.
+      - name: Verify schema version is already published
+        if: inputs.packages == 'mcp'
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          version="${RELEASE_TAG#npm-v}"
+          if ! npm view "@webmcp-today/schema@${version}" >/dev/null 2>&1; then
+            echo "::error::packages=mcp recovery run but @webmcp-today/schema@${version} is not published — run packages=both first"
+            exit 1
+          fi
+
+      # Publish schema first: the bridge installs against the exact schema
+      # version, which must already be public when the bridge's dependency
+      # resolves. A push-tag run (no inputs) always means both packages.
+      - name: Publish @webmcp-today/schema
+        if: inputs.packages != 'mcp'
+        working-directory: packages/schema
+        run: npm publish --access public ${{ inputs['dry-run'] == true && '--dry-run' || '' }}
+
+      - name: Publish @webmcp-today/mcp-bridge
+        working-directory: packages/mcp
+        run: npm publish --access public ${{ inputs['dry-run'] == true && '--dry-run' || '' }}
