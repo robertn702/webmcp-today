@@ -119,7 +119,7 @@
     },
     "packages/mcp": {
       "name": "@webmcp-today/mcp-bridge",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "bin": {
         "webmcp-today-mcp": "./dist/index.js",
       },
@@ -137,7 +137,7 @@
     },
     "packages/schema": {
       "name": "@webmcp-today/schema",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "dependencies": {
         "@jmespath-community/jmespath": "1.3.0",
         "@noble/hashes": "^2.2.0",

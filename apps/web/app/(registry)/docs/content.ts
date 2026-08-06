@@ -6,9 +6,10 @@ export const REDDIT_PACKAGE_DOMAIN = "reddit.com";
 export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
-export const INSTALL_MCP_BRIDGE = "npm install --global @webmcp-today/mcp-bridge@0.1.1";
-export const DOWNLOAD_EXTENSION = `curl -L -O ${EXTENSION_RELEASE_URL}
-unzip webmcp-today-extension.zip -d webmcp-today-extension`;
+export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.1.2";
+export const MCP_BRIDGE_NODE_ISSUE_URL = "https://github.com/robertn702/webmcp-today/issues/127";
+export const DOWNLOAD_EXTENSION = `curl -L ${EXTENSION_RELEASE_URL} -o ~/Downloads/webmcp-today-extension.zip
+unzip ~/Downloads/webmcp-today-extension.zip -d ~/Downloads/webmcp-today-extension`;
 
 export const MCP_CLIENT_CONFIGS = [
   {
@@ -22,7 +23,7 @@ export const MCP_CLIENT_CONFIGS = [
   "mcp": {
     "webmcp-today": {
       "type": "local",
-      "command": ["webmcp-today-mcp"]
+      "command": ["npx", "--yes", "${MCP_BRIDGE_PACKAGE}"]
     }
   }
 }`,
@@ -33,7 +34,7 @@ export const MCP_CLIENT_CONFIGS = [
     location: "your terminal",
     instruction: "Run this once in your terminal:",
     format: "sh",
-    configuration: "claude mcp add --transport stdio --scope user webmcp-today -- webmcp-today-mcp",
+    configuration: `claude mcp add --transport stdio --scope user webmcp-today -- npx --yes ${MCP_BRIDGE_PACKAGE}`,
   },
   {
     id: "codex",
@@ -42,7 +43,8 @@ export const MCP_CLIENT_CONFIGS = [
     instruction: "Add this to",
     format: "toml",
     configuration: `[mcp_servers.webmcp-today]
-command = "webmcp-today-mcp"`,
+command = "npx"
+args = ["--yes", "${MCP_BRIDGE_PACKAGE}"]`,
   },
   {
     id: "cursor",
@@ -54,7 +56,8 @@ command = "webmcp-today-mcp"`,
   "mcpServers": {
     "webmcp-today": {
       "type": "stdio",
-      "command": "webmcp-today-mcp"
+      "command": "npx",
+      "args": ["--yes", "${MCP_BRIDGE_PACKAGE}"]
     }
   }
 }`,
@@ -69,7 +72,8 @@ command = "webmcp-today-mcp"`,
   "servers": {
     "webmcp-today": {
       "type": "stdio",
-      "command": "webmcp-today-mcp"
+      "command": "npx",
+      "args": ["--yes", "${MCP_BRIDGE_PACKAGE}"]
     }
   }
 }`,
@@ -108,19 +112,13 @@ ${DOWNLOAD_EXTENSION}
 
 ## 2. Install and configure the bridge
 
-1. Run:
-
-\`\`\`sh
-${INSTALL_MCP_BRIDGE}
-\`\`\`
-
-2. Add a local stdio MCP server named \`webmcp-today\` that runs \`webmcp-today-mcp\` to the configuration for the client I use. Preserve my other MCP servers.
+1. Add a local stdio MCP server named \`webmcp-today\` that runs \`npx --yes ${MCP_BRIDGE_PACKAGE}\` to the configuration for the client I use. This downloads the pinned bridge on demand without a global install. Use \`npx\`, not \`bunx\`, because bridge setup requires Node; see ${MCP_BRIDGE_NODE_ISSUE_URL}. Preserve my other MCP servers.
 
 ${MCP_CLIENT_CONFIG_PROMPT}
 
-3. Have me restart or reload that MCP client.
-4. Call \`setup_webmcp_bridge\` with \`{"browser":"chrome","confirm":true}\`. Use \`"brave"\` instead of \`"chrome"\` if I use Brave. This confirmation-gated tool is the only bridge-install step; do not run a manual installer command.
-5. Call \`get_webmcp_bridge_status\`. If it is not ready, diagnose the returned bridge-owned paths and permissions before proceeding.
+2. Have me restart or reload that MCP client.
+3. Call \`setup_webmcp_bridge\` with \`{"browser":"chrome","confirm":true}\`. Use \`"brave"\` instead of \`"chrome"\` if I use Brave. This confirmation-gated tool is the only bridge-install step; do not run a manual installer command.
+4. Call \`get_webmcp_bridge_status\`. If it is not ready, diagnose the returned bridge-owned paths and permissions before proceeding.
 
 ## 3. Install Reddit in the selected tab
 

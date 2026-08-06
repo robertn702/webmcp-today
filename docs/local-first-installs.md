@@ -317,12 +317,11 @@ With sync deferred, a terminal agent's `install_package` writes an `installs` ro
 reads. The tool (`packages/mcp/src/write-tools.ts`) currently promises an effect it does not
 have — the landing page's mode-flow copy says so explicitly.
 
-**Recommendation: keep the tool, re-scope the description, and add a handoff link.** The MCP
-package tools were freely renamed pre-publish (see `docs/DECISIONS.md` 2026-07-26) — nothing is
-on npm yet, so there is no "breaks saved agent prompts" cost to weigh here. That freedom won't
-last: once `@webmcp-today/mcp-bridge` actually ships, a rename does break saved agent prompts,
-so treat this as the last free rename. The description is what the model actually reads, so the
-description is what must stop lying:
+**Recommendation: keep the tool, re-scope the description, and add a handoff link.** Now that
+`@webmcp-today/mcp-bridge` is published, its MCP server and tool names are compatibility
+surfaces: renaming either breaks saved agent prompts and client configuration. Preserve names or
+ship an explicit compatibility path; update the descriptions when behavior changes. The
+description is what the model actually reads, so the description is what must stop lying:
 
 > `install_package` — Pin this package to a version **on your webmcp.today account**. This does not
 > install into your browser; the extension's installs are local to the browser. Returns a link

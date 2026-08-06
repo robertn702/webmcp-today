@@ -7,11 +7,11 @@ import { McpClientConfigs } from "@/components/mcp-client-configs";
 import { WebMcpReadiness } from "@/components/webmcp-readiness";
 import {
   DOWNLOAD_EXTENSION,
-  INSTALL_MCP_BRIDGE,
   EXTENSION_RELEASE_URL,
   EXTENSION_RELEASES_URL,
   FIRST_TOOL_NAME,
   FIRST_TOOL_PROMPT,
+  MCP_BRIDGE_NODE_ISSUE_URL,
   QUICKSTART_PROMPT,
   REDDIT_DEMO_URL,
   REDDIT_TOOL_COUNT,
@@ -81,14 +81,22 @@ export default function QuickstartPage() {
         title="Install the MCP bridge and configure your client"
       >
         <p>
-          Install the published MCP bridge globally, then add its command to your MCP client. After
-          restarting the client, ask it to call
+          Add the published MCP bridge to your MCP client with the pinned <Code>npx</Code> command
+          below. It downloads the bridge on demand without a global installation; use{" "}
+          <Code>npx</Code>
+          rather than <Code>bunx</Code> because bridge setup requires Node (see{" "}
+          <a
+            href={MCP_BRIDGE_NODE_ISSUE_URL}
+            className="text-foreground underline underline-offset-4"
+          >
+            issue #127
+          </a>
+          ). After restarting the client, ask it to call
           <Code>setup_webmcp_bridge</Code> with <Code>{'{"browser":"chrome","confirm":true}'}</Code>
           (or use <Code>brave</Code>). The confirmation-gated tool copies the durable host and
           writes only this bridge&apos;s per-user native-messaging manifest; it does not expose an
           HTTP service.
         </p>
-        <CopyBlock label="sh">{INSTALL_MCP_BRIDGE}</CopyBlock>
         <p>
           Select your MCP client, then add the local server without replacing your other MCP
           servers:

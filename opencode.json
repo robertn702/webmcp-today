@@ -3,7 +3,7 @@
   "mcp": {
     "webmcp-today": {
       "type": "local",
-      "command": ["bun", "packages/mcp/dist/index.js"]
+      "command": ["node", "packages/mcp/dist/index.js"]
     }
   }
 }

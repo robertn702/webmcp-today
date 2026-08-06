@@ -9,8 +9,9 @@ implemented WebMCP — "Greasyfork for the agentic web".
   data. Skip production concerns (zero-downtime migrations, backfills, API
   backwards compat).
 - DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
-- **Nothing is published to npm yet** — `packages/schema` and `packages/mcp` are
-  consumed locally only; changesets are not in use pre-launch.
+- **`@webmcp-today/schema` and `@webmcp-today/mcp-bridge` are published**; the bridge
+  is public beta, the other workspace packages remain local, and changesets are not in use
+  pre-launch.
 - Schema changes are squashed into `packages/db/migrations/0000_init.sql`: edit it and
   its meta snapshot in place rather than stacking a migration, then confirm drift-free
   with `drizzle-kit generate` ("No schema changes, nothing to migrate").
@@ -20,11 +21,11 @@ implemented WebMCP — "Greasyfork for the agentic web".
 ```
 apps/web/          Next.js — registry UI + public REST API
 apps/extension/    WXT — package lookup + tool injection
-packages/schema/            @webmcp-today/schema — zod package format (not yet published to npm); keystone, all consumers validate against it
+packages/schema/            @webmcp-today/schema — published zod package format; keystone, all consumers validate against it
 packages/engine/            @webmcp-today/engine — API execution engine (not yet published to npm); MIT, consumed by the extension
 packages/db/                Drizzle + Neon — schema + client
 packages/curated-packages/  @webmcp-today/curated-packages — curated first-party packages (registry seed source)
-packages/mcp/               @webmcp-today/mcp-bridge — MCP server (not yet published to npm)
+packages/mcp/               @webmcp-today/mcp-bridge — published public-beta MCP server
 ```
 
 ## Commands

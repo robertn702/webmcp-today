@@ -21,6 +21,7 @@ import {
   EXTENSION_RELEASES_URL,
   MCP_CLIENT_CONFIGS,
   MCP_CLIENT_CONFIG_PROMPT,
+  MCP_BRIDGE_PACKAGE,
   QUICKSTART_PROMPT,
   REDDIT_DEMO_URL,
   REDDIT_PACKAGE_DOMAIN,
@@ -145,7 +146,8 @@ describe("bridge quickstart", () => {
       "https://github.com/robertn702/webmcp-today/releases/latest/download/webmcp-today-extension.zip",
     );
     expect(DOWNLOAD_EXTENSION).toContain(EXTENSION_RELEASE_URL);
-    expect(DOWNLOAD_EXTENSION).toContain("unzip webmcp-today-extension.zip");
+    expect(DOWNLOAD_EXTENSION).toContain("~/Downloads/webmcp-today-extension.zip");
+    expect(DOWNLOAD_EXTENSION).toContain("~/Downloads/webmcp-today-extension");
     expect(EXTENSION_RELEASES_URL).toBe(
       "https://github.com/robertn702/webmcp-today/releases/latest",
     );
@@ -155,7 +157,7 @@ describe("bridge quickstart", () => {
     expect(QUICKSTART_PROMPT).toContain("Load unpacked");
     expect(QUICKSTART_PROMPT).toContain("## Prerequisites");
     expect(QUICKSTART_PROMPT).toContain("## 4. Verify the live tool call");
-    expect(QUICKSTART_PROMPT).toContain("webmcp-today-mcp");
+    expect(QUICKSTART_PROMPT).toContain(`npx --yes ${MCP_BRIDGE_PACKAGE}`);
     expect(QUICKSTART_PROMPT).toContain(MCP_CLIENT_CONFIG_PROMPT);
     expect(QUICKSTART_PROMPT).toContain("execute_webmcp_tool");
     expect(FIRST_TOOL_PROMPT).toContain("execute_webmcp_tool");
@@ -168,16 +170,16 @@ describe("bridge quickstart", () => {
     ]);
     expect(MCP_CLIENT_CONFIGS.map((client) => client.configuration)).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('"command": ["webmcp-today-mcp"]'),
+        expect.stringContaining(`"command": ["npx", "--yes", "${MCP_BRIDGE_PACKAGE}"]`),
         expect.stringContaining("claude mcp add --transport stdio"),
-        expect.stringContaining('command = "webmcp-today-mcp"'),
+        expect.stringContaining('command = "npx"'),
         expect.stringContaining('"type": "stdio"'),
       ]),
     );
     expect(QUICKSTART_PROMPT).toContain("setup_webmcp_bridge");
     expect(QUICKSTART_PROMPT).toContain("get_webmcp_bridge_status");
-    expect(QUICKSTART_PROMPT).toContain("npm install --global @webmcp-today/mcp-bridge@0.1.1");
-    expect(QUICKSTART_PROMPT).not.toContain("bun install");
+    expect(QUICKSTART_PROMPT).toContain(`npx --yes ${MCP_BRIDGE_PACKAGE}`);
+    expect(QUICKSTART_PROMPT).not.toContain("npm install --global");
     expect(QUICKSTART_PROMPT).not.toContain("@webmcp-today/extension...");
   });
 
