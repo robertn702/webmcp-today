@@ -41,7 +41,7 @@ shape changes, it doesn't die.
 
 ## `Permissions-Policy: tools=()` — per-site kill switch (bounded)
 
-A site sets one response header and every `registerTool` call throws
+A site sets one response header and every native `registerTool` call throws
 `SecurityError`. Implemented in Chrome 150, enforced in Blink above the JS
 layer, not bypassable by injected script
 ([#178](https://github.com/webmachinelearning/webmcp/issues/178) — filed by a
@@ -57,11 +57,16 @@ write tools.
 An extension could strip the header via `declarativeNetRequest`. **Decision
 2026-07-24: we don't**. It lowers the site's security posture
 for all scripts, not just ours; it's the pattern CWS review exists to catch;
-and the platform sides with the site if it escalates. Instead: catch the
-`SecurityError`, mark the package site-blocked in the UI, treat those domains as
-first-party-outreach candidates (feeds the "show official webmcps" item).
-Note `tools=()` only blocks the WebMCP transport — classic content-script
-automation still works on those pages.
+and the platform sides with the site if it escalates. Native mode catches the
+`SecurityError` and marks the package site-blocked in the UI. The built-in
+in-memory fallback checks `document.permissionsPolicy.allowsFeature("tools")`
+and produces that same result only when the policy API recognizes `tools` as a
+supported feature. When WebMCP is disabled, Chromium may report `false` for the
+unknown feature; the fallback bypasses that non-cooperating result so stock
+Chrome still works. Browsers without a usable policy API likewise register
+bridge-only tools; see BACKLOG for the compatibility follow-up. Note `tools=()`
+only blocks the WebMCP transport — classic content-script automation still
+works on those pages.
 
 Watch: `tools=()` graduating into baseline security guidance or framework/CDN
 defaults. That trend — not the header itself — is the existential version.

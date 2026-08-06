@@ -94,6 +94,12 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 
 ### Extension / executor
 
+- **Fallback `tools=()` policy detection** — the bridge-only in-memory WebMCP
+  fallback honors a `false` policy result only when `permissionsPolicy.features()`
+  recognizes `tools`; WebMCP-disabled Chromium can report `false` for an unknown
+  feature, and browsers may omit the API entirely. Re-test as Chrome's policy
+  surface evolves; disable the fallback on that path if a reliable check cannot
+  be made. (docs/platform-risks.md → `Permissions-Policy: tools=()`)
 - **Move `<all_urls>` to `optional_host_permissions`** — drop the static
   `<all_urls>` content script, request broad access at onboarding (or per-site
   from the popup), register content scripts dynamically via

@@ -1,7 +1,13 @@
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { browser } from "wxt/browser";
 import { getPackagesForUrl } from "../lib/packages.js";
-import { getModelContext, getToolConsumerModelContext } from "../lib/model-context.js";
+import {
+  getModelContext,
+  getToolConsumerModelContext,
+  type ModelContextLike,
+  type ToolConsumerModelContextLike,
+} from "../lib/model-context.js";
+import { getOrCreateFallbackModelContext } from "../lib/model-context-fallback.js";
 import { startNavigationWatcher } from "../lib/navigation.js";
 import { runRegistrationPass, type RegistrationDeps } from "../lib/register-tools.js";
 import { STATUS_MESSAGE_TYPE, type PageStatus } from "../lib/status.js";
@@ -14,7 +20,7 @@ export default defineContentScript({
   runAt: "document_idle",
   main() {
     const localBridge = new LocalBridgeContent({
-      getConsumer: getToolConsumerModelContext,
+      getConsumer: getContentModelContext,
       getTitle: () => document.title,
       getUrl: () => window.location.href,
     });
@@ -54,10 +60,39 @@ export default defineContentScript({
 
 const deps: RegistrationDeps = {
   loadPackages: getPackagesForUrl,
-  getModelContext,
+  getModelContext: getContentModelContext,
   siteDeclaredToolNames,
   reportStatus,
 };
+
+let contentModelContext: (ModelContextLike & ToolConsumerModelContextLike) | undefined;
+let didLogFallback = false;
+
+function getContentModelContext(): ModelContextLike & ToolConsumerModelContextLike {
+  if (contentModelContext) return contentModelContext;
+
+  const provider = getModelContext();
+  const consumer = getToolConsumerModelContext();
+  if (isCompleteModelContext(provider, consumer)) {
+    contentModelContext = provider;
+    return contentModelContext;
+  }
+  if (!didLogFallback) {
+    console.info(
+      "[webmcp-today] WebMCP native API absent — using built-in fallback; tools available via the WebMCP Today bridge only",
+    );
+    didLogFallback = true;
+  }
+  contentModelContext = getOrCreateFallbackModelContext();
+  return contentModelContext;
+}
+
+function isCompleteModelContext(
+  provider: ModelContextLike | undefined,
+  consumer: ToolConsumerModelContextLike | undefined,
+): provider is ModelContextLike & ToolConsumerModelContextLike {
+  return provider !== undefined && consumer !== undefined && Object.is(provider, consumer);
+}
 
 /** Tools the site declared itself — ours skip on a name collision. */
 function siteDeclaredToolNames(): Set<string> {
