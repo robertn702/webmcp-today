@@ -95,8 +95,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   Leave it unset locally so the separate development GitHub OAuth App keeps its localhost callback.
 - Dev server owns port 3000 — the extension's default registry URL points here.
   One instance only; check `lsof -nP -i :3000` for strays.
-- `scripts/seed.ts` seeds the curated packages from `@webmcp-today/curated-packages`
-  (currently just the tier-1 Reddit package).
+- `scripts/seed.ts` seeds the curated first-party packages from
+  `@webmcp-today/curated-packages` (the seed set, currently Reddit, Google and HN).
 - Sentry (error monitoring only — no tracing/replay/logs) is wired via
   `instrumentation{,-client}.ts` + `sentry.{server,edge}.config.ts`. The repo is
   source-available, so nothing Sentry-specific is hardcoded: the DSN comes from
