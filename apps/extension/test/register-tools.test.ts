@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { webMcpPackageSchema, type WebMcpPackage } from "@webmcp-today/schema";
 import type { PageLoadPackages } from "../src/lib/local-lookup.js";
 import type { ModelContextLike } from "../src/lib/model-context.js";
+import { getOrCreateFallbackModelContext } from "../src/lib/model-context-fallback.js";
 import { runRegistrationPass, type RegistrationDeps } from "../src/lib/register-tools.js";
 import { WEBMCP_FLAG_URL, type PageStatus } from "../src/lib/status.js";
 
@@ -80,6 +81,7 @@ describe("runRegistrationPass", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("stays silent on a page with no matching packages, without probing WebMCP", async () => {
@@ -114,6 +116,18 @@ describe("runRegistrationPass", () => {
 
     expect(registered).toEqual(["wiki_summary", "wiki_search"]);
     expect(statuses).toEqual([{ kind: "registered", toolNames: ["wiki_summary", "wiki_search"] }]);
+  });
+
+  it("registers tools through the in-memory fallback", async () => {
+    vi.stubGlobal("document", {});
+    vi.stubGlobal("location", { origin: "https://en.wikipedia.org" });
+    const { deps, statuses } = harness([pkg("wiki_fallback")], getOrCreateFallbackModelContext());
+    const controller = new AbortController();
+
+    await runRegistrationPass(PAGE_URL, controller.signal, deps);
+
+    expect(statuses).toEqual([{ kind: "registered", toolNames: ["wiki_fallback"] }]);
+    controller.abort();
   });
 
   it("skips tools that collide with a site-declared tool", async () => {
