@@ -176,7 +176,7 @@ describe("bridge quickstart", () => {
     );
     expect(QUICKSTART_PROMPT).toContain("setup_webmcp_bridge");
     expect(QUICKSTART_PROMPT).toContain("get_webmcp_bridge_status");
-    expect(QUICKSTART_PROMPT).toContain("npm install --global @webmcp-today/mcp-bridge@0.1.0");
+    expect(QUICKSTART_PROMPT).toContain("npm install --global @webmcp-today/mcp-bridge@0.1.1");
     expect(QUICKSTART_PROMPT).not.toContain("bun install");
     expect(QUICKSTART_PROMPT).not.toContain("@webmcp-today/extension...");
   });

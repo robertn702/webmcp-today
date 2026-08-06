@@ -1,6 +1,6 @@
 {
   "name": "@webmcp-today/schema",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Config format for WebMCP Today — zod schemas for community WebMCP tool configs",
   "type": "module",
   "license": "MIT",
