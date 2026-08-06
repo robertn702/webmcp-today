@@ -37,6 +37,12 @@ export async function runRegistrationPass(
   // status, so say nothing.
   if (signal.aborted) return;
 
+  if (blocked === "lookup-failed") {
+    // A transiently unavailable service worker cannot authoritatively say the
+    // page has no packages. Preserve any prior good tab status instead.
+    return;
+  }
+
   if (blocked !== undefined) {
     deps.reportStatus({
       kind: blocked === "no-revocation-list" ? "safety-list-missing" : "storage-unreadable",

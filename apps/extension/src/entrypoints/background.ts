@@ -257,7 +257,7 @@ async function buildPopupState(): Promise<PopupState> {
 
   const tabs = await browser.tabs.query({ active: true, lastFocusedWindow: true });
   const tab = tabs[0];
-  const status = (tab?.id === undefined ? undefined : tabStatus.get(tab.id)) ?? null;
+  let status = (tab?.id === undefined ? undefined : tabStatus.get(tab.id)) ?? null;
   let hostname: string | null = null;
   try {
     hostname = tab?.url ? new URL(tab.url).hostname : null;
@@ -301,6 +301,16 @@ async function buildPopupState(): Promise<PopupState> {
     });
   }
   installs.sort((a, b) => Number(b.matchesTab) - Number(a.matchesTab));
+  // Raw URL matches include revoked and broken installs, but the page lookup
+  // filters those out. Only a usable lookup match contradicts no-packages.
+  if (
+    status?.kind === "no-packages" &&
+    installs.some(
+      (install) => install.matchesTab && install.state !== "revoked" && install.state !== "broken",
+    )
+  ) {
+    status = null;
+  }
 
   // Discovery suggestions replace the old bundled fallback: only fetched (and
   // only ever shown) once nothing installed already covers this tab.
