@@ -1,6 +1,6 @@
 {
   "name": "@webmcp-today/mcp-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for the WebMCP Today registry and local browser bridge — manage packages and list or execute live WebMCP tools",
   "type": "module",
   "license": "MIT",
@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
-    "@webmcp-today/schema": "0.1.0",
+    "@webmcp-today/schema": "0.1.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {

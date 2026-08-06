@@ -22,7 +22,7 @@ published, install it globally with Node 20 or newer. Bridge setup intentionally
 ephemeral package-manager caches:
 
 ```bash
-npm install --global @webmcp-today/mcp-bridge@0.1.0
+npm install --global @webmcp-today/mcp-bridge@0.1.1
 webmcp-today-mcp
 ```
 
