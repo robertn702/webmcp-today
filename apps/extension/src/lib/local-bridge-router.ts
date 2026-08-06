@@ -123,13 +123,15 @@ async function selectedTabIdOrError(
   if (selectedTabId === undefined) {
     return errorResponse(request.requestId, {
       code: "tab-unavailable",
-      message: "No selected browser tab is available.",
+      message:
+        "No active visible browser tab is available. Ask the user to open or focus the target site in their browser.",
     });
   }
   if (selectedTabId !== request.tabId) {
     return errorResponse(request.requestId, {
       code: "tab-not-eligible",
-      message: "The requested tab is not the user's selected visible tab.",
+      message:
+        "The requested tab is not the user's active visible tab. Ask the user to focus the target tab in their browser or navigate to the page in their active tab.",
     });
   }
   return selectedTabId;
@@ -147,7 +149,8 @@ async function contentResponse(
     return {
       error: {
         code: "tab-unavailable",
-        message: "The selected tab no longer has a reachable WebMCP Today content script.",
+        message:
+          "The user's active visible tab is no longer reachable. Ask the user to refresh or focus the target site in their browser, then retry.",
       },
     };
   }

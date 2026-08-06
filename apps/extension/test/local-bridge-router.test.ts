@@ -9,7 +9,7 @@ const document = {
   url: "https://example.com",
 };
 
-function createRouter(selectedTabId = 9) {
+function createRouter(selectedTabId: number | null = 9) {
   const sendToContent = vi.fn(async (_tabId, message: unknown) => {
     if (typeof message === "object" && message !== null) {
       if (Reflect.get(message, "type") === "webmcp-today:local-bridge:execute-tool") {
@@ -30,7 +30,10 @@ function createRouter(selectedTabId = 9) {
     };
   });
   return {
-    router: createLocalBridgeRouter({ getSelectedTabId: async () => selectedTabId, sendToContent }),
+    router: createLocalBridgeRouter({
+      getSelectedTabId: async () => selectedTabId ?? undefined,
+      sendToContent,
+    }),
     sendToContent,
   };
 }
@@ -52,8 +55,34 @@ describe("local bridge router", () => {
         requestId: "request",
         tabId: 10,
       }),
-    ).resolves.toMatchObject({ type: "error", error: { code: "tab-not-eligible" } });
+    ).resolves.toMatchObject({
+      type: "error",
+      error: {
+        code: "tab-not-eligible",
+        message:
+          "The requested tab is not the user's active visible tab. Ask the user to focus the target tab in their browser or navigate to the page in their active tab.",
+      },
+    });
     expect(sendToContent).not.toHaveBeenCalled();
+  });
+
+  it("explains how to recover when no active visible tab is available", async () => {
+    const { router } = createRouter(null);
+    await expect(
+      router.handle({
+        v: LOCAL_BRIDGE_PROTOCOL_VERSION,
+        type: "list-tools",
+        requestId: "request",
+        tabId: 9,
+      }),
+    ).resolves.toMatchObject({
+      type: "error",
+      error: {
+        code: "tab-unavailable",
+        message:
+          "No active visible browser tab is available. Ask the user to open or focus the target site in their browser.",
+      },
+    });
   });
 
   it("routes execution through the content script with the supplied generations", async () => {
