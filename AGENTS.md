@@ -72,6 +72,8 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - Simplicity bias: smallest version that works; no abstraction without a current need.
 - Conventional commits; keep `main` green (typecheck + lint + test before committing).
 - Skills install project-locally via `npx skills add` (never `-g`).
+- opencode users: copy `opencode.example.json` → `opencode.json` (gitignored) to
+  opt into the local `webmcp-today` MCP bridge; requires `packages/mcp` built.
 - Once a package is published to npm, its `files` array must list `LICENSE`.
 - `CLAUDE.md` symlinks to `AGENTS.md` (pre-commit auto-creates) — never diverge them.
 - Env: `apps/web/.env.example` lists required vars (`DATABASE_URL`, GitHub OAuth,
