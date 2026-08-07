@@ -98,7 +98,11 @@ describe("bridge quickstart", () => {
     expect(QUICKSTART_PROMPT).toContain("Developer mode");
     expect(QUICKSTART_PROMPT).toContain("Load unpacked");
     expect(QUICKSTART_PROMPT).toContain("## Prerequisites");
-    expect(QUICKSTART_PROMPT).toContain("## 4. Verify the live tool call");
+    expect(QUICKSTART_PROMPT).toContain("## 5. Verify the live tool call");
+    expect(QUICKSTART_PROMPT).toContain("Ask which browser I will use (Chrome or Brave)");
+    expect(QUICKSTART_PROMPT).toContain("Do not infer the MCP client from your own runtime");
+    expect(QUICKSTART_PROMPT).toContain("AppleScript");
+    expect(QUICKSTART_PROMPT).toContain("open location");
     expect(QUICKSTART_PROMPT).toContain(`npx --yes ${MCP_BRIDGE_PACKAGE}`);
     expect(QUICKSTART_PROMPT).toContain(MCP_CLIENT_CONFIG_PROMPT);
     expect(QUICKSTART_PROMPT).toContain("execute_webmcp_tool");
@@ -123,6 +127,15 @@ describe("bridge quickstart", () => {
     expect(QUICKSTART_PROMPT).toContain(`npx --yes ${MCP_BRIDGE_PACKAGE}`);
     expect(QUICKSTART_PROMPT).not.toContain("npm install --global");
     expect(QUICKSTART_PROMPT).not.toContain("@webmcp-today/extension...");
+  });
+
+  it("runs the readiness check only after the extension is loaded", () => {
+    // The check pings the extension, so the prompt must not assert "connected"
+    // before the download and Load unpacked steps.
+    const loadIndex = QUICKSTART_PROMPT.indexOf("Load unpacked");
+    const readinessIndex = QUICKSTART_PROMPT.indexOf("browser-readiness check");
+    expect(loadIndex).toBeGreaterThan(-1);
+    expect(readinessIndex).toBeGreaterThan(loadIndex);
   });
 
   it("publishes a docs hub and keeps bridge quickstart free of stale CDP setup", async () => {
