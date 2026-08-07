@@ -68,8 +68,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   className="flex shrink-0 items-center gap-2 whitespace-nowrap font-mono text-lg font-bold"
                 >
                   <span>⚡ webmcp.today</span>
-                  <span aria-hidden className="h-4 w-px bg-border" />
-                  <span className="text-[10px] font-medium tracking-[0.16em] text-brand uppercase">
+                  {/* Beta badge drops below sm — with only the wordmark the
+                      header row fits small phones alongside the sign-up CTA. */}
+                  <span aria-hidden className="hidden h-4 w-px bg-border sm:block" />
+                  <span className="hidden text-[10px] font-medium tracking-[0.16em] text-brand uppercase sm:inline">
                     Beta
                   </span>
                 </Link>

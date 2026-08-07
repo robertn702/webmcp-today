@@ -100,11 +100,14 @@ export function UserButton({
 
   if (isUnauthenticated) {
     // Vercel/Linear pattern: sign-up is the emphasized CTA for new visitors,
-    // sign-in stays as a quiet secondary action beside it.
+    // sign-in stays as a quiet secondary action beside it. On narrow screens
+    // the pair overflows the header, so the quiet action drops below `sm` —
+    // sign-in remains one tap away via the link on the sign-up page.
     return (
       <>
         <Button
           variant="ghost"
+          className="hidden sm:inline-flex"
           onClick={() =>
             navigate({
               to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
@@ -114,7 +117,7 @@ export function UserButton({
           {localization.auth.signIn}
         </Button>
         <Button
-          className={cn(className)}
+          className={cn("max-sm:h-7 max-sm:px-2 max-sm:text-xs", className)}
           onClick={() =>
             navigate({
               to: `${basePaths.auth}/${viewPaths.auth.signUp}`,
