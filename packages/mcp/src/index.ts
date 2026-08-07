@@ -11,7 +11,7 @@ import { registerWriteTools } from "./write-tools.js";
 const baseUrl = process.env.WEBMCP_TODAY_API_URL ?? "https://webmcp.today";
 const apiKey = process.env.WEBMCP_TODAY_API_KEY;
 
-const server = new McpServer({ name: "webmcp-today", version: "0.1.3" });
+const server = new McpServer({ name: "webmcp-today", version: "0.1.4" });
 const client = new RegistryClient({ baseUrl, apiKey });
 const localBridgeClient = new LocalBridgeClient();
 

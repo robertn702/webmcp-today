@@ -119,7 +119,7 @@
     },
     "packages/mcp": {
       "name": "@webmcp-today/mcp-bridge",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "bin": {
         "webmcp-today-mcp": "./dist/index.js",
       },
