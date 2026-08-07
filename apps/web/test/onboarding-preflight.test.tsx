@@ -102,7 +102,7 @@ describe("bridge quickstart", () => {
     expect(QUICKSTART_PROMPT).toContain("Ask which browser I will use (Chrome or Brave)");
     expect(QUICKSTART_PROMPT).toContain("Do not infer the MCP client from your own runtime");
     expect(QUICKSTART_PROMPT).toContain("AppleScript");
-    expect(QUICKSTART_PROMPT).toContain("open location");
+    expect(QUICKSTART_PROMPT).toContain("do not use the browser's `open location` command");
     expect(QUICKSTART_PROMPT).toContain(`npx --yes ${MCP_BRIDGE_PACKAGE}`);
     expect(QUICKSTART_PROMPT).toContain(MCP_CLIENT_CONFIG_PROMPT);
     expect(QUICKSTART_PROMPT).toContain("execute_webmcp_tool");
