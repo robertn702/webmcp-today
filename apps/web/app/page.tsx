@@ -62,7 +62,7 @@ export default async function LandingPage() {
                 asChild
                 className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
               >
-                <Link href="/docs">
+                <Link href="/docs/quickstart">
                   Make your first tool call
                   <ArrowRight data-icon="inline-end" />
                 </Link>
@@ -150,7 +150,7 @@ export default async function LandingPage() {
             asChild
             className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
           >
-            <Link href="/docs">
+            <Link href="/docs/quickstart">
               Follow the verified quickstart
               <ArrowRight data-icon="inline-end" />
             </Link>
@@ -252,7 +252,7 @@ export default async function LandingPage() {
               asChild
               className="h-11 gap-2 bg-brand px-5 text-[0.95rem] text-brand-contrast hover:bg-brand/90"
             >
-              <Link href="/docs">
+              <Link href="/docs/quickstart">
                 Make your first tool call
                 <ArrowRight data-icon="inline-end" />
               </Link>
