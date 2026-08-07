@@ -378,13 +378,12 @@ async function handleUninstall(packageId: string): Promise<{ removed: boolean }>
   return { removed };
 }
 
-/** "!" for every state that needs the user's attention (flag off, safety list
+/** "!" for every state that needs the user's attention (safety list
  * missing, storage unreadable, site blocks WebMCP), the tool count when
  * registration worked, a "•" discovery hint when nothing is installed here
  * but the registry has packages for this domain, nothing otherwise. */
 async function applyBadge(tabId: number, status: PageStatus, hostname: string): Promise<void> {
   const attention =
-    status.kind === "webmcp-unavailable" ||
     status.kind === "safety-list-missing" ||
     status.kind === "storage-unreadable" ||
     status.kind === "site-blocked";
