@@ -121,9 +121,10 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   document. Only serializable descriptors leave the content script; execution
   re-resolves the tool and requires matching document + tool-list generations,
   so navigation and `toolchange` fail stale calls rather than calling a new page.
-  `local-bridge-router.ts` permits the native bridge only to target the user's
-  selected visible tab; `native-bridge.ts` reconnects the ephemeral MV3 worker
-  without retaining request state.
+  `local-bridge-router.ts` enumerates package-matched tabs and lets the native
+  bridge focus one before targeting the user's selected visible tab;
+  `native-bridge.ts` reconnects the ephemeral MV3 worker without retaining
+  request state.
 - The install bridge: `externally_connectable` (built from
   `src/lib/registry-origins.ts`'s `registryMatchPatterns()` — the same function
   the runtime origin allowlist derives from; dev builds also trust

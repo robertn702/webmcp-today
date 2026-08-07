@@ -95,6 +95,14 @@ describe("local bridge schemas", () => {
       }).success,
     ).toBe(true);
     expect(
+      localBridgeRequestSchema.safeParse({
+        v: LOCAL_BRIDGE_PROTOCOL_VERSION,
+        type: "focus-tab",
+        requestId: "request",
+        tabId: 4,
+      }).success,
+    ).toBe(true);
+    expect(
       localBridgeResponseSchema.safeParse({
         v: LOCAL_BRIDGE_PROTOCOL_VERSION,
         type: "tool-result",
@@ -107,6 +115,14 @@ describe("local bridge schemas", () => {
           url: "https://example.com",
         },
         result: { content: [{ type: "text", text: "ok" }] },
+      }).success,
+    ).toBe(true);
+    expect(
+      localBridgeResponseSchema.safeParse({
+        v: LOCAL_BRIDGE_PROTOCOL_VERSION,
+        type: "tab-focused",
+        requestId: "request",
+        tabId: 4,
       }).success,
     ).toBe(true);
     expect(jsonValueSchema.safeParse(new Date()).success).toBe(false);

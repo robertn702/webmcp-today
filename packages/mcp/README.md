@@ -1,9 +1,10 @@
 # WebMCP Today MCP bridge
 
-`webmcp-today-mcp` exposes registry operations, three browser bridge tools, and
+`webmcp-today-mcp` exposes registry operations, four browser bridge tools, and
 first-party macOS bridge setup tools:
 
 - `list_connected_webmcp_tabs`
+- `focus_webmcp_tab`
 - `list_webmcp_tools`
 - `execute_webmcp_tool`
 - `setup_webmcp_bridge`

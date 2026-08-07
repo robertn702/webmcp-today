@@ -141,6 +141,13 @@ export const localBridgeListToolsRequestSchema = z.object({
   tabId: tabIdSchema,
 });
 
+export const localBridgeFocusTabRequestSchema = z.object({
+  v: z.literal(LOCAL_BRIDGE_PROTOCOL_VERSION),
+  type: z.literal("focus-tab"),
+  requestId: requestIdSchema,
+  tabId: tabIdSchema,
+});
+
 export const localBridgeExecuteToolRequestSchema = z.object({
   v: z.literal(LOCAL_BRIDGE_PROTOCOL_VERSION),
   type: z.literal("execute-tool"),
@@ -156,6 +163,7 @@ export const localBridgeExecuteToolRequestSchema = z.object({
 export const localBridgeRequestSchema = z.discriminatedUnion("type", [
   localBridgeListTabsRequestSchema,
   localBridgeListToolsRequestSchema,
+  localBridgeFocusTabRequestSchema,
   localBridgeExecuteToolRequestSchema,
 ]);
 
@@ -173,6 +181,13 @@ export const localBridgeToolsResponseSchema = z.object({
   tabId: tabIdSchema,
   document: localBridgeDocumentSchema,
   tools: z.array(localBridgeToolDescriptorSchema),
+});
+
+export const localBridgeTabFocusedResponseSchema = z.object({
+  v: z.literal(LOCAL_BRIDGE_PROTOCOL_VERSION),
+  type: z.literal("tab-focused"),
+  requestId: requestIdSchema,
+  tabId: tabIdSchema,
 });
 
 export const localBridgeToolResultResponseSchema = z.object({
@@ -194,6 +209,7 @@ export const localBridgeErrorResponseSchema = z.object({
 export const localBridgeResponseSchema = z.discriminatedUnion("type", [
   localBridgeTabsResponseSchema,
   localBridgeToolsResponseSchema,
+  localBridgeTabFocusedResponseSchema,
   localBridgeToolResultResponseSchema,
   localBridgeErrorResponseSchema,
 ]);
@@ -239,7 +255,9 @@ export type ContentBridgeRequest = z.infer<typeof contentBridgeRequestSchema>;
 export type ContentBridgeResponse = z.infer<typeof contentBridgeResponseSchema>;
 export type LocalBridgeDocument = z.infer<typeof localBridgeDocumentSchema>;
 export type LocalBridgeError = z.infer<typeof localBridgeErrorSchema>;
+export type LocalBridgeFocusTabRequest = z.infer<typeof localBridgeFocusTabRequestSchema>;
 export type LocalBridgeRequest = z.infer<typeof localBridgeRequestSchema>;
 export type LocalBridgeResponse = z.infer<typeof localBridgeResponseSchema>;
+export type LocalBridgeTabFocusedResponse = z.infer<typeof localBridgeTabFocusedResponseSchema>;
 export type LocalBridgeToolDescriptor = z.infer<typeof localBridgeToolDescriptorSchema>;
 export type LocalBridgeConfiguration = z.infer<typeof localBridgeConfigurationSchema>;
