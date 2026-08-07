@@ -22,10 +22,10 @@ configure your MCP client to invoke the pinned package through `npx`; it downloa
 bridge on demand and copies the native host into a durable user-owned location during setup:
 
 ```bash
-npx --yes @webmcp-today/mcp-bridge@0.1.2
+npx --yes @webmcp-today/mcp-bridge@0.1.3
 ```
 
-Configure your MCP client to run `npx --yes @webmcp-today/mcp-bridge@0.1.2`, then restart it. Ask it to call
+Configure your MCP client to run `npx --yes @webmcp-today/mcp-bridge@0.1.3`, then restart it. Ask it to call
 `setup_webmcp_bridge` with `confirm: true` and `browser: "chrome"` (or `"brave"`).
 The tool copies the bundled host to `~/.config/webmcp-today/native-host-public` and writes
 only WebMCP Today's native-messaging manifest(s). Setup uses the official release extension
