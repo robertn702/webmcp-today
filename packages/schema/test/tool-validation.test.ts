@@ -47,4 +47,24 @@ describe("toolDescriptorSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("accepts a tool with a destructiveHint annotation", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "delete",
+      description: "Delete",
+      inputSchema,
+      annotations: { destructiveHint: true, readOnlyHint: false },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a non-boolean destructiveHint annotation", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "delete",
+      description: "Delete",
+      inputSchema,
+      annotations: { destructiveHint: "yes" },
+    });
+    expect(result.success).toBe(false);
+  });
 });

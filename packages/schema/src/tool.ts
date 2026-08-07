@@ -8,6 +8,7 @@ import { inputSchemaSchema } from "./input-schema.js";
 export const toolAnnotationsSchema = z.looseObject({
   readOnlyHint: z.boolean().optional(),
   untrustedContentHint: z.boolean().optional(),
+  destructiveHint: z.boolean().optional(),
 });
 
 export const toolDescriptorSchema = z.object({
