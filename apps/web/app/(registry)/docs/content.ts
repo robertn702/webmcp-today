@@ -98,34 +98,38 @@ Help me make a first live, read-only WebMCP tool call. Work through these instru
 - Preserve unrelated MCP servers and configuration.
 - The WebMCP Today extension, bridge, and package format are in public beta.
 
-## 1. Check the browser and load the extension
+## 1. Choose the browser and MCP client
 
-1. Have me open https://webmcp.today/docs/quickstart in the normal Chrome or Brave browser I will use.
-2. Ask me to use its browser-readiness check. It should report the WebMCP Today extension as connected; no WebMCP testing flag is needed for this path — the extension's built-in fallback registers tools without it, and the flag only matters for Chrome's native agent.
-3. Download and extract the extension ZIP. Do not build the extension from source:
+1. Ask which browser I will use (Chrome or Brave) and which MCP client I will use (OpenCode, Claude Code, Codex, Cursor, or VS Code), then wait for my answer. Do not infer the MCP client from your own runtime. Use the selected browser for every remaining browser instruction and for \`setup_webmcp_bridge\`; modify only the selected MCP client's configuration.
+
+## 2. Load the extension and check the browser
+
+1. Download and extract the extension ZIP. Do not build the extension from source:
 
 \`\`\`sh
 ${DOWNLOAD_EXTENSION}
 \`\`\`
    For a manual download, use ${EXTENSION_RELEASES_URL}.
-4. Pause for me to enable Developer mode, choose Load unpacked, and select the extracted extension folder. The extension must remain enabled in the browser holding the target tab.
+2. Ask whether I want you to open the selected browser's extensions page or whether I will open it myself. If I choose for you to open it, use AppleScript to activate the selected browser and set its active tab URL to \`chrome://extensions/\` or \`brave://extensions/\`; do not use the browser's \`open location\` command. Create a window first if necessary, and do not open another browser. Then pause for me to enable Developer mode, choose Load unpacked, and select the extracted extension folder. The extension must remain enabled in the browser holding the target tab.
+3. Have me open https://webmcp.today/docs/quickstart in the selected browser.
+4. Ask me to use its browser-readiness check. It should report the WebMCP Today extension as connected; no WebMCP testing flag is needed for this path — the extension's built-in fallback registers tools without it, and the flag only matters for Chrome's native agent.
 
-## 2. Install and configure the bridge
+## 3. Install and configure the bridge
 
-1. Add a local stdio MCP server named \`webmcp-today\` that runs \`npx --yes ${MCP_BRIDGE_PACKAGE}\` to the configuration for the client I use. This downloads the pinned bridge on demand without a global install. Use \`npx\`, not \`bunx\`, because bridge setup requires Node; see ${MCP_BRIDGE_NODE_ISSUE_URL}. Preserve my other MCP servers.
+1. Add a local stdio MCP server named \`webmcp-today\` that runs \`npx --yes ${MCP_BRIDGE_PACKAGE}\` to the selected MCP client's configuration. This downloads the pinned bridge on demand without a global install. Use \`npx\`, not \`bunx\`, because bridge setup requires Node; see ${MCP_BRIDGE_NODE_ISSUE_URL}. Preserve my other MCP servers.
 
 ${MCP_CLIENT_CONFIG_PROMPT}
 
 2. Have me restart or reload that MCP client.
-3. Call \`setup_webmcp_bridge\` with \`{"browser":"chrome","confirm":true}\`. Use \`"brave"\` instead of \`"chrome"\` if I use Brave. This confirmation-gated tool is the only bridge-install step; do not run a manual installer command.
+3. Call \`setup_webmcp_bridge\` with \`{"browser":"chrome","confirm":true}\`. Use \`"brave"\` instead of \`"chrome"\` if I selected Brave. This confirmation-gated tool is the only bridge-install step; do not run a manual installer command.
 4. Call \`get_webmcp_bridge_status\`. If it is not ready, diagnose the returned bridge-owned paths and permissions before proceeding.
 
-## 3. Install Reddit in the selected tab
+## 4. Install Reddit in the selected tab
 
-1. Pause for me to open and select ${REDDIT_DEMO_URL} in my normal browser.
+1. Pause for me to open and select ${REDDIT_DEMO_URL} in the selected browser.
 2. Pause for me to open the WebMCP Today extension popup, inspect the suggested Reddit package, and click Install. This is a browser-owned consent action that I must perform.
 
-## 4. Verify the live tool call
+## 5. Verify the live tool call
 
 1. Call \`list_connected_webmcp_tabs\`, then \`list_webmcp_tools\` for the selected Reddit tab.
 2. If \`${FIRST_TOOL_NAME}\` is missing, ask me to install or repair the Reddit package in the extension popup and wait for confirmation before listing tools again.
