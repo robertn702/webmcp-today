@@ -158,20 +158,22 @@ same-origin fetch, checks `errorPath`, and applies the `returns` projection.
 
 ### ④ Local bridge flow — MCP → selected tab's live tools
 
-_The user selects a visible tab; the native host relays only discovery and execution._
+_The user selects a visible tab, or an agent focuses a package-matched one via
+`focus-tab`; the native host relays only discovery and execution._
 
 ```mermaid
 flowchart LR
     MCP["WebMCP Today MCP"] --> HOST["native host"]
     HOST --> NB["native-bridge.ts"]
-    NB --> ROUTER["local-bridge-router.ts<br/>(selected visible tab only)"]
+    NB --> ROUTER["local-bridge-router.ts<br/>(selected tab; agent-focusable)"]
     ROUTER --> CONTENT["local-bridge-content.ts<br/>(getTools / executeTool)"]
     CONTENT --> MC["WebMCP API"]
 ```
 
 - `native-bridge.ts` reconnects the ephemeral MV3 worker to the native host without retaining
   request state.
-- `local-bridge-router.ts` targets only the user's selected visible tab.
+- `local-bridge-router.ts` targets only the user's selected visible tab, but enumerates
+  package-matched tabs and lets the bridge focus one (`focus-tab`) to make it selected.
 - `local-bridge-content.ts` retains live handles only in that document and rejects stale document
   or tool-list generations before execution.
 

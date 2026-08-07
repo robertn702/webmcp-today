@@ -14,6 +14,8 @@ import {
 export interface LocalBridgeRouterDeps {
   /** The active tab in the last-focused browser window: the user's selected target. */
   getSelectedTabId: () => Promise<number | undefined>;
+  listEligibleTabIds: () => Promise<number[]>;
+  focusTab: (tabId: number) => Promise<"focused" | "not-found" | "not-eligible">;
   sendToContent: (tabId: number, message: unknown) => Promise<unknown>;
 }
 
@@ -33,6 +35,7 @@ async function handle(message: unknown, deps: LocalBridgeRouterDeps): Promise<Lo
   if (!request.success) return invalidRequestResponse(message);
 
   if (request.data.type === "list-tabs") return listTabs(request.data, deps);
+  if (request.data.type === "focus-tab") return focusTab(request.data, deps);
 
   const selectedTabId = await selectedTabIdOrError(request.data, deps);
   if (typeof selectedTabId !== "number") return selectedTabId;
@@ -83,40 +86,60 @@ async function listTabs(
   request: Extract<LocalBridgeRequest, { type: "list-tabs" }>,
   deps: LocalBridgeRouterDeps,
 ): Promise<LocalBridgeResponse> {
-  const tabId = await deps.getSelectedTabId();
-  if (tabId === undefined) {
-    return localBridgeResponseSchema.parse({
-      v: LOCAL_BRIDGE_PROTOCOL_VERSION,
-      type: "tabs",
-      requestId: request.requestId,
-      tabs: [],
-    });
-  }
-
-  const response = await contentResponse(
-    tabId,
-    { v: LOCAL_BRIDGE_PROTOCOL_VERSION, type: "webmcp-today:local-bridge:list-tools" },
-    deps,
+  const selectedTabId = await deps.getSelectedTabId();
+  const tabIds = [
+    ...(selectedTabId === undefined ? [] : [selectedTabId]),
+    ...(await deps.listEligibleTabIds()),
+  ].filter((tabId, index, candidates) => candidates.indexOf(tabId) === index);
+  const tabs = await Promise.all(
+    tabIds.map(async (tabId) => {
+      const response = await contentResponse(
+        tabId,
+        { v: LOCAL_BRIDGE_PROTOCOL_VERSION, type: "webmcp-today:local-bridge:list-tools" },
+        deps,
+      );
+      // A page without a reachable consumer API is not an eligible bridge tab.
+      if ("error" in response || !response.ok || !("tools" in response)) return undefined;
+      return { tabId, document: response.document, toolCount: response.tools.length };
+    }),
   );
-  // A page without a reachable consumer API is not an eligible bridge tab.
-  if ("error" in response || !response.ok || !("tools" in response)) {
-    return localBridgeResponseSchema.parse({
-      v: LOCAL_BRIDGE_PROTOCOL_VERSION,
-      type: "tabs",
-      requestId: request.requestId,
-      tabs: [],
-    });
-  }
   return localBridgeResponseSchema.parse({
     v: LOCAL_BRIDGE_PROTOCOL_VERSION,
     type: "tabs",
     requestId: request.requestId,
-    tabs: [{ tabId, document: response.document, toolCount: response.tools.length }],
+    tabs: tabs.filter((tab) => tab !== undefined),
+  });
+}
+
+async function focusTab(
+  request: Extract<LocalBridgeRequest, { type: "focus-tab" }>,
+  deps: LocalBridgeRouterDeps,
+): Promise<LocalBridgeResponse> {
+  const result = await deps.focusTab(request.tabId);
+  if (result === "focused") {
+    return localBridgeResponseSchema.parse({
+      v: LOCAL_BRIDGE_PROTOCOL_VERSION,
+      type: "tab-focused",
+      requestId: request.requestId,
+      tabId: request.tabId,
+    });
+  }
+  if (result === "not-found") {
+    return errorResponse(request.requestId, {
+      code: "tab-unavailable",
+      message:
+        "The requested browser tab is no longer available. Use list_connected_webmcp_tabs, then retry.",
+    });
+  }
+  return errorResponse(request.requestId, {
+    code: "tab-not-eligible",
+    message:
+      "The requested tab does not match an installed package, so the local bridge may not focus it. Use list_connected_webmcp_tabs to choose a package-matched tab.",
   });
 }
 
 async function selectedTabIdOrError(
-  request: Exclude<LocalBridgeRequest, { type: "list-tabs" }>,
+  request: Exclude<LocalBridgeRequest, { type: "list-tabs" | "focus-tab" }>,
   deps: LocalBridgeRouterDeps,
 ): Promise<number | LocalBridgeResponse> {
   const selectedTabId = await deps.getSelectedTabId();
@@ -124,14 +147,14 @@ async function selectedTabIdOrError(
     return errorResponse(request.requestId, {
       code: "tab-unavailable",
       message:
-        "No active visible browser tab is available. Ask the user to open or focus the target site in their browser.",
+        "No active visible browser tab is available. Use list_connected_webmcp_tabs to find an eligible tab and focus_webmcp_tab to select it, or ask the user to open the target site in their browser.",
     });
   }
   if (selectedTabId !== request.tabId) {
     return errorResponse(request.requestId, {
       code: "tab-not-eligible",
       message:
-        "The requested tab is not the user's active visible tab. Ask the user to focus the target tab in their browser or navigate to the page in their active tab.",
+        "The requested tab is not the user's active visible tab. Call focus_webmcp_tab with the target tabId from list_connected_webmcp_tabs, or ask the user to focus the tab in their browser, then retry.",
     });
   }
   return selectedTabId;
@@ -150,7 +173,7 @@ async function contentResponse(
       error: {
         code: "tab-unavailable",
         message:
-          "The user's active visible tab is no longer reachable. Ask the user to refresh or focus the target site in their browser, then retry.",
+          "The user's active visible tab is no longer reachable. Ask the user to refresh the target site, or use list_connected_webmcp_tabs to find a reachable tab, then retry.",
       },
     };
   }

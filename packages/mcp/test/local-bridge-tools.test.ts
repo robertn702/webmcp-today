@@ -70,6 +70,22 @@ describe("local bridge MCP tool handlers", () => {
     expect(request).toHaveBeenCalledWith(expect.objectContaining({ inputJson: "{}" }));
   });
 
+  it("turns a tab focus call into a versioned local bridge request", async () => {
+    const request = vi.fn(async () => ({
+      v: LOCAL_BRIDGE_PROTOCOL_VERSION,
+      type: "tab-focused" as const,
+      requestId: "request",
+      tabId: 4,
+    }));
+    const handlers = createLocalBridgeToolHandlers({ request });
+
+    await handlers.focusTab(4);
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({ v: LOCAL_BRIDGE_PROTOCOL_VERSION, type: "focus-tab", tabId: 4 }),
+    );
+  });
+
   it("marks structured bridge failures as MCP tool errors", async () => {
     const handlers = createLocalBridgeToolHandlers({
       request: async () => ({
@@ -113,9 +129,9 @@ describe("local bridge MCP tool handlers", () => {
     expect(executeWebmcpToolDescription).toContain("did not run and can be retried");
   });
 
-  it("guides the model to recover when the active tab changes", () => {
+  it("guides the model to focus a tab when the active tab changes", () => {
     expect(executeWebmcpToolDescription).toContain("user-selected active visible Chrome/Brave tab");
     expect(executeWebmcpToolDescription).toContain("tab is not eligible or available");
-    expect(executeWebmcpToolDescription).toContain("focus the target browser tab");
+    expect(executeWebmcpToolDescription).toContain("focus_webmcp_tab");
   });
 });

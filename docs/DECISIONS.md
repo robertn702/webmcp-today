@@ -5,6 +5,15 @@ Inclusion bar and entry format: root `AGENTS.md` → "Decision log". This is del
 **not** a changelog or a complete history — entries are pruned once their reasoning
 lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
+- 2026-08-07 — **An agent with local socket access may focus any tab matching an
+  installed package, replacing the manual-focus consent gate.** Focusing raises the
+  tab and its window, preserving the user-sees-what's-driven property while making
+  target selection agent-callable. Rejected: adding the `tabs` permission —
+  `tabs.update` needs none and `<all_urls>` content-script matches already expose
+  `tab.url`, while the permission adds a “read your browsing history” install warning;
+  and OS-level AppleScript focus — outside the extension trust model and
+  permission-fragile.
+
 - 2026-07-28 — **DOM execution mode was removed entirely; `api` is the only execution
   mode.** The pre-launch curated set was 5/6 DOM packages, but they were read-only
   page-extraction demos nobody needed, while the Reddit API package was the actual

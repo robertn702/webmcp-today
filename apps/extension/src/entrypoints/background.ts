@@ -72,6 +72,30 @@ export default defineBackground(() => {
       const tabs = await browser.tabs.query({ active: true, lastFocusedWindow: true });
       return tabs[0]?.id;
     },
+    async listEligibleTabIds() {
+      const tabs = await browser.tabs.query({});
+      const eligible = await Promise.all(
+        tabs.map(async (tab) => {
+          if (tab.id === undefined || !isHttpUrl(tab.url)) return undefined;
+          return (await handleLookup(tab.url)).packages.length > 0 ? tab.id : undefined;
+        }),
+      );
+      return eligible.filter((tabId): tabId is number => tabId !== undefined);
+    },
+    async focusTab(tabId) {
+      let tab;
+      try {
+        tab = await browser.tabs.get(tabId);
+      } catch {
+        return "not-found";
+      }
+      if (!isHttpUrl(tab.url) || (await handleLookup(tab.url)).packages.length === 0) {
+        return "not-eligible";
+      }
+      await browser.tabs.update(tabId, { active: true });
+      await browser.windows.update(tab.windowId, { focused: true });
+      return "focused";
+    },
     sendToContent: (tabId, message) => browser.tabs.sendMessage(tabId, message),
   });
   startNativeBridge({
@@ -208,6 +232,16 @@ async function handleLookup(url: string): Promise<LocalLookupResult> {
   const result = await resolveLocalLookup(url, store, localStorageArea);
   rememberInstallCount(await store.readIndex());
   return result;
+}
+
+function isHttpUrl(url: string | undefined): url is string {
+  if (url === undefined) return false;
+  try {
+    const protocol = new URL(url).protocol;
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function storageUnreadableLookup(): LocalLookupResult {
