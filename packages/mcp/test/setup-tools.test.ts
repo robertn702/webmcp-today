@@ -1,9 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import {
   createNativeHostInstallerDeps,
   developmentExtensionId,
 } from "../src/native-host-installer.js";
-import { createSetupToolHandlers } from "../src/setup-tools.js";
+import { confirmApproval, createSetupToolHandlers } from "../src/setup-tools.js";
+
+describe("confirmApproval schema", () => {
+  it('parses boolean true, tolerates string "true", and leaves other values gated', () => {
+    const schema = z.object({ confirm: confirmApproval("the test action") });
+    expect(schema.parse({ confirm: true })).toEqual({ confirm: true });
+    // MCP clients can degrade `const: true` to the string "true" in tool calls.
+    expect(schema.parse({ confirm: "true" })).toEqual({ confirm: true });
+    expect(schema.parse({ confirm: false })).toEqual({ confirm: false });
+    expect(schema.parse({})).toEqual({});
+    expect(schema.safeParse({ confirm: "yes" }).success).toBe(false);
+  });
+});
 
 describe("bridge setup MCP tool handlers", () => {
   it("requires explicit confirmation for setup and uninstall", async () => {
