@@ -10,7 +10,7 @@ import { listPackages } from "@/lib/packages-repo";
 
 export const dynamic = "force-dynamic";
 
-type Stats = { packages: number; tools: number; domains: number };
+type Stats = { packages: number; tools: number };
 
 /**
  * Registry counters for the hero. One page fetch, wide enough to cover the
@@ -20,11 +20,10 @@ type Stats = { packages: number; tools: number; domains: number };
 async function loadStats(): Promise<Stats | null> {
   try {
     const { packages, total } = await listPackages({ page: 1, pageSize: 100 });
-    if (packages.length < total) return { packages: total, tools: 0, domains: 0 };
+    if (packages.length < total) return { packages: total, tools: 0 };
     return {
       packages: total,
       tools: packages.reduce((sum, pkg) => sum + pkg.tools.length, 0),
-      domains: new Set(packages.map((pkg) => pkg.domain)).size,
     };
   } catch {
     return null;
@@ -83,7 +82,6 @@ export default async function LandingPage() {
               <dl className="cafe-rise mt-10 flex flex-wrap gap-x-10 gap-y-4 border-t pt-6 [animation-delay:340ms]">
                 <Stat label="packages published" value={stats.packages} />
                 {stats.tools > 0 ? <Stat label="tools available" value={stats.tools} /> : null}
-                {stats.domains > 0 ? <Stat label="domains covered" value={stats.domains} /> : null}
               </dl>
             ) : null}
           </div>
