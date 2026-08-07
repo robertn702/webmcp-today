@@ -1,7 +1,7 @@
 # Product Marketing Context
 
-**Document version:** v6
-**Last updated:** 2026-08-02
+**Document version:** v7
+**Last updated:** 2026-08-07
 
 Source of truth for positioning, audience, and voice. Every marketing skill
 (copywriting, cro, copy-editing, …) reads this before drafting. Product facts
@@ -34,9 +34,15 @@ tools rather than page scripts.
 published npm packages (`schema`, `mcp`). No hosted paid tier.
 
 **Business model:** None today. Growth metric is packages published and
-installs, not revenue. Licensing is undecided, so **no copy may claim the
-product is free, open source, or permanently either** — that claim was
-deliberately removed from the site (v3).
+installs, not revenue.
+
+**Licensing (decided — supersedes v3):** The repo is public. Everything that
+runs client-side is MIT (extension, `schema`, `engine`, `mcp`,
+`curated-packages`); the server half is AGPL-3.0-only (`apps/web`,
+`packages/db`, repo root). Copy may state this, but framed as proof behind the
+trust mechanism ("every line that runs in your browser is MIT and readable"),
+never as a standalone "open source" claim — the bare claim buys no trust with
+this audience and competes with the capability hook for attention.
 
 **Release status:** Public beta for the initial release. The registry, browser
 extension, and local MCP bridge are actively developing, and the WebMCP
@@ -279,6 +285,11 @@ package.
 
 _Newest first. One line per revision: what changed and why._
 
+- v7 (2026-08-07) — Licensing landed in code, so the v3 "undecided" note was
+  stale: the repo is public, client-side code is MIT, the server half is
+  AGPL-3.0-only. The ban on free/open-source claims is lifted with a framing
+  rule: auditable source supports the trust story ("every line that runs in
+  your browser is MIT and readable") and is never a standalone selling point.
 - v6 (2026-08-02) — Positioned the initial release as a public beta so active
   development and possible breaking changes are explicit at activation points;
   added release status and a readiness objection while preserving concrete trust
