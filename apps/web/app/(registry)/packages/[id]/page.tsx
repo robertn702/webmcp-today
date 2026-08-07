@@ -75,8 +75,8 @@ export default async function PackagePage({
           {targetVersion} until you update.
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Needs the extension on Chrome 149+; the WebMCP testing flag is only needed for
-          Chrome&apos;s native agent, not for the bridge.{" "}
+          Needs the extension in a supported Chrome or Brave browser; the WebMCP testing flag is
+          only needed for Chrome&apos;s native agent, not for the bridge.{" "}
           <Link href="/extension" className="text-foreground underline underline-offset-4">
             Get the extension →
           </Link>
