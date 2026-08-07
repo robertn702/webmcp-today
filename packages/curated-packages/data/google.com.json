@@ -1,7 +1,7 @@
 {
   "version": 1,
   "domain": "google.com",
-  "urlPatterns": ["*://www.google.com/maps/*", "*://google.com/maps/*"],
+  "urlPatterns": ["*://www.google.com/maps*", "*://google.com/maps*"],
   "title": "Google Maps (internal web API)",
   "description": "Google Maps via the web app's own internal endpoints: place search, place details (ratings, hours, phone, website), driving directions, and — with a logged-in Google session — your saved lists and the places in them. No Google Cloud project, API key, or billing account required; search/details/directions also work logged out. NOTE: Maps responds with positional arrays, so these projections are the registry's loudest canary for API rot — when Google reshapes the payload the tools throw instead of answering wrong.",
   "minEngine": 1,
