@@ -101,7 +101,7 @@ Help me make a first live, read-only WebMCP tool call. Work through these instru
 ## 1. Check the browser and load the extension
 
 1. Have me open https://webmcp.today/docs/quickstart in the normal Chrome or Brave browser I will use.
-2. Ask me to use its browser-readiness check. Only if it reports WebMCP unavailable, have me open the supplied browser settings path, enable WebMCP testing, relaunch the browser, and check again.
+2. Ask me to use its browser-readiness check. It should report the WebMCP Today extension as connected; no WebMCP testing flag is needed for this path — the extension's built-in fallback registers tools without it, and the flag only matters for Chrome's native agent.
 3. Download and extract the extension ZIP. Do not build the extension from source:
 
 \`\`\`sh

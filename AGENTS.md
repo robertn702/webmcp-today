@@ -83,8 +83,10 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 - `await mc.registerTool({ name, description, inputSchema, execute, annotations }, { signal })`
   — rejects on duplicate names.
 - Chrome origin trial 149→156; local dev **and end users** need
-  `chrome://flags/#enable-webmcp-testing` — sites we inject into never serve an
-  origin-trial token on our behalf (docs/DECISIONS.md 2026-07-24).
+  `chrome://flags/#enable-webmcp-testing` for Chrome's native agent to see our
+  tools, but the extension's built-in fallback registers tools without the flag
+  (reachable via the WebMCP Today bridge only) — sites we inject into never serve
+  an origin-trial token on our behalf (docs/DECISIONS.md 2026-07-24).
 - Char budgets (Chrome guidance): we enforce 500/tool description, 1000/param
   description, 30/name at publish time; tool output is uncapped in v1 (Chrome's 1.5K is
   guidance, not enforcement — see docs/DECISIONS.md 2026-07-24).

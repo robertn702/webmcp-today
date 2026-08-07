@@ -58,11 +58,12 @@ export default function ExtensionPage() {
           </p>
         </li>
         <li>
-          <p className="text-sm font-semibold">Check the actual runtime</p>
+          <p className="text-sm font-semibold">Confirm the extension answers</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Return to the readiness checks above. They feature-detect the WebMCP registration and
-            consumer APIs instead of assuming support from the browser name. If unavailable, copy
-            the shown settings path, enable WebMCP testing, relaunch, and check again.
+            Return to the readiness check above. It probes the extension through its own bridge API
+            instead of assuming support from the browser name. No WebMCP testing flag is needed for
+            this path: the extension&apos;s built-in fallback registers tools without it. The flag
+            only matters for Chrome&apos;s native agent.
           </p>
         </li>
         <li>

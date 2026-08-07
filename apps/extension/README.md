@@ -22,18 +22,16 @@ Page loads do not ask the registry what to run.
 Every registration pass reports its outcome to the background script, which
 mirrors it on the action badge and in the popup:
 
-| Situation                           | Badge      | Popup                                               |
-| ----------------------------------- | ---------- | --------------------------------------------------- |
-| Packages matched, tools registered  | tool count | the registered tool names                           |
-| Packages matched, WebMCP API absent | `!`        | `chrome://flags/#enable-webmcp-testing` steps       |
-| No package matches the URL          | cleared    | "No tools for this page"                            |
-| Background has no status yet        | unchanged  | "reload the page" (service worker restarts lose it) |
+| Situation                          | Badge      | Popup                                               |
+| ---------------------------------- | ---------- | --------------------------------------------------- |
+| Packages matched, tools registered | tool count | the registered tool names                           |
+| No package matches the URL         | cleared    | "No tools for this page"                            |
+| Background has no status yet       | unchanged  | "reload the page" (service worker restarts lose it) |
 
-The "WebMCP is off" signal only fires once a package has matched — probing the
-API first would warn on every page on the internet. It also lands in the page
-console (`console.warn`) with the same steps, since that's where the rest of the
-extension's logging goes. Nothing is injected into the page: banners on
-third-party sites are user-hostile and a review risk.
+Tools register even without Chrome's WebMCP flag: when no native API is exposed,
+a built-in document-local fallback holds the tools and the local bridge serves
+them (see `src/lib/model-context-fallback.ts`). The flag only matters for
+Chrome's own native agent, which cannot see fallback-registered tools.
 
 No extra permissions back this — the badge comes with the `action` key that the
 popup entrypoint already adds.
@@ -114,10 +112,10 @@ injected as a tool in a live page.
 - SPA route changes are detected by a 500 ms URL poll (plus `popstate` /
   `hashchange`), so for up to half a second after a client-side navigation the
   previous route's tools are still the registered ones. See "SPA navigation".
-- End users still need the same `chrome://flags/#enable-webmcp-testing` toggle we
-  use in dev — there is no origin-trial path for injected tools. The extension
-  detects the missing API and shows the enablement steps (badge + popup + page
-  console), but it can't flip the flag for them.
+- Without Chrome's `chrome://flags/#enable-webmcp-testing` flag, tools are
+  reachable only through the WebMCP Today bridge, not Chrome's native agent —
+  there is no origin-trial path for injected tools. The built-in fallback
+  registers them anyway; it just can't expose them to Chrome's own agent.
 - Registration from a content script is unsanctioned upstream, and sites can
   reject injected tools outright via `Permissions-Policy: tools=()` (Chrome
   150+) — see docs/platform-risks.md.

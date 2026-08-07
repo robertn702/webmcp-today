@@ -2,7 +2,7 @@ import { executeApiTool, requiredEngineLevel, supportsPackageEngine } from "@web
 import { ENGINE_VERSION } from "@webmcp-today/schema";
 import type { PageLoadPackages } from "./local-lookup.js";
 import type { McpResult, ModelContextLike } from "./model-context.js";
-import { WEBMCP_FLAG_URL, type PageStatus } from "./status.js";
+import type { PageStatus } from "./status.js";
 
 type ToolExecute = (params: Record<string, unknown>) => Promise<McpResult>;
 
@@ -10,8 +10,9 @@ type ToolExecute = (params: Record<string, unknown>) => Promise<McpResult>;
 export interface RegistrationDeps {
   /** Installed packages matching the URL, or the reason nothing may register. */
   loadPackages: (url: string) => Promise<PageLoadPackages>;
-  /** Chrome's WebMCP entry point, or undefined when the API is unavailable. */
-  getModelContext: () => ModelContextLike | undefined;
+  /** The WebMCP context to register into — the content script always supplies
+   * one (native API or the built-in fallback), so this is never absent. */
+  getModelContext: () => ModelContextLike;
   /** Tool names the site declared itself (`form[toolname]`) — ours yield to them. */
   siteDeclaredToolNames: () => Set<string>;
   /** Surfaces the pass outcome on the action badge + popup. */
@@ -56,14 +57,6 @@ export async function runRegistrationPass(
   }
 
   const mc = deps.getModelContext();
-  if (!mc) {
-    console.warn(
-      `[webmcp-today] ${packages.length} package(s) match this page, but Chrome's WebMCP API is unavailable, so no tools were registered.\n` +
-        `Enable it: open ${WEBMCP_FLAG_URL}, set "WebMCP for testing" to Enabled, then relaunch Chrome. Needs Chrome 149+.`,
-    );
-    deps.reportStatus({ kind: "webmcp-unavailable", packageCount: packages.length });
-    return;
-  }
 
   const declarativeNames = deps.siteDeclaredToolNames();
   const registered: string[] = [];

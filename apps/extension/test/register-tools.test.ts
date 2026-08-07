@@ -4,7 +4,7 @@ import type { PageLoadPackages } from "../src/lib/local-lookup.js";
 import type { ModelContextLike } from "../src/lib/model-context.js";
 import { getOrCreateFallbackModelContext } from "../src/lib/model-context-fallback.js";
 import { runRegistrationPass, type RegistrationDeps } from "../src/lib/register-tools.js";
-import { WEBMCP_FLAG_URL, type PageStatus } from "../src/lib/status.js";
+import type { PageStatus } from "../src/lib/status.js";
 
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";
 
@@ -54,7 +54,7 @@ function recordingContext(reject: string[] = []): {
 
 function harness(
   load: WebMcpPackage[] | PageLoadPackages,
-  mc: ModelContextLike | undefined,
+  mc: ModelContextLike,
   declared: string[] = [],
 ): { deps: RegistrationDeps; statuses: PageStatus[]; getModelContext: () => unknown } {
   const result: PageLoadPackages = Array.isArray(load) ? { packages: load } : load;
@@ -85,7 +85,7 @@ describe("runRegistrationPass", () => {
   });
 
   it("stays silent on a page with no matching packages, without probing WebMCP", async () => {
-    const { deps, statuses, getModelContext } = harness([], undefined);
+    const { deps, statuses, getModelContext } = harness([], recordingContext().mc);
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
@@ -93,19 +93,6 @@ describe("runRegistrationPass", () => {
     // Order matters: probing first would warn about the flag on every page.
     expect(getModelContext).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
-  });
-
-  it("warns with enablement steps when packages match but WebMCP is absent", async () => {
-    const { deps, statuses } = harness([pkg("wiki_summary")], undefined);
-
-    await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
-
-    expect(statuses).toEqual([{ kind: "webmcp-unavailable", packageCount: 1 }]);
-    expect(warn).toHaveBeenCalledTimes(1);
-    const message = String(warn.mock.calls[0]?.[0]);
-    expect(message).toContain(WEBMCP_FLAG_URL);
-    expect(message).toContain("WebMCP for testing");
-    expect(message).toContain("relaunch Chrome");
   });
 
   it("registers matching tools and reports their names", async () => {
@@ -238,7 +225,7 @@ describe("runRegistrationPass", () => {
   it("reports safety-list-missing when the fail-closed gate blocks the pass", async () => {
     const { deps, statuses, getModelContext } = harness(
       { packages: [], blocked: "no-revocation-list" },
-      undefined,
+      recordingContext().mc,
     );
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
@@ -248,7 +235,10 @@ describe("runRegistrationPass", () => {
   });
 
   it("reports storage-unreadable when storage was written by a newer build", async () => {
-    const { deps, statuses } = harness({ packages: [], blocked: "storage-unreadable" }, undefined);
+    const { deps, statuses } = harness(
+      { packages: [], blocked: "storage-unreadable" },
+      recordingContext().mc,
+    );
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);
 
@@ -258,7 +248,7 @@ describe("runRegistrationPass", () => {
   it("preserves the prior status when the background lookup fails", async () => {
     const { deps, statuses, getModelContext } = harness(
       { packages: [], blocked: "lookup-failed" },
-      undefined,
+      recordingContext().mc,
     );
 
     await runRegistrationPass(PAGE_URL, new AbortController().signal, deps);

@@ -1,4 +1,4 @@
-import { WEBMCP_FLAG_URL, type PopupInstall, type PopupState } from "../../lib/status.js";
+import { type PopupInstall, type PopupState } from "../../lib/status.js";
 
 // Pure-ish view builders for the popup (vanilla DOM — no React in the
 // extension). main.ts wires the data and the uninstall/install callbacks.
@@ -36,7 +36,6 @@ export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
       ),
       el("p", "To recover, reinstall the packages you use from the registry."),
     );
-    nodes.push(footerNote());
     return nodes;
   }
 
@@ -55,7 +54,6 @@ export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
 
   nodes.push(...installsNodes(state, callbacks));
   nodes.push(...suggestionsNodes(state, callbacks));
-  nodes.push(footerNote());
   return nodes;
 }
 
@@ -66,23 +64,6 @@ function statusNodes(state: PopupState): Node[] {
   }
 
   switch (status.kind) {
-    case "webmcp-unavailable": {
-      const steps = document.createElement("ol");
-      steps.append(
-        li("Open ", code(WEBMCP_FLAG_URL)),
-        li('Set "WebMCP for testing" to Enabled'),
-        li("Relaunch Chrome, then reload the page"),
-      );
-      return [
-        el("h1", "WebMCP is turned off in Chrome"),
-        el(
-          "p",
-          `${status.packageCount} package(s) match this page, but Chrome exposes no WebMCP API, so no tools were registered.`,
-        ),
-        steps,
-        el("footer", "Needs Chrome 149 or newer."),
-      ];
-    }
     case "site-blocked":
       return [
         el("h1", "This site blocks WebMCP"),
@@ -248,12 +229,6 @@ function stateBadge(install: PopupInstall): Node {
       break;
   }
   return fragment;
-}
-
-function footerNote(): HTMLElement {
-  const footer = document.createElement("footer");
-  footer.append("WebMCP needs ", code(WEBMCP_FLAG_URL), " (Chrome 149+).");
-  return footer;
 }
 
 export function unreachableView(): Node[] {

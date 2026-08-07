@@ -27,11 +27,7 @@ import {
   REDDIT_PACKAGE_DOMAIN,
   REDDIT_TOOL_COUNT,
 } from "@/app/(registry)/docs/content";
-import {
-  browserGuidance,
-  extensionCheckpoint,
-  webMcpCapabilities,
-} from "@/lib/onboarding-preflight";
+import { extensionCheckpoint } from "@/lib/onboarding-preflight";
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 const quickstartPath = resolve(testDirectory, "../app/(registry)/docs/quickstart/page.tsx");
@@ -46,68 +42,13 @@ const PING_OK: BridgePingResponse = {
   storageReadable: true,
 };
 
-function readinessView(
-  registration: Parameters<typeof WebMcpReadinessView>[0]["registration"],
-  consumer: Parameters<typeof WebMcpReadinessView>[0]["consumer"],
-  extension: Parameters<typeof WebMcpReadinessView>[0]["extension"],
-): string {
+function readinessView(extension: Parameters<typeof WebMcpReadinessView>[0]["extension"]): string {
   return renderToStaticMarkup(
-    <WebMcpReadinessView
-      registration={registration}
-      consumer={consumer}
-      extension={extension}
-      guidance={browserGuidance({ userAgent: "Mozilla/5.0 Chrome/149.0" })}
-      onCheckAgain={() => undefined}
-    />,
+    <WebMcpReadinessView extension={extension} onCheckAgain={() => undefined} />,
   );
 }
 
 describe("bridge quickstart", () => {
-  it("feature-detects registration and consumer APIs without using browser identity", () => {
-    const registerTool = () => Promise.resolve();
-    const getTools = () => Promise.resolve([]);
-    const executeTool = () => Promise.resolve(null);
-
-    expect(
-      webMcpCapabilities({ modelContext: { registerTool, getTools, executeTool } }, {}),
-    ).toEqual({
-      registration: true,
-      consumer: true,
-    });
-    expect(
-      webMcpCapabilities({}, { modelContext: { registerTool, getTools, executeTool } }),
-    ).toEqual({
-      registration: true,
-      consumer: true,
-    });
-    expect(webMcpCapabilities({ modelContext: { registerTool } }, {})).toEqual({
-      registration: true,
-      consumer: false,
-    });
-    expect(
-      webMcpCapabilities(
-        { modelContext: { registerTool } },
-        { modelContext: { getTools, executeTool } },
-      ),
-    ).toEqual({ registration: true, consumer: true });
-    expect(webMcpCapabilities({}, {})).toEqual({ registration: false, consumer: false });
-  });
-
-  it("uses browser identity only for a copy-only settings path", () => {
-    expect(browserGuidance({ userAgent: "Mozilla/5.0 Chrome/149.0" })).toMatchObject({
-      family: "chrome",
-      settingsPath: "chrome://flags/#enable-webmcp-testing",
-    });
-    expect(browserGuidance({ userAgent: "Mozilla/5.0 Brave/1.92" })).toMatchObject({
-      family: "brave",
-      settingsPath: "brave://flags/#enable-webmcp-testing",
-    });
-    expect(browserGuidance({ userAgent: "Mozilla/5.0 Firefox/140.0" })).toEqual({
-      family: "other",
-    });
-    expect(browserGuidance({ userAgent: "Mozilla/5.0 Edg/149.0" })).toEqual({ family: "other" });
-  });
-
   it("maps installed-extension probes to actionable readiness states", () => {
     expect(extensionCheckpoint({ status: "absent" })).toBe("absent");
     expect(extensionCheckpoint({ status: "invalid" })).toBe("absent");
@@ -117,13 +58,14 @@ describe("bridge quickstart", () => {
     expect(extensionCheckpoint({ status: "ok", data: PING_OK })).toBe("ready");
   });
 
-  it("renders copy-only browser runtime remediation without bridge setup", () => {
-    const unavailable = readinessView("unavailable", "waiting", "waiting");
-    expect(unavailable).toContain("chrome://flags/#enable-webmcp-testing");
-    expect(unavailable).toContain('aria-label="Copy chrome://flags/#enable-webmcp-testing"');
-    expect(unavailable).not.toContain('href="chrome://flags/#enable-webmcp-testing"');
+  it("renders the extension checkpoint and demotes the flag to a native-agent-only note", () => {
+    const waiting = readinessView("waiting");
+    expect(waiting).toContain("Load the extension, then check again.");
+    expect(waiting).toContain("The WebMCP testing flag is only needed for Chrome");
+    expect(waiting).not.toContain("chrome://flags/#enable-webmcp-testing");
+    expect(waiting).not.toContain('aria-label="Copy chrome://flags/#enable-webmcp-testing"');
 
-    const ready = readinessView("ready", "ready", "ready");
+    const ready = readinessView("ready");
     expect(ready).toContain("The extension answered this site and its storage is readable.");
     expect(ready).not.toContain("native host");
     expect(ready).not.toContain("MCP configuration");
@@ -198,7 +140,7 @@ describe("bridge quickstart", () => {
     expect(quickstart).toContain("execute_webmcp_tool");
     expect(quickstart).toContain("setup_webmcp_bridge");
     expect(quickstart).toContain("get_webmcp_bridge_status");
-    expect(quickstart).toContain("no package-only fallback");
+    expect(quickstart).toContain("built-in fallback");
     expect(quickstart).toContain("EXTENSION_RELEASE_URL");
     expect(quickstart).toContain("EXTENSION_RELEASES_URL");
     expect(quickstart).toContain("DOWNLOAD_EXTENSION");

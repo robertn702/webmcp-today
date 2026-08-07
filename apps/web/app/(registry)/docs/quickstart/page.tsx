@@ -145,7 +145,8 @@ export default function QuickstartPage() {
           <strong className="font-semibold text-foreground">Success:</strong> five current post
           titles and permalinks return from Reddit&apos;s own JSON API. This is generic WebMCP tool
           passthrough: the bridge lists and executes whatever live tools are registered in the
-          selected tab. It has no package-only fallback when WebMCP is unavailable.
+          selected tab — via Chrome&apos;s native API or the extension&apos;s built-in fallback. It
+          never fabricates tools or substitutes browser automation.
         </p>
       </Step>
 

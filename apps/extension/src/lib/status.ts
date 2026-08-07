@@ -5,10 +5,6 @@ import { z } from "zod";
 // free of `wxt/browser` imports so it stays importable from pure modules and
 // tests; the content script sends, the background stores, the popup asks.
 
-/** WebMCP is flag-gated through Chrome 156 and there is no origin-trial path for
- * injected tools (docs/DECISIONS.md 2026-07-24), so every user must set this. */
-export const WEBMCP_FLAG_URL = "chrome://flags/#enable-webmcp-testing";
-
 export const STATUS_MESSAGE_TYPE = "webmcp-today:page-status";
 export const POPUP_STATE_QUERY_TYPE = "webmcp-today:get-popup-state";
 export const UNINSTALL_MESSAGE_TYPE = "webmcp-today:uninstall";
@@ -17,8 +13,6 @@ export const INSTALL_SUGGESTION_MESSAGE_TYPE = "webmcp-today:install-suggestion"
 export const pageStatusSchema = z.discriminatedUnion("kind", [
   /** No installed package matches this URL — nothing to say, no badge. */
   z.object({ kind: z.literal("no-packages") }),
-  /** Packages matched but Chrome exposes no modelContext: the flag is off. */
-  z.object({ kind: z.literal("webmcp-unavailable"), packageCount: z.number().int().positive() }),
   z.object({ kind: z.literal("registered"), toolNames: z.array(z.string()) }),
   /** The site itself blocks WebMCP (`Permissions-Policy: tools=()`) — distinct
    * from a broken package: nothing this extension holds can register here. */

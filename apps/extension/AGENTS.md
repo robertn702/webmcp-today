@@ -95,7 +95,8 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
 - Drive the dev browser's page tools through `packages/mcp` after registering
   the local native host (`packages/mcp/README.md`):
   `list_connected_webmcp_tabs` → `list_webmcp_tools` →
-  `execute_webmcp_tool`. Chrome's WebMCP testing flag is still required.
+  `execute_webmcp_tool`. The built-in fallback registers tools without the
+  WebMCP testing flag, so that flag is only needed for Chrome's native agent.
 - All extension logging (match counts, registered/skipped tools, executor
   failures) lands in the **page console** — not the service worker, not the
   WXT terminal.

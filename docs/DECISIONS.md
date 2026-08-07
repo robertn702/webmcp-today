@@ -65,19 +65,21 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   still valuable for output density, just not for fitting a fixed budget. The budget
   question is **deferred, not answered** (`docs/BACKLOG.md`).
 
-- 2026-07-24 — **The WebMCP flag is unavoidable for end users; launch to developers.**
-  From surveying the reference implementation (WebMCP Hub,
-  `ahblgfajboifhioeldnefolijmllkaaj`, on the Chrome Web Store since Feb 2026). No
-  origin-trial path exists for us: we inject into third-party sites, which never serve
-  a trial token on our behalf — so the extension must detect a missing `modelContext`
-  and say how to enable it, and the install page leads with that. Two other reads:
-  store approval is precedented for this exact category (remote-registry lookup +
-  content-script tool registration), and Hub's 21 users in five months says today's
-  reachable audience is people willing to run a Chrome flag, i.e. developers — so ship
-  package-authoring docs and honest "this is early" framing rather than polishing for a
-  consumer audience that can't run the API yet. Hub's popup takes a configurable hub
-  URL, so a wire-compatible `GET /api/packages/lookup` is a zero-review-latency
-  distribution fallback (`docs/BACKLOG.md`).
+- 2026-07-24 — **No origin-trial path exists for injected tools; the flag is only
+  needed for Chrome's native agent.** We inject into third-party sites, which never serve
+  a trial token on our behalf — so the native WebMCP API stays flag-gated through Chrome 156. Surveying the reference implementation (WebMCP Hub,
+  `ahblgfajboifhioeldnefolijmllkaaj`, on the Chrome Web Store since Feb 2026): the
+  extension originally had to detect a missing `modelContext` and walk the user through
+  `chrome://flags/#enable-webmcp-testing`; the built-in fallback (2026-08-06,
+  `apps/extension/src/lib/model-context-fallback.ts`) removed that need — tools register
+  into the document-local polyfill and stay reachable through the WebMCP Today bridge with
+  no flag at all. Launch to developers stands: store approval is precedented for this exact
+  category (remote-registry lookup + content-script tool registration), and Hub's 21 users
+  in five months says today's reachable audience is people willing to run a Chrome flag,
+  i.e. developers — so ship package-authoring docs and honest "this is early" framing rather
+  than polishing for a consumer audience that can't run the API yet. Hub's popup takes a
+  configurable hub URL, so a wire-compatible `GET /api/packages/lookup` is a
+  zero-review-latency distribution fallback (`docs/BACKLOG.md`).
 
 - 2026-07-24 — **Flag-missing and SPA-navigation handling: four calls that look
   arbitrary from the code.** (1) Packages are looked up _before_ `getModelContext()` is
