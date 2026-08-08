@@ -5,13 +5,10 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of service",
   description:
-    "The terms for using WebMCP Today, including the license you grant when you publish a tool package and the CC0 license every published package is offered under.",
+    "The terms for using WebMCP Today, including the license you grant when you publish a tool package and the CC0 license community-published packages are offered under.",
 };
 
-// TODO(legal): reviewed by a lawyer before launch. Known gaps: no governing-law
-// or dispute clause, and the only contact channel is the public issue tracker
-// (no abuse/legal mailbox exists yet — see docs/BACKLOG.md "Email service").
-const LAST_UPDATED = "25 July 2026";
+const LAST_UPDATED = "8 August 2026";
 
 export default function TermsPage() {
   return (
@@ -31,18 +28,21 @@ export default function TermsPage() {
         <h2 className="text-sm font-semibold">The short version</h2>
         <ul className="mt-3 flex list-disc flex-col gap-2 pl-4 text-sm leading-relaxed text-muted-foreground">
           <li>Publishing a package gives this project a permanent license to host and share it.</li>
-          <li>Every published package is offered to everyone under CC0.</li>
-          <li>Nobody reviews packages. Read one before you install it.</li>
-          <li>Anything here can be removed at any time.</li>
+          <li>Community packages are offered under CC0; curated first-party packages are MIT.</li>
+          <li>
+            Packages are submitted by publishers, not endorsed or approved by us or target sites.
+          </li>
+          <li>Public listing/access can be removed; safety revocation can disable installs.</li>
         </ul>
       </div>
 
       <Section n={1} title="What this is">
         <p>
-          WebMCP Today is a registry of tool packages written by the public. A package is a JSON
+          WebMCP Today is a registry of tool packages submitted by publishers. A package is a JSON
           document that tells a browser extension how to register tools on a site the package&apos;s
-          author doesn&apos;t control. Robert Niimi runs the registry. It isn&apos;t affiliated
-          with, endorsed by, or operated with the involvement of any site a package targets.
+          author doesn&apos;t control. Robert Niimi runs the registry. Listing or installing a
+          package is not endorsement, affiliation, target-site approval, or authorization, and
+          WebMCP Today is not affiliated with sites packages target.
         </p>
         <p>
           There is no review queue. A package goes live the moment it validates against the schema.
@@ -51,8 +51,11 @@ export default function TermsPage() {
 
       <Section n={2} title="Your account">
         <p>
-          You need an account to publish or install. Anything done with your account, or with an API
-          key created under it, is your responsibility. Treat a key like a password and delete it at{" "}
+          You need an account to publish, create API keys, or create account-side install pins.
+          Local installs through the browser extension do not need an account and stay in your
+          browser; account-side pins are a separate service feature for your signed-in account.
+          Anything done with your account, or with an API key created under it, is your
+          responsibility. Treat a key like a password and delete it at{" "}
           <Link href="/settings/security" className="text-foreground underline underline-offset-4">
             Settings → Security
           </Link>{" "}
@@ -74,10 +77,10 @@ export default function TermsPage() {
           use anywhere else, under any terms you like.
         </p>
         <p>
-          Irrevocable matters here. Versions are append-only and every install pins to a specific
-          version, so anyone who installed your package is already running a copy you can&apos;t
-          call back. You can have a package taken down from the registry (section 7), but the
-          license on copies already distributed stands.
+          Irrevocable matters here. Versions are append-only, so the license on copies already
+          distributed stands. Removing public listing/access does not undo that license. Safety
+          revocation is different: once the extension receives its safety list, it can disable an
+          installed package.
         </p>
       </Section>
 
@@ -95,6 +98,10 @@ export default function TermsPage() {
           <li>
             No employment agreement or other contract you&apos;re under prohibits publishing it.
           </li>
+          <li>
+            You will comply with applicable law, your account authorization, and the target
+            site&apos;s terms and restrictions.
+          </li>
         </ul>
         <p>
           If one of those turns out to be false and defending it costs this project money, that cost
@@ -102,9 +109,10 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section n={5} title="Published packages are CC0">
+      <Section n={5} title="Package and software licenses">
         <p>
-          By publishing, you agree that your package is offered to everyone under{" "}
+          By publishing a community submission, you agree that your package is offered to everyone
+          under{" "}
           <a
             href="https://creativecommons.org/publicdomain/zero/1.0/"
             className="text-foreground underline underline-offset-4"
@@ -119,15 +127,15 @@ export default function TermsPage() {
           exists to be copied.
         </p>
         <p>
-          The code that runs the registry is licensed separately, and split across the repository.
-          The{" "}
+          First-party curated packages are MIT, as documented in the{" "}
           <a
             href="https://github.com/robertn702/webmcp-today#license"
             className="text-foreground underline underline-offset-4"
           >
             README
-          </a>{" "}
-          says which part is under which license.
+          </a>
+          . Open-source licenses govern software copying, modification, and distribution; these
+          Terms govern the hosted service, registry publishing, and service-connected use.
         </p>
       </Section>
 
@@ -141,6 +149,10 @@ export default function TermsPage() {
           </li>
           <li>Anything illegal, or built to help someone else do something illegal.</li>
           <li>
+            Packages designed to bypass access controls, evade blocks or rate limits, conceal
+            writes, or access accounts or data without authorization.
+          </li>
+          <li>
             Spam, packages published to bury a rival, or packages published to sit on a domain name.
           </li>
           <li>Malware of any description, including a harmless v1 followed by a hostile v2.</li>
@@ -153,17 +165,26 @@ export default function TermsPage() {
 
       <Section n={7} title="Removing things">
         <p>
-          Anything here can be removed at any time, without notice, and an account can be suspended
-          the same way. The usual reasons are the list above, a credible legal complaint, or a
-          package that turns out to be dangerous to the people who installed it.
+          During beta, removal requests are handled manually. After a publisher or legal request, or
+          when a package is dangerous, we may remove its public listing or access. A safety
+          revocation can disable an installed package once the extension receives the safety list.
+          The usual reasons are the list above, a credible legal complaint, or danger to people who
+          installed a package.
         </p>
         <p>
-          You can ask for your own package to be removed and it will be. Removal doesn&apos;t undo
-          section 3 or section 5. Copies already distributed stay licensed, and anyone pinned to a
-          version keeps running it until they move the pin.
+          You can ask us to remove public access to your own package. Removal doesn&apos;t undo
+          section 3 or section 5. Copies already distributed stay licensed; removing public access
+          does not necessarily affect local copies, while safety revocation can disable them.
         </p>
         <p>
-          To report a package or ask for a takedown,{" "}
+          For private reports, takedowns, or legal requests, email{" "}
+          <a
+            href="mailto:legal@webmcp.today"
+            className="text-foreground underline underline-offset-4"
+          >
+            legal@webmcp.today
+          </a>
+          . For non-sensitive reports, you can also{" "}
           <a
             href="https://github.com/robertn702/webmcp-today/issues"
             className="text-foreground underline underline-offset-4"
@@ -208,13 +229,15 @@ export default function TermsPage() {
 
       <Section n={11} title="Contact">
         <p>
+          Email{" "}
           <a
-            href="https://github.com/robertn702/webmcp-today/issues"
+            href="mailto:legal@webmcp.today"
             className="text-foreground underline underline-offset-4"
           >
-            Open an issue on the repository
-          </a>
-          .
+            legal@webmcp.today
+          </a>{" "}
+          for private reports, takedowns, or legal requests. Public GitHub issues remain available
+          for non-sensitive reports.
         </p>
       </Section>
     </div>

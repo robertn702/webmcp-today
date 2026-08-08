@@ -133,9 +133,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   JSON blob injected into a live page and would be decorative (`packages/curated-packages`
   stays MIT — it's code-shaped and ships its own LICENSE). Deliberately not done: a
   `license` field on `packages/schema`, and a required `agreeToTerms` field — that
-  would break the seed corpus and every published consumer, and a notice at the
-  submission point is the pattern npm and GitHub use. Unreviewed draft; the
-  `TODO(legal)` markers in the page list what's missing.
+  would break the seed corpus and every published consumer.
 
 - 2026-07-26 — **`revocations.id` is a `bigserial`, not the repo's usual random uuid.**
   It doubles as the client's poll cursor (`GET /api/revocations?since=`,
