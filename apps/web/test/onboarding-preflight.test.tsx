@@ -58,15 +58,20 @@ describe("bridge quickstart", () => {
     expect(extensionCheckpoint({ status: "ok", data: PING_OK })).toBe("ready");
   });
 
-  it("renders the extension checkpoint and demotes the flag to a native-agent-only note", () => {
+  it("renders the extension checkpoint as a compact status line", () => {
     const waiting = readinessView("waiting");
-    expect(waiting).toContain("Load the extension, then check again.");
-    expect(waiting).toContain("The WebMCP testing flag is only needed for Chrome");
+    expect(waiting).toContain("Checking for the WebMCP Today extension…");
+    expect(waiting).not.toContain("Check again");
+    expect(waiting).not.toContain("Check this browser first");
     expect(waiting).not.toContain("chrome://flags/#enable-webmcp-testing");
-    expect(waiting).not.toContain('aria-label="Copy chrome://flags/#enable-webmcp-testing"');
+
+    const absent = readinessView("absent");
+    expect(absent).toContain("No WebMCP Today extension answered this page yet");
+    expect(absent).toContain("Check again");
 
     const ready = readinessView("ready");
-    expect(ready).toContain("The extension answered this site and its storage is readable.");
+    expect(ready).toContain("WebMCP Today extension connected.");
+    expect(ready).not.toContain("Check again");
     expect(ready).not.toContain("native host");
     expect(ready).not.toContain("MCP configuration");
     expect(ready).not.toContain("list_connected_webmcp_tabs");
