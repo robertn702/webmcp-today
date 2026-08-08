@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "What the WebMCP Today extension and website store, what they send, and what they never see.",
 };
 
-const LAST_UPDATED = "3 August 2026";
+const LAST_UPDATED = "8 August 2026";
 
 export default function PrivacyPage() {
   return (
@@ -44,36 +44,45 @@ export default function PrivacyPage() {
             periodic fetches of the global revocation list and the known-domains list, so packages
             reported as broken or abusive get disabled on your device.
           </li>
+          <li>
+            when you open or use popup suggestions, the active tab&apos;s origin and pathname only —
+            never its query, fragment, credentials, or port.
+          </li>
         </ul>
         <p>
-          Those requests carry no account, identifier, cookies, or browsing data. The extension has
-          no analytics, telemetry, or error reporting. The one thing the requests can&apos;t hide is
-          your IP address, which our hosting provider&apos;s servers see, as any web server does
-          (see the processor list below).
+          Those requests carry no account or identifier. The extension has no analytics, telemetry,
+          or error reporting. The one thing the requests can&apos;t hide is your IP address, which
+          our hosting provider&apos;s servers see, as any web server does (see the processor list
+          below).
         </p>
         <p>
-          When an AI agent runs one of your installed tools on a page, the request goes from the
-          page to that same site, using your own existing session with it. The data goes from the
-          site to itself, never to us. We cannot see which sites you visit or which tools you run.
+          When an AI agent runs an installed tool, its same-origin request goes to that target site,
+          using your existing session; it is not proxied through WebMCP Today. Tool descriptors,
+          inputs, and outputs can pass locally through the extension, native bridge, and MCP client
+          to your configured MCP or AI provider. That provider&apos;s policies govern that data;
+          WebMCP Today&apos;s hosted servers do not receive it.
         </p>
       </Section>
 
       <Section n={2} title="The website">
         <p>
           Sign-in is GitHub OAuth or email and password. The site stores the profile GitHub hands
-          over (name, email, avatar) and your session, kept alive by the only cookie the site sets.
-          If you sign in with GitHub, GitHub handles that sign-in under its own privacy policy. The
-          service isn&apos;t directed at children under 13, and GitHub sign-in requires you to be at
-          least 13.
+          over (name, email, avatar), authentication data, and sessions, which may contain IP and
+          user-agent information. The site uses session cookies; other cookies may be used where
+          needed for the service. If you sign in with GitHub, GitHub handles that sign-in under its
+          own privacy policy. The service isn&apos;t directed at children under 13, and GitHub
+          sign-in requires you to be at least 13.
         </p>
         <p>
           Publishing a package stores the package itself and its association with your account.
-          Published packages are public and offered to everyone under CC0. See{" "}
+          Community-published packages are public and offered to everyone under CC0. See{" "}
           <Link href="/terms" className="text-foreground underline underline-offset-4">
             the terms
           </Link>{" "}
-          for what that means. Installing a package records an install row on your account, which is
-          how the site serves you your pinned versions.
+          for what that means. A local browser install does not create an account record.
+          Separately, an account-side install records an install row, which is how the service
+          stores signed-in account pins. API key usage and security records are also stored to
+          operate and protect the service.
         </p>
         <p>
           We store all of this to run the service for you, which is the legal basis for processing
@@ -83,7 +92,7 @@ export default function PrivacyPage() {
           The website also uses Vercel Web Analytics to understand aggregate website traffic. It is
           cookie-free and uses anonymized data. It applies to the website&apos;s deployed hosts,
           including Vercel Preview deployments. The extension does not use it or send analytics,
-          telemetry, error reports, browsing history, page contents, or per-URL activity.
+          telemetry, error reports, browsing history, page contents, or queries and fragments.
         </p>
         <p>The service uses these processors:</p>
         <ul className="flex list-disc flex-col gap-2 pl-4">
@@ -93,8 +102,10 @@ export default function PrivacyPage() {
           </li>
           <li>Neon (database).</li>
           <li>
-            Sentry (error monitoring, web app only, not in the extension). An error report can
-            include your IP address, browser, and the page that failed.
+            Sentry (error monitoring, web app only, not in the extension). It is configured not to
+            collect user information, cookies, HTTP headers/bodies, URL query params, GraphQL,
+            database, or AI input/output data, or stack-frame variables/context; reports can still
+            include browser and the page that failed.
           </li>
         </ul>
         <p>
@@ -105,18 +116,20 @@ export default function PrivacyPage() {
 
       <Section n={3} title="What we don't collect">
         <p>
-          The extension sends us no browsing history, page contents, or per-URL activity. We do not
-          sell or share your personal information. Vercel, Neon, and Sentry process website data as
-          described above. GitHub handles GitHub sign-in under its own privacy policy. The extension
-          sends data only as described in section 1.
+          The extension sends us no browsing history, page contents, queries, or fragments. We do
+          not sell or share your personal information. Vercel, Neon, and Sentry process website data
+          as described above. GitHub handles GitHub sign-in under its own privacy policy. The
+          extension sends data only as described in section 1.
         </p>
       </Section>
 
       <Section n={4} title="Your rights">
         <p>
           You can ask to see, correct, export, or delete the data tied to your account by emailing
-          the address below. Deleting your account removes your profile, sessions, and install pins.
-          Published packages are public under CC0 and stay public (see the terms).
+          the address below. During beta, requests are handled manually: we delete or anonymize
+          account data no longer needed, while retaining published packages, submission and license
+          records, safety records, and information required by law. Community-published packages are
+          public under CC0 (see the terms).
         </p>
         <p>
           If you&apos;re in the EU or UK, you also have the right to object to processing and to

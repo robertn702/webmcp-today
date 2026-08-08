@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import type { ZodType } from "zod";
+import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
 
 export function jsonError(status: number, message: string): NextResponse {
   return NextResponse.json({ error: message }, { status });
+}
+
+/** Require API publishers to affirm the current submission terms before a write. */
+export function requireSubmissionTerms(request: Request): NextResponse | null {
+  if (request.headers.get(SUBMISSION_TERMS_HEADER) === SUBMISSION_TERMS_VERSION) return null;
+
+  const terms = new URL("/terms", request.url).toString();
+  return NextResponse.json(
+    {
+      error: `Accept the current terms by sending ${SUBMISSION_TERMS_HEADER}: ${SUBMISSION_TERMS_VERSION}`,
+      termsVersion: SUBMISSION_TERMS_VERSION,
+      terms,
+    },
+    { status: 428, headers: { Link: `<${terms}>; rel="terms-of-service"` } },
+  );
 }
 
 /** Parse a JSON body against a zod schema; returns a response on failure. */

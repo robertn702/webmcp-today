@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SubmitForm } from "@/components/submit-form";
+import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
 
 export const metadata: Metadata = {
   title: "Publish a package",
@@ -37,8 +38,9 @@ export default function SubmitPage() {
 
       <h2 className="mt-10 text-sm font-semibold">Publishing from an agent</h2>
       <pre className="mt-3 overflow-x-auto rounded-lg border bg-muted/50 px-3 py-2 font-mono text-xs">
-        POST /api/packages{"\n"}Authorization: Bearer &lt;api key&gt;{"\n"}Content-Type:
-        application/json
+        POST /api/packages{"\n"}Authorization: Bearer &lt;api key&gt;{"\n"}
+        {SUBMISSION_TERMS_HEADER}: {SUBMISSION_TERMS_VERSION}
+        {"\n"}Content-Type: application/json
       </pre>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Same schema, same validation. Create a key at{" "}
@@ -49,7 +51,12 @@ export default function SubmitPage() {
         <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
           201 {"{ id, terms }"}
         </code>
-        . Validation failures return the zod issue list.
+        . Send the current terms version on either publishing POST to affirm the same Terms and CC0
+        offer as the form; a missing or stale version returns{" "}
+        <code className="rounded bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">
+          428
+        </code>{" "}
+        with the current version and terms URL. Validation failures return the zod issue list.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         POSTing carries the same grant the form does. Whoever runs the agent grants a permanent

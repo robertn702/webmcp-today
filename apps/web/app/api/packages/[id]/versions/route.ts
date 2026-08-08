@@ -8,6 +8,7 @@ import {
   acceptedSubmission,
   jsonError,
   parseBody,
+  requireSubmissionTerms,
   VersionConflictError,
   versionConflict,
 } from "@/lib/http";
@@ -45,6 +46,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
+  const termsResponse = requireSubmissionTerms(request);
+  if (termsResponse) return termsResponse;
+
   const { id } = await context.params;
   const userId = await getAuthUserId(request);
   if (!userId) return jsonError(401, "Authentication required");

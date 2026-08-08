@@ -5,6 +5,7 @@ import {
   acceptedSubmission,
   jsonError,
   parseBody,
+  requireSubmissionTerms,
   VersionConflictError,
   versionConflict,
 } from "@/lib/http";
@@ -29,6 +30,9 @@ export async function GET(request: Request): Promise<NextResponse> {
  * offered onward under CC0. The 201 links back to /terms.
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  const termsResponse = requireSubmissionTerms(request);
+  if (termsResponse) return termsResponse;
+
   const userId = await getAuthUserId(request);
   if (!userId) return jsonError(401, "Authentication required (session or API key)");
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as postVersion } from "@/app/api/packages/[id]/versions/route";
 import { POST as postPackage } from "@/app/api/packages/route";
+import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
 
 // Versions are author-declared: 1 on create, exactly max(version)+1 on
 // publish. A mismatch is an optimistic-concurrency conflict (409 carrying the
@@ -77,7 +78,10 @@ const createBody = {
 function post(url: string, body: unknown): Request {
   return new Request(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      [SUBMISSION_TERMS_HEADER]: SUBMISSION_TERMS_VERSION,
+    },
     body: JSON.stringify(body),
   });
 }
