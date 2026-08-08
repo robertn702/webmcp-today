@@ -12,7 +12,8 @@ Page loads do not ask the registry what to run.
   install path: fetch that exact version, verify its content hash, bootstrap the
   revocation list, and store the package locally.
 - Page loads resolve matching packages entirely from local storage. The registry
-  is contacted only for installs and revocation polling.
+  is contacted only for installs, revocation/domain polling, and a daily optional
+  release-metadata poll for the unpacked-extension update notice.
 - Base URL: `WXT_REGISTRY_API_URL` build-time env var (see `.env.example`),
   defaulting to `https://webmcp.today`. WXT inlines `WXT_`-prefixed variables at
   build time.
@@ -35,6 +36,16 @@ Chrome's own native agent, which cannot see fallback-registered tools.
 
 No extra permissions back this — the badge comes with the `action` key that the
 popup entrypoint already adds.
+
+## Self-hosted extension updates
+
+Unpacked releases cannot replace their own files. Once daily, the background checks
+`GET /api/extension/latest`, validates its inert stable-release metadata, and stores
+the last valid result locally. Only the known self-hosted release ID loaded through
+Developer mode sees a popup notice when that version is newer; local development,
+managed, and Chrome Web Store installs never see it. The notice links to
+`https://webmcp.today/extension#update-unpacked`; it never downloads, installs, or
+executes remote code.
 
 ## Registration lifecycle
 

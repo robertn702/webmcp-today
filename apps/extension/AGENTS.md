@@ -59,6 +59,10 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   refuses `.crx` sideloads outside enterprise policy, so there are no
   auto-updates — users re-download, and Chrome nags about developer-mode
   extensions each launch.
+- The passive update notice checks `GET /api/extension/latest` once per day and
+  only appears for the known release ID when Chrome reports `installType:
+"development"`. It never downloads or replaces extension files, must not alter
+  badges or revocation state, and must not add permissions.
 
 ## Gotchas (hard-won 2026-07-23)
 
