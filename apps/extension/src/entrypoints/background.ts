@@ -92,8 +92,13 @@ export default defineBackground(() => {
       if (!isHttpUrl(tab.url) || (await handleLookup(tab.url)).packages.length === 0) {
         return "not-eligible";
       }
-      await browser.tabs.update(tabId, { active: true });
-      await browser.windows.update(tab.windowId, { focused: true });
+      try {
+        await browser.tabs.update(tabId, { active: true });
+        await browser.windows.update(tab.windowId, { focused: true });
+      } catch {
+        // The tab or its window closed between tabs.get and the focus calls.
+        return "not-found";
+      }
       return "focused";
     },
     sendToContent: (tabId, message) => browser.tabs.sendMessage(tabId, message),
