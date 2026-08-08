@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "What the WebMCP Today extension and website store, what they send, and what they never see.",
 };
 
-const LAST_UPDATED = "3 August 2026";
+const LAST_UPDATED = "5 August 2026";
 
 export default function PrivacyPage() {
   return (
@@ -41,8 +41,10 @@ export default function PrivacyPage() {
             registry, and
           </li>
           <li>
-            periodic fetches of the global revocation list and the known-domains list, so packages
-            reported as broken or abusive get disabled on your device.
+            periodic fetches of the global revocation list, known-domains list, and a small stable
+            extension-release document. The release document contains only version and GitHub
+            download links and lets self-hosted unpacked installs show an optional manual-update
+            notice.
           </li>
         </ul>
         <p>
