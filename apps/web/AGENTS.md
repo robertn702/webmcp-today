@@ -18,8 +18,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
   group), so `/terms` and the AGPL §13 source offer appear on the landing page too.
 - `/terms` is the submission grant + the corpus's CC0 offer. Both publish routes echo it
   on `201` (`terms` field + `Link: …; rel="terms-of-service"`) via `acceptedSubmission`
-  in `lib/http.ts` — API publishers never see the notice on `/submit`. Unreviewed draft;
-  the `TODO(legal)` in the page lists what a lawyer still has to add.
+  in `lib/http.ts` — API publishers must also send the current `WebMCP-Terms-Version`
+  accepted by `requireSubmissionTerms` before a write.
 - The atmosphere/grid layers, `cafe-*` animations, and `bg-brand` CTA buttons are
   landing treatments, also reused by the full-bleed `/auth/[path]` sign-in/sign-up
   pages. `--font-display` (Instrument Serif) and the `--brand` amber are also used

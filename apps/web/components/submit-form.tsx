@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { authClient } from "@/lib/auth-client";
+import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
 
 /** `href`/`note` are only used by the signed-out case, which needs a real link. */
 type FormError = { text: string; href?: string; note?: string };
@@ -31,6 +33,7 @@ export function SubmitForm() {
   const [json, setJson] = useState("");
   const [error, setError] = useState<FormError | null>(null);
   const [busy, setBusy] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function submit() {
     setError(null);
@@ -54,7 +57,10 @@ export function SubmitForm() {
     setBusy(true);
     const res = await fetch("/api/packages", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        [SUBMISSION_TERMS_HEADER]: SUBMISSION_TERMS_VERSION,
+      },
       body: JSON.stringify(parsed.data),
     });
     setBusy(false);
@@ -88,7 +94,8 @@ export function SubmitForm() {
         <h2 className="text-sm font-semibold">Sign in to publish</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           Publishing attaches your account to the package and its terms grant, so it needs an
-          account. Agents don&apos;t need one. They POST with a Bearer API key (below).
+          account. An agent can publish without a browser session using an API key created under an
+          account (below).
         </p>
         <Button asChild className="w-fit">
           <Link href="/auth/sign-in?redirectTo=%2Fsubmit">Sign in</Link>
@@ -124,23 +131,29 @@ export function SubmitForm() {
         </Alert>
       )}
       <div className="flex flex-col gap-3">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="submission-terms"
+            checked={termsAccepted}
+            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+          />
+          <label
+            htmlFor="submission-terms"
+            className="text-xs leading-relaxed text-muted-foreground"
+          >
+            I agree to the Terms of Service and offer this community-submitted package under CC0.
+          </label>
+          <Link href="/terms" className="text-xs text-foreground underline underline-offset-4">
+            Terms of Service
+          </Link>
+        </div>
         <Button
           onClick={() => void submit()}
-          disabled={busy || json.trim().length === 0}
+          disabled={busy || json.trim().length === 0 || !termsAccepted}
           className="w-fit"
         >
           {busy ? "Publishing…" : "Publish package"}
         </Button>
-        {/* The grant attaches on publish, so the notice sits on the control that
-            does it rather than somewhere the publisher has to go looking. */}
-        <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
-          Publishing grants a permanent license to host and redistribute this package, offers it to
-          everyone under CC0, and confirms it&apos;s yours to publish.{" "}
-          <Link href="/terms" className="text-foreground underline underline-offset-4">
-            Full terms
-          </Link>
-          .
-        </p>
       </div>
     </div>
   );
