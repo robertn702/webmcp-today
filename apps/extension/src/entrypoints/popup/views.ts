@@ -9,7 +9,7 @@ export interface ViewCallbacks {
 }
 
 export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
-  const nodes: Node[] = [];
+  const nodes: Node[] = [...extensionUpdateNodes(state)];
 
   // Global problem states outrank whatever the page reported.
   if (state.schemaState !== "ok") {
@@ -55,6 +55,28 @@ export function popupView(state: PopupState, callbacks: ViewCallbacks): Node[] {
   nodes.push(...installsNodes(state, callbacks));
   nodes.push(...suggestionsNodes(state, callbacks));
   return nodes;
+}
+
+function extensionUpdateNodes(state: PopupState): Node[] {
+  if (state.extensionUpdate === undefined) return [];
+
+  const notice = document.createElement("section");
+  notice.className = "update-notice";
+  notice.append(
+    el("h2", "Extension update available"),
+    el(
+      "p",
+      `WebMCP Today ${state.extensionUpdate.version} is available. Unpacked extensions do not update automatically.`,
+    ),
+  );
+  const instructions = document.createElement("a");
+  instructions.className = "btn btn-ghost";
+  instructions.href = "https://webmcp.today/extension#update-unpacked";
+  instructions.target = "_blank";
+  instructions.rel = "noreferrer";
+  instructions.textContent = "Update instructions";
+  notice.append(instructions);
+  return [notice];
 }
 
 function statusNodes(state: PopupState): Node[] {

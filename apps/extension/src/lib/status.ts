@@ -65,6 +65,12 @@ export const popupSuggestionSchema = z.object({
 });
 export type PopupSuggestion = z.infer<typeof popupSuggestionSchema>;
 
+/** A passive notice for self-hosted unpacked builds only. It intentionally
+ * contains no remote code or install action. */
+export const popupExtensionUpdateSchema = z.object({
+  version: z.string(),
+});
+
 export const popupStateSchema = z.object({
   /** `null` when the background has no status for the tab (e.g. the service
    * worker restarted since the page loaded). */
@@ -85,6 +91,7 @@ export const popupStateSchema = z.object({
    * distinct from an empty `suggestions` array, which means the registry was
    * reached and genuinely has nothing to suggest. */
   suggestionsUnavailable: z.boolean().optional(),
+  extensionUpdate: popupExtensionUpdateSchema.optional(),
 });
 export type PopupState = z.infer<typeof popupStateSchema>;
 
