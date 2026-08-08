@@ -15,7 +15,6 @@ export interface NativeHostInstallerDeps {
   platform: string;
   homedir: () => string;
   execPath: string;
-  isBun: boolean;
   packageRoot: string;
   fs: typeof fs;
   path: typeof path;
@@ -94,7 +93,6 @@ export function createNativeHostInstallerDeps(): NativeHostInstallerDeps {
     platform: process.platform,
     homedir,
     execPath: process.execPath,
-    isBun: Boolean(process.versions.bun),
     packageRoot: path.dirname(path.dirname(fileURLToPath(import.meta.url))),
     fs,
     path,
@@ -385,10 +383,9 @@ export async function uninstallBridge(
   };
 }
 
-function assertMacos(deps: Pick<NativeHostInstallerDeps, "platform" | "isBun">): void {
+function assertMacos(deps: Pick<NativeHostInstallerDeps, "platform">): void {
   if (deps.platform !== "darwin")
     throw new Error("The WebMCP Today bridge setup supports macOS only.");
-  if (deps.isBun) throw new Error("The WebMCP Today bridge setup must run under Node, not Bun.");
 }
 
 function assertExtensionId(extensionId: string): void {

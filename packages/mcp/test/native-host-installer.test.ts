@@ -70,14 +70,11 @@ describe("public macOS native-host installer", () => {
     ).rejects.toThrow("official release or development");
   });
 
-  it("rejects non-macOS and Bun setup before writing", async () => {
+  it("rejects non-macOS setup before writing", async () => {
     const linux = await testDeps({ platform: "linux" });
     await expect(installBridge(linux.deps, { browser: "chrome" })).rejects.toThrow("macOS only");
     await expect(getBridgeStatus(linux.deps, { browser: "chrome" })).rejects.toThrow("macOS only");
     await expect(uninstallBridge(linux.deps, { browser: "chrome" })).rejects.toThrow("macOS only");
-
-    const bun = await testDeps({ isBun: true });
-    await expect(installBridge(bun.deps, { browser: "chrome" })).rejects.toThrow("Node, not Bun");
   });
 
   it("copies a host from an ephemeral npx cache into durable bridge paths", async () => {
@@ -294,7 +291,7 @@ describe("public macOS native-host installer", () => {
 });
 
 async function testDeps(
-  overrides: Partial<Pick<NativeHostInstallerDeps, "platform" | "isBun" | "packageRoot">> = {},
+  overrides: Partial<Pick<NativeHostInstallerDeps, "platform" | "packageRoot">> = {},
 ) {
   const homeDirectory = await mkdtemp(path.join(tmpdir(), "webmcp-today-public-host-"));
   temporaryDirectories.push(homeDirectory);

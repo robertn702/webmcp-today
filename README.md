@@ -36,7 +36,7 @@ cd apps/extension && bun run dev
 
 ## Development
 
-**Prerequisites:** `bun@1.3.14` (pinned in root `package.json` `packageManager`), Node for Next.js/WXT and some CLIs. The local MCP bridge requires Node 20 or newer.
+**Prerequisites:** `bun@1.3.14` (pinned in root `package.json` `packageManager`), Node for Next.js/WXT and some CLIs. The local MCP bridge requires Node 20 or newer or Bun.
 
 **Setup:**
 
