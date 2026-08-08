@@ -7,7 +7,6 @@ export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
 export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.1.4";
-export const MCP_BRIDGE_NODE_ISSUE_URL = "https://github.com/robertn702/webmcp-today/issues/127";
 export const DOWNLOAD_EXTENSION = `curl -L ${EXTENSION_RELEASE_URL} -o ~/Downloads/webmcp-today-extension.zip
 unzip ~/Downloads/webmcp-today-extension.zip -d ~/Downloads/webmcp-today-extension`;
 
@@ -94,7 +93,7 @@ Help me make a first live, read-only WebMCP tool call. Work through these instru
 
 ## Prerequisites
 
-- I need macOS, Chrome or Brave, and Node 20 or newer.
+- I need macOS, Chrome or Brave, and Node 20 or newer, or Bun.
 - Preserve unrelated MCP servers and configuration.
 - The WebMCP Today extension, bridge, and package format are in public beta.
 
@@ -116,7 +115,7 @@ ${DOWNLOAD_EXTENSION}
 
 ## 3. Install and configure the bridge
 
-1. Add a local stdio MCP server named \`webmcp-today\` that runs \`npx --yes ${MCP_BRIDGE_PACKAGE}\` to the selected MCP client's configuration. This downloads the pinned bridge on demand without a global install. Use \`npx\`, not \`bunx\`, because bridge setup requires Node; see ${MCP_BRIDGE_NODE_ISSUE_URL}. Preserve my other MCP servers.
+1. Add a local stdio MCP server named \`webmcp-today\` that runs \`npx --yes ${MCP_BRIDGE_PACKAGE}\` to the selected MCP client's configuration. This downloads the pinned bridge on demand without a global install. Preserve my other MCP servers.
 
 ${MCP_CLIENT_CONFIG_PROMPT}
 

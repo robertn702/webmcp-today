@@ -11,7 +11,6 @@ import {
   EXTENSION_RELEASES_URL,
   FIRST_TOOL_NAME,
   FIRST_TOOL_PROMPT,
-  MCP_BRIDGE_NODE_ISSUE_URL,
   QUICKSTART_PROMPT,
   REDDIT_DEMO_URL,
   REDDIT_TOOL_COUNT,
@@ -41,7 +40,8 @@ export default function QuickstartPage() {
 
       <p className="mt-4 border-l-2 border-brand/30 pl-5 text-sm leading-relaxed text-muted-foreground">
         <strong className="font-semibold text-foreground">Before Step 1:</strong> this first-party
-        local bridge requires macOS and Chrome or Brave, plus Node 20 or newer for the MCP bridge.
+        local bridge requires macOS and Chrome or Brave, plus Node 20 or newer or Bun for the MCP
+        bridge.
       </p>
 
       <p className="mt-4 border-l-2 border-brand/30 pl-5 text-sm leading-relaxed text-muted-foreground">
@@ -82,16 +82,8 @@ export default function QuickstartPage() {
       >
         <p>
           Add the published MCP bridge to your MCP client with the pinned <Code>npx</Code> command
-          below. It downloads the bridge on demand without a global installation; use{" "}
-          <Code>npx</Code>
-          rather than <Code>bunx</Code> because bridge setup requires Node (see{" "}
-          <a
-            href={MCP_BRIDGE_NODE_ISSUE_URL}
-            className="text-foreground underline underline-offset-4"
-          >
-            issue #127
-          </a>
-          ). After restarting the client, ask it to call
+          below. It downloads the bridge on demand without a global installation. After restarting
+          the client, ask it to call
           <Code>setup_webmcp_bridge</Code> with <Code>{'{"browser":"chrome","confirm":true}'}</Code>
           (or use <Code>brave</Code>). The confirmation-gated tool copies the durable host and
           writes only this bridge&apos;s per-user native-messaging manifest; it does not expose an

@@ -36,10 +36,6 @@ async function main() {
   if (platform() !== "darwin") {
     throw new Error("This development installer currently supports macOS only.");
   }
-  if (process.versions.bun) {
-    throw new Error("Run this macOS development installer with Node, not Bun.");
-  }
-
   const arguments_ = process.argv.slice(2);
   const browserArgument = arguments_.find((argument) => argument.startsWith("--browser="));
   const extensionIdArgument = arguments_.find((argument) => !argument.startsWith("--"));

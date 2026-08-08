@@ -18,9 +18,9 @@ destructive package tool still blocks on the browser's `window.confirm`.
 
 ## macOS setup
 
-The first-party native bridge supports macOS Chrome and Brave. With Node 20 or newer,
-configure your MCP client to invoke the pinned package through `npx`; it downloads the
-bridge on demand and copies the native host into a durable user-owned location during setup:
+The first-party native bridge supports macOS Chrome and Brave. With Node 20 or newer or Bun,
+configure your MCP client to invoke the pinned package through `npx`; it downloads the bridge on
+demand and copies the native host into a durable user-owned location during setup:
 
 ```bash
 npx --yes @webmcp-today/mcp-bridge@0.1.4
@@ -32,8 +32,7 @@ The tool copies the bundled host to `~/.config/webmcp-today/native-host-public` 
 only WebMCP Today's native-messaging manifest(s). Setup uses the official release extension
 ID by default; its only override is the documented development ID.
 
-Bun is unsupported for native-host setup; use Node rather than `bunx`. See
-[issue #127](https://github.com/robertn702/webmcp-today/issues/127).
+The bridge runs under Node 20 or newer or under Bun; either `npx` or `bunx` can launch it.
 
 Use `get_webmcp_bridge_status` to inspect the installation. It reports paths and
 permissions but never exposes the bridge secret. Use `uninstall_webmcp_bridge` with

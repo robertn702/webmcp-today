@@ -285,3 +285,10 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   one-way engine → schema; `McpResult`/`McpTextContent` moved with the engine
   (`result.ts`) while `model-context.ts`'s DOM feature detection stays in the
   extension as host code.
+
+- 2026-08-08 — **Bun is an accepted bridge runtime alongside Node 20+.** The stdio
+  host and Unix-socket bridge use runtime-agnostic Node APIs that Bun implements, and
+  the wrapper execs the interpreter's absolute path so Chrome launches either identically.
+  Rejected: retaining the Node-only guard — it was unverified caution, not a known
+  incompatibility. Non-obvious consequence: `native-host-bun.test.ts` gates on a `bun`
+  binary, so CI and development environments without Bun silently skip that coverage.
