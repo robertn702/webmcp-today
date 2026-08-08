@@ -159,7 +159,7 @@ same-origin fetch, checks `errorPath`, and applies the `returns` projection.
 ### ④ Local bridge flow — MCP → selected tab's live tools
 
 _The user selects a visible tab, or an agent focuses a package-matched one via
-`focus-tab`; the native host relays only discovery and execution._
+`focus-tab`; the native host relays discovery, tab focus, and execution._
 
 ```mermaid
 flowchart LR
