@@ -42,9 +42,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             periodic fetches of the global revocation list, known-domains list, and a small stable
-            extension-release document. The release document contains only version and GitHub
-            download links and lets self-hosted unpacked installs show an optional manual-update
-            notice.
+            extension-release document. The release document contains release metadata, including
+            the version, publication time, and GitHub links, and lets self-hosted unpacked installs
+            show an optional manual-update notice.
           </li>
         </ul>
         <p>

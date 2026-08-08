@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLatestExtensionRelease } from "@/lib/extension-release";
+import { extensionReleaseSchema, getLatestExtensionRelease } from "@/lib/extension-release";
 
 function githubRelease(
   version: string,
@@ -80,5 +80,56 @@ describe("getLatestExtensionRelease", () => {
     const release = await getLatestExtensionRelease(fetchFn);
 
     expect(release).toBeUndefined();
+  });
+
+  it("finds the highest valid stable release across GitHub pages", async () => {
+    const inits: RequestInit[] = [];
+    const urls: string[] = [];
+    const nextUrl =
+      "https://api.github.com/repos/robertn702/webmcp-today/releases?per_page=100&page=2";
+    const fetchFn = async (url: string, init?: RequestInit) => {
+      urls.push(url);
+      if (init !== undefined) inits.push(init);
+      return new Response(
+        JSON.stringify(url === nextUrl ? [githubRelease("1.0.10")] : [githubRelease("1.0.2")]),
+        {
+          headers:
+            url === nextUrl
+              ? undefined
+              : { Link: `<${nextUrl}>; rel="next", <https://example.test>; rel="last"` },
+        },
+      );
+    };
+
+    await expect(getLatestExtensionRelease(fetchFn)).resolves.toMatchObject({ version: "1.0.10" });
+    expect(urls).toEqual([
+      "https://api.github.com/repos/robertn702/webmcp-today/releases?per_page=100",
+      nextUrl,
+    ]);
+    expect(inits).toEqual([
+      expect.objectContaining({
+        cache: "force-cache",
+        headers: { Accept: "application/vnd.github+json" },
+        next: { revalidate: 3600 },
+      }),
+      expect.objectContaining({
+        cache: "force-cache",
+        headers: { Accept: "application/vnd.github+json" },
+        next: { revalidate: 3600 },
+      }),
+    ]);
+  });
+
+  it.each(["0", "0.0", "0.0.0", "0.0.0.0"])("rejects the all-zero version %s", (version) => {
+    expect(
+      extensionReleaseSchema.safeParse({
+        channel: "stable",
+        version,
+        releaseUrl: "https://example.test/release",
+        downloadUrl: "https://example.test/download",
+        checksumsUrl: "https://example.test/checksums",
+        publishedAt: "2026-08-05T12:00:00Z",
+      }).success,
+    ).toBe(false);
   });
 });
