@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExtensionUpdateDetails } from "@/components/extension-update-details";
 import { WebMcpReadiness } from "@/components/webmcp-readiness";
 import { EXTENSION_RELEASE_URL } from "../docs/content";
 
@@ -75,6 +76,42 @@ export default function ExtensionPage() {
           </p>
         </li>
       </ol>
+
+      <section id="update-unpacked" className="mt-10 scroll-mt-8">
+        <p className="font-mono text-[11px] tracking-[0.2em] text-brand uppercase">Update</p>
+        <h2 className="mt-3 font-display text-3xl tracking-tight">Update an unpacked extension</h2>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          Unpacked extensions do not update automatically. Download a new release, replace the
+          contents of the folder Chrome already loads, and reload the same extension. Do not remove
+          it first: removing it can clear the package data stored with the extension.
+        </p>
+        <ExtensionUpdateDetails />
+        <ol className="mt-5 flex flex-col gap-5 border-l-2 border-brand/30 pl-5">
+          <li>
+            <p className="text-sm font-semibold">Open the exact release</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Use the exact release notes, versioned ZIP, and SHA256SUMS links above. They are
+              loaded from the same release metadata the extension checks.
+            </p>
+          </li>
+          <li>
+            <p className="text-sm font-semibold">Keep the existing extension directory</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Open <code>chrome://extensions</code>, find WebMCP Today, and use its displayed source
+              path to locate the folder that is currently loaded. Extract the new ZIP and replace
+              the contents of that same folder.
+            </p>
+          </li>
+          <li>
+            <p className="text-sm font-semibold">Reload, do not remove</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Return to <code>chrome://extensions</code> and click Reload on the existing WebMCP
+              Today entry. This preserves its identity and locally stored packages. Chrome Web Store
+              installs will update through Chrome when the store version is available.
+            </p>
+          </li>
+        </ol>
+      </section>
 
       <p className="mt-10 text-sm text-muted-foreground">
         Continue to the{" "}

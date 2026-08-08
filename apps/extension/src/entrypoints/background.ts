@@ -8,6 +8,13 @@ import {
   pollDomains,
   readDomainsDoc,
 } from "../lib/domains.js";
+import {
+  EXTENSION_UPDATE_ALARM,
+  EXTENSION_UPDATE_POLL_MINUTES,
+  pollExtensionUpdate,
+  readExtensionUpdateState,
+  shouldShowExtensionUpdate,
+} from "../lib/extension-update.js";
 import { handleBridgeRequest, installPackage, resolveInstallState } from "../lib/install-bridge.js";
 import { createInstallsStore, type SchemaVersionState } from "../lib/installs-store.js";
 import { resolveLocalLookup, type LocalLookupResult } from "../lib/local-lookup.js";
@@ -122,6 +129,7 @@ export default defineBackground(() => {
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === REVOCATIONS_ALARM) void pollNow();
     if (alarm.name === DOMAINS_ALARM) void pollDomainsNow();
+    if (alarm.name === EXTENSION_UPDATE_ALARM) void pollExtensionUpdateNow();
   });
 
   browser.storage.onChanged.addListener((changes, areaName) => {
@@ -202,7 +210,13 @@ async function bootstrap(): Promise<void> {
   if (!existingDomains) {
     browser.alarms.create(DOMAINS_ALARM, { periodInMinutes: DOMAINS_POLL_MINUTES });
   }
-  await Promise.all([pollNow(), pollDomainsNow()]);
+  const existingUpdate = await browser.alarms.get(EXTENSION_UPDATE_ALARM);
+  if (!existingUpdate) {
+    browser.alarms.create(EXTENSION_UPDATE_ALARM, {
+      periodInMinutes: EXTENSION_UPDATE_POLL_MINUTES,
+    });
+  }
+  await Promise.all([pollNow(), pollDomainsNow(), pollExtensionUpdateNow()]);
 }
 
 async function pollNow(): Promise<void> {
@@ -218,6 +232,15 @@ async function pollDomainsNow(): Promise<void> {
     area: localStorageArea,
     fetchFn: (url) => fetch(url),
     origin: REGISTRY_ORIGIN,
+  });
+}
+
+async function pollExtensionUpdateNow(): Promise<void> {
+  await pollExtensionUpdate({
+    area: localStorageArea,
+    fetchFn: (url, init) => fetch(url, init),
+    origin: REGISTRY_ORIGIN,
+    getInstall: () => browser.management.getSelf(),
   });
 }
 
@@ -308,6 +331,21 @@ async function buildPopupState(): Promise<PopupState> {
   // Popup open is a natural retry moment for the fail-closed state.
   if (revokedDoc === undefined) void pollNow();
 
+  // Render the last valid notice immediately; a stale popup open refreshes it
+  // in the background for the next open without blocking package status.
+  const extensionUpdate = await readExtensionUpdateState(localStorageArea);
+  void pollExtensionUpdateNow();
+  let showExtensionUpdate = false;
+  try {
+    showExtensionUpdate = shouldShowExtensionUpdate(
+      extensionUpdate,
+      browser.runtime.getManifest().version,
+      await browser.management.getSelf(),
+    );
+  } catch {
+    // An unavailable installation-type lookup only suppresses this optional UI.
+  }
+
   const rawIndex = (await localStorageArea.get(INDEX_KEY))[INDEX_KEY];
   const parsedIndex = rawIndex === undefined ? undefined : indexSchema.safeParse(rawIndex);
   const index: InstallIndex = parsedIndex?.success ? parsedIndex.data : {};
@@ -378,6 +416,9 @@ async function buildPopupState(): Promise<PopupState> {
     ...(recovery !== undefined ? { recovery } : {}),
     ...(suggestions !== undefined ? { suggestions } : {}),
     ...(suggestionsUnavailable !== undefined ? { suggestionsUnavailable } : {}),
+    ...(showExtensionUpdate && extensionUpdate !== undefined
+      ? { extensionUpdate: { version: extensionUpdate.latest.version } }
+      : {}),
   };
 }
 
