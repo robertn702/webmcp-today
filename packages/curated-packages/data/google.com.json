@@ -86,7 +86,8 @@
           },
           "limit": { "type": "integer", "description": "Max results to return (1-20)" }
         },
-        "required": ["query", "limit"]
+        "required": ["query", "limit"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "search" }
@@ -102,7 +103,8 @@
             "description": "Hex feature ID pair from maps_search, e.g. 0x89c259fea13836e1:0xdc1041da3f77c1fd"
           }
         },
-        "required": ["featureId"]
+        "required": ["featureId"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "place" }
@@ -122,7 +124,8 @@
             "description": "End point: place name or address, e.g. 'Grand Central Terminal'"
           }
         },
-        "required": ["origin", "destination"]
+        "required": ["origin", "destination"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "directions" }
@@ -130,7 +133,7 @@
     {
       "name": "maps_lists",
       "description": "List the signed-in user's saved Google Maps lists — Favorites, Want to go, Travel plans, and custom lists — with name, list id, type (1=custom, 2=Favorites, 3=Want to go, 5=Travel plans, 6=Saved places), and place count. Requires a logged-in Google session; fails logged out. Use a list id with maps_list_places.",
-      "inputSchema": { "type": "object", "properties": {} },
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "lists" }
     },
@@ -146,7 +149,8 @@
           },
           "limit": { "type": "integer", "description": "Max places to return (1-500)" }
         },
-        "required": ["listId", "limit"]
+        "required": ["listId", "limit"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "listPlaces" }

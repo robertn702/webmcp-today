@@ -74,7 +74,8 @@
             "description": "Comment body (plain text; blank lines split paragraphs, links auto-link)"
           }
         },
-        "required": ["itemId", "text"]
+        "required": ["itemId", "text"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false, "destructiveHint": true },
       "execution": { "mode": "api", "endpoint": "comment" }
@@ -95,7 +96,8 @@
             "enum": ["up", "un"]
           }
         },
-        "required": ["itemId", "how"]
+        "required": ["itemId", "how"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false },
       "execution": { "mode": "api", "endpoint": "vote" }
@@ -116,7 +118,8 @@
             "description": "Body for a text post (Ask HN etc.); omit for a link post. Provide exactly one of url or text"
           }
         },
-        "required": ["title"]
+        "required": ["title"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false, "destructiveHint": true },
       "execution": { "mode": "api", "endpoint": "submit" }

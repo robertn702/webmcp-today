@@ -64,11 +64,11 @@ export default function PackageFormatPage() {
           <Field name="tools" type="ToolDescriptor[], 1–30 · required">
             The tools registered on a matching page. Names must be unique within the package.
           </Field>
-          <Field name="api" type="ApiBlock · optional">
-            The site&apos;s HTTP surface. Optional in the schema, required in practice: execution is
-            api-mode only, so a tool that does anything binds to an endpoint declared here.
+          <Field name="api" type="ApiBlock · required">
+            The site&apos;s HTTP surface, with at least one endpoint. Execution is api-mode only, so
+            every tool binds to an endpoint declared here.
           </Field>
-          <Field name="minEngine" type="integer ≥ 1 · optional">
+          <Field name="minEngine" type="integer ≥ 1 · required">
             The capability floor this version needs, like an Android API level. An extension whose
             own level is lower skips the package instead of half-running it. Current level is{" "}
             <Code>1</Code>.
@@ -101,22 +101,23 @@ export default function PackageFormatPage() {
             source of the 500, which is enforced here.
           </Field>
           <Field name="inputSchema" type="JSON Schema object · required">
-            <Code>{'{ type: "object", properties, required? }'}</Code>. <Code>properties</Code>{" "}
-            defaults to <Code>{"{}"}</Code>, so it&apos;s effectively optional. At most 20
-            properties; each takes a <Code>type</Code> and an optional <Code>description</Code>{" "}
-            (≤1000) and <Code>enum</Code>, plus nested <Code>items</Code>/<Code>properties</Code>/
-            <Code>required</Code> if you need them. Each property object is loose; unknown keys pass
-            through. Property names are what <Code>{"{{param}}"}</Code> placeholders in the api
-            block refer to.
+            <Code>{'{ type: "object", properties, required?, additionalProperties: false }'}</Code>.
+            Primitive-only and non-recursive: at most 20 properties, each a <Code>string</Code>/
+            <Code>number</Code>/<Code>integer</Code>/<Code>boolean</Code> leaf with an optional{" "}
+            <Code>description</Code> (≤150), a type-compatible <Code>enum</Code>, and the matching
+            bounds (<Code>minLength</Code>/<Code>maxLength</Code> for strings, <Code>minimum</Code>/
+            <Code>maximum</Code> for numbers). No nested objects or arrays, and no unknown keys.
+            Property names are what <Code>{"{{param}}"}</Code> placeholders in the api block refer
+            to.
           </Field>
           <Field name="annotations" type="object · optional">
-            Hints for the agent: <Code>readOnlyHint</Code>, <Code>untrustedContentHint</Code>. Extra
-            keys are allowed and passed through. Mark writes honestly.
+            Hints for the agent: <Code>readOnlyHint</Code>, <Code>untrustedContentHint</Code>,{" "}
+            <Code>destructiveHint</Code>. No unknown keys, and a tool can&apos;t claim both{" "}
+            <Code>readOnlyHint</Code> and <Code>destructiveHint</Code>. Mark writes honestly.
           </Field>
-          <Field name="execution" type='{ mode: "api", endpoint } · optional'>
+          <Field name="execution" type='{ mode: "api", endpoint } · required'>
             Binds the tool to a key in <Code>api.endpoints</Code>. <Code>mode</Code> is{" "}
-            <Code>&quot;api&quot;</Code>, the only mode there is. A tool with no{" "}
-            <Code>execution</Code> is skipped at registration and never reaches the agent.
+            <Code>&quot;api&quot;</Code>, the only mode there is.
           </Field>
         </div>
       </Section>
@@ -178,10 +179,6 @@ export default function PackageFormatPage() {
             A literal prefix removed before the body is parsed as JSON, for sites that armour
             responses against XSSI, like Google&apos;s <Code>{")]}'"}</Code>. Stripped only when
             present.
-          </Field>
-          <Field name="persistedQuery" type="boolean · optional">
-            Accepted by the schema, but the executor throws on it today; Automatic Persisted Queries
-            aren&apos;t implemented yet. Don&apos;t set it.
           </Field>
           <Field name="auth" type="string[], ≤10 · optional">
             Names of auth sources to attach to this call.

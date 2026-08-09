@@ -1,7 +1,7 @@
 import { compile } from "@jmespath-community/jmespath";
 import { z } from "zod";
 import type { ToolDescriptor } from "./tool.js";
-import { unknownPlaceholders } from "./templates.js";
+import { TEMPLATE_RE, unknownPlaceholders } from "./templates.js";
 import { hostnameWithinDomain } from "./url-matching.js";
 
 // Tier-1 API execution model — a package declares a site's HTTP surface as data
@@ -35,9 +35,24 @@ const locatorPath = z.array(z.string().min(1).max(PATH_SEGMENT_MAX)).min(1).max(
 
 /** A named credential-acquisition flow, e.g. Reddit's modhash dance: fetch an
  * endpoint, extract a token from its response, resend it on the write call. */
-export const apiAuthSourceSchema = z.object({
+function validateAuthPattern(pattern: string): string | null {
+  const staticPattern = pattern.replace(TEMPLATE_RE, "webmcp_placeholder");
+  try {
+    new RegExp(staticPattern);
+    const captureProbe = new RegExp(`(?:${staticPattern})|`).exec("");
+    if (captureProbe === null || captureProbe.length < 2) {
+      return "pattern must define capture group 1 for the token";
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return `pattern must be valid JavaScript regex syntax: ${detail}`;
+  }
+  return null;
+}
+
+export const apiAuthSourceSchema = z.strictObject({
   source: z
-    .object({
+    .strictObject({
       // Endpoint (by name) to fetch the token from.
       endpoint: endpointName,
       // Locator into the JSON response, e.g. ["data", "modhash"].
@@ -48,7 +63,15 @@ export const apiAuthSourceSchema = z.object({
       // 1 is the token; no match is a loud failure. May carry {{param}}
       // placeholders (e.g. a per-item id in a vote URL); their values are
       // regex-escaped before compiling, so they match literal text.
-      pattern: z.string().min(1).max(500).optional(),
+      pattern: z
+        .string()
+        .min(1)
+        .max(500)
+        .superRefine((pattern, ctx) => {
+          const error = validateAuthPattern(pattern);
+          if (error !== null) ctx.addIssue({ code: "custom", message: error });
+        })
+        .optional(),
     })
     .superRefine((src, ctx) => {
       // Exactly one extraction mode. Zero = no way to get a token; two = the
@@ -61,7 +84,7 @@ export const apiAuthSourceSchema = z.object({
         });
       }
     }),
-  sendAs: z.object({
+  sendAs: z.strictObject({
     // Where the token is injected: a request header (Reddit's X-Modhash), a
     // form field (HN's hmac), or a query param (HN's vote auth). The {in,
     // name} axis is the one four independent teams converged on (OpenAPI `in`,
@@ -82,7 +105,7 @@ export const apiAuthSourceSchema = z.object({
 /** A GraphQL operation. `document` is opaque — either an inline query or a
  * "@documents/name" reference into the package-level `documents` block. It is
  * NEVER template-scanned; only `variables` bind {{param}} from tool input. */
-export const apiGraphqlSchema = z.object({
+export const apiGraphqlSchema = z.strictObject({
   document: z.string().min(1).max(DOCUMENT_MAX),
   variables: z.record(z.string(), z.unknown()).optional(),
 });
@@ -92,9 +115,21 @@ export const apiGraphqlSchema = z.object({
 const BODY_KINDS = ["graphql", "form", "body"] as const;
 
 export const apiEndpointSchema = z
-  .object({
+  .strictObject({
     method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
-    path: z.string().min(1).max(2048),
+    path: z
+      .string()
+      .min(1)
+      .max(2048)
+      .refine(
+        (path) =>
+          path.startsWith("/") &&
+          !path.includes("//") &&
+          !path.includes("\\") &&
+          !path.includes("?") &&
+          !path.includes("#"),
+        "path must begin with exactly one '/', contain no '//', and contain no URL, backslash, query, or fragment",
+      ),
     query: z.record(z.string(), z.string()).optional(),
     // Opaque body template; string leaves may carry {{param}} placeholders.
     body: z.unknown().optional(),
@@ -127,7 +162,6 @@ export const apiEndpointSchema = z
     // constants. Stripped only when present: a site that drops its own prefix
     // must not break a package that was already working.
     stripPrefix: z.string().min(1).max(50).optional(),
-    persistedQuery: z.boolean().optional(),
     graphql: apiGraphqlSchema.optional(),
     // Names of auth token sources to attach to this call.
     auth: z.array(endpointName).max(10).optional(),
@@ -145,9 +179,16 @@ export const apiEndpointSchema = z
         path: [declared[1] ?? "body"],
       });
     }
+    if (endpoint.method === "GET" && declared.length > 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "GET endpoints cannot declare body, form, or graphql",
+        path: [declared[0] ?? "body"],
+      });
+    }
   });
 
-export const apiBlockSchema = z.object({
+export const apiBlockSchema = z.strictObject({
   baseUrl: z
     .string()
     .min(1)
@@ -160,7 +201,9 @@ export const apiBlockSchema = z.object({
       }
     }, "baseUrl must be a valid https:// URL"),
   auth: z.record(z.string(), apiAuthSourceSchema).optional(),
-  endpoints: z.record(z.string(), apiEndpointSchema),
+  endpoints: z
+    .record(z.string(), apiEndpointSchema)
+    .refine((endpoints) => Object.keys(endpoints).length > 0, "api.endpoints must not be empty"),
   // Opaque named static GraphQL documents, referenced as "@documents/name".
   // NEVER template-scanned.
   documents: z.record(z.string(), z.string().min(1).max(DOCUMENT_MAX)).optional(),

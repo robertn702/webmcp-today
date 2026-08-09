@@ -5,6 +5,7 @@ const inputSchema = {
   type: "object",
   properties: { query: { type: "string", description: "Search query" } },
   required: ["query"],
+  additionalProperties: false,
 };
 
 describe("toolDescriptorSchema", () => {
@@ -54,8 +55,31 @@ describe("toolDescriptorSchema", () => {
       description: "Delete",
       inputSchema,
       annotations: { destructiveHint: true, readOnlyHint: false },
+      execution: { mode: "api", endpoint: "delete" },
     });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a readOnlyHint + destructiveHint combination", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      annotations: { destructiveHint: true, readOnlyHint: true },
+      execution: { mode: "api", endpoint: "search" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown key on the annotations object", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+      annotations: { readOnlyHint: true, extra: true },
+      execution: { mode: "api", endpoint: "search" },
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects a non-boolean destructiveHint annotation", () => {

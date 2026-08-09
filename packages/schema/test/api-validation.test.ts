@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { createPackageSchema, publishVersionSchema } from "../src/index.js";
+import {
+  apiAuthSourceSchema,
+  apiEndpointSchema,
+  createPackageSchema,
+  publishVersionSchema,
+} from "../src/index.js";
 
 // A Reddit-style tier-1 config: REST read (subredditHot) + write (comment with
-// the csrf modhash token source) + a GraphQL endpoint exercising errorPath,
-// persistedQuery, and an @documents reference. Cloned + mutated per failure test.
+// the csrf modhash token source) + a GraphQL endpoint exercising errorPath
+// and an @documents reference. Cloned + mutated per failure test.
 const base = {
   version: 1,
   domain: "reddit.com",
   urlPatterns: ["*://*.reddit.com/*"],
   title: "Reddit API tools",
   description: "Read and write Reddit via its JSON API.",
+  minEngine: 1,
   api: {
     baseUrl: "https://www.reddit.com",
     auth: {
@@ -39,7 +45,6 @@ const base = {
         path: "/svc/shreddit/graphql",
         graphql: { document: "@documents/search", variables: { query: "{{query}}", first: 10 } },
         errorPath: ["errors"],
-        persistedQuery: true,
         returns: "data.search",
       },
     },
@@ -58,6 +63,7 @@ const base = {
           limit: { type: "integer", description: "Max posts" },
         },
         required: ["subreddit"],
+        additionalProperties: false,
       },
       annotations: { readOnlyHint: true },
       execution: { mode: "api", endpoint: "subredditHot" },
@@ -72,6 +78,7 @@ const base = {
           text: { type: "string", description: "Comment body" },
         },
         required: ["thingId", "text"],
+        additionalProperties: false,
       },
       annotations: { readOnlyHint: false },
       execution: { mode: "api", endpoint: "comment" },
@@ -83,6 +90,7 @@ const base = {
         type: "object",
         properties: { query: { type: "string", description: "Search query" } },
         required: ["query"],
+        additionalProperties: false,
       },
       execution: { mode: "api", endpoint: "searchGraphql" },
     },
@@ -145,6 +153,7 @@ describe("api block cross-validation", () => {
       urlPatterns: ["*://acme.com/*"],
       title: "x",
       description: "x",
+      minEngine: 1,
       api: {
         baseUrl: "https://acme.com",
         endpoints: { create: { method: "POST", path: "/api/create", body } },
@@ -157,6 +166,7 @@ describe("api block cross-validation", () => {
             type: "object",
             properties: { title: { type: "string", description: "Title" } },
             required: ["title"],
+            additionalProperties: false,
           },
           execution: { mode: "api", endpoint: "create" },
         },
@@ -282,6 +292,7 @@ describe("api block cross-validation", () => {
       urlPatterns: ["*://news.ycombinator.com/*"],
       title: "HN write tools",
       description: "Vote and comment on HN.",
+      minEngine: 1,
       api: {
         baseUrl: "https://news.ycombinator.com",
         auth: {
@@ -314,6 +325,7 @@ describe("api block cross-validation", () => {
               how: { type: "string", description: "up/un" },
             },
             required: ["itemId", "how"],
+            additionalProperties: false,
           },
           execution: { mode: "api", endpoint: "vote" },
         },
@@ -357,7 +369,13 @@ describe("api block cross-validation", () => {
   });
 
   it("runs the same api cross-validation on publishVersionSchema", () => {
-    const version = { version: 2, urlPatterns: base.urlPatterns, tools: base.tools, api: base.api };
+    const version = {
+      version: 2,
+      urlPatterns: base.urlPatterns,
+      tools: base.tools,
+      api: base.api,
+      minEngine: base.minEngine,
+    };
     expect(publishVersionSchema.safeParse(version).success).toBe(true);
     const apiSubdomain = structuredClone(version);
     apiSubdomain.urlPatterns = ["*://reddit.com/*"];
@@ -368,5 +386,103 @@ describe("api block cross-validation", () => {
     if (!tool) throw new Error("fixture missing tool");
     tool.execution = { mode: "api", endpoint: "ghost" };
     expect(publishVersionSchema.safeParse(broken).success).toBe(false);
+  });
+});
+
+describe("apiEndpointSchema path validation", () => {
+  const withPath = (path: string) => apiEndpointSchema.safeParse({ method: "GET", path }).success;
+
+  it("accepts a single-rooted path", () => {
+    expect(withPath("/api/me.json")).toBe(true);
+  });
+
+  it("rejects a path missing the leading slash", () => {
+    expect(withPath("api/me.json")).toBe(false);
+  });
+
+  it("rejects a double-slash anywhere in the path", () => {
+    expect(withPath("/api//me.json")).toBe(false);
+  });
+
+  it("rejects a protocol-relative path", () => {
+    expect(withPath("//evil.example.com/api")).toBe(false);
+  });
+
+  it("rejects an absolute URL as a path", () => {
+    expect(withPath("https://evil.example.com/api")).toBe(false);
+  });
+
+  it("rejects a backslash in the path", () => {
+    expect(withPath("/api\\me.json")).toBe(false);
+  });
+
+  it("rejects an embedded query string in the path", () => {
+    expect(withPath("/api/me.json?x=1")).toBe(false);
+  });
+
+  it("rejects an embedded fragment in the path", () => {
+    expect(withPath("/api/me.json#top")).toBe(false);
+  });
+});
+
+describe("apiEndpointSchema GET body rejection", () => {
+  it("rejects a GET endpoint declaring a body", () => {
+    const result = apiEndpointSchema.safeParse({
+      method: "GET",
+      path: "/api/search",
+      body: { q: "{{q}}" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a GET endpoint declaring a form", () => {
+    const result = apiEndpointSchema.safeParse({
+      method: "GET",
+      path: "/api/search",
+      form: { q: "{{q}}" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a GET endpoint declaring a graphql operation", () => {
+    const result = apiEndpointSchema.safeParse({
+      method: "GET",
+      path: "/api/search",
+      graphql: { document: "query { a }" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a POST endpoint declaring a body", () => {
+    const result = apiEndpointSchema.safeParse({
+      method: "POST",
+      path: "/api/search",
+      body: { q: "{{q}}" },
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("apiAuthSourceSchema pattern validation", () => {
+  const withPattern = (pattern: string) =>
+    apiAuthSourceSchema.safeParse({
+      source: { endpoint: "me", pattern },
+      sendAs: { in: "header", name: "X-Token" },
+    }).success;
+
+  it("accepts a pattern with a capture group", () => {
+    expect(withPattern('name="hmac" value="([^"]+)"')).toBe(true);
+  });
+
+  it("rejects a pattern with no capture group", () => {
+    expect(withPattern('name="hmac" value="[^"]+"')).toBe(false);
+  });
+
+  it("rejects a pattern that is not valid regex syntax", () => {
+    expect(withPattern("(unterminated")).toBe(false);
+  });
+
+  it("accepts a pattern containing a {{param}} placeholder alongside a capture group", () => {
+    expect(withPattern("vote\\?id={{itemId}}&auth=([^&]+)")).toBe(true);
   });
 });
