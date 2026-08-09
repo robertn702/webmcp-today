@@ -87,9 +87,7 @@ export async function runRegistrationPass(
         );
         continue;
       }
-      const endpointName = execution.endpoint;
-      const execute: ToolExecute = (params) =>
-        executeApiTool(tool.name, api, endpointName, params, tool.annotations);
+      const execute: ToolExecute = (params) => executeApiTool(tool, api, params);
 
       if (seen.has(tool.name)) continue;
       if (declarativeNames.has(tool.name)) {

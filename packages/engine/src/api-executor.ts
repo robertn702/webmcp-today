@@ -1,5 +1,11 @@
 import { search, type JSONValue } from "@jmespath-community/jmespath";
-import type { ApiAuthSource, ApiBlock, ApiEndpoint } from "@webmcp-today/schema";
+import {
+  validateToolInput,
+  type ApiAuthSource,
+  type ApiBlock,
+  type ApiEndpoint,
+  type ToolDescriptor,
+} from "@webmcp-today/schema";
 import { mcpResult } from "./mcp-result.js";
 import type { McpResult } from "./result.js";
 
@@ -420,31 +426,48 @@ export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): Mc
   return mcpResult(typeof projected === "string" ? projected : JSON.stringify(projected));
 }
 
+/** Everything executeApiTool needs from a tool descriptor — narrowed so
+ *  callers (and tests) don't have to fabricate a `description` just to
+ *  execute a tool. */
+export type ApiToolDescriptor = Pick<
+  ToolDescriptor,
+  "name" | "inputSchema" | "annotations" | "execution"
+>;
+
 export async function executeApiTool(
-  toolName: string,
+  tool: ApiToolDescriptor,
   api: ApiBlock,
-  endpointName: string,
   params: Record<string, unknown>,
-  annotations?: Record<string, unknown>,
 ): Promise<McpResult> {
   try {
-    return await executeApiToolInner(toolName, api, endpointName, params, annotations);
+    return await executeApiToolInner(tool, api, params);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[webmcp-today] API tool "${toolName}" failed:`, err);
-    return mcpResult(`Error executing "${toolName}": ${msg}`);
+    console.error(`[webmcp-today] API tool "${tool.name}" failed:`, err);
+    return mcpResult(`Error executing "${tool.name}": ${msg}`);
   }
 }
 
 async function executeApiToolInner(
-  toolName: string,
+  tool: ApiToolDescriptor,
   api: ApiBlock,
-  endpointName: string,
   params: Record<string, unknown>,
-  annotations?: Record<string, unknown>,
 ): Promise<McpResult> {
+  const { name: toolName, annotations } = tool;
+  const endpointName = tool.execution.endpoint;
   const endpoint = api.endpoints[endpointName];
   if (!endpoint) throw new Error(`Endpoint "${endpointName}" is not defined in api.endpoints.`);
+
+  // Validate BEFORE any side effect below (confirm dialog, auth-source fetch,
+  // request interpolation, the tool's own fetch) — an agent that sends bad
+  // input must never trigger a confirmation prompt or touch the network.
+  const validation = validateToolInput(tool.inputSchema, params);
+  if (!validation.success) {
+    const issue = validation.issues[0];
+    const path = issue && issue.path.length > 0 ? issue.path.join(".") : "(root)";
+    throw new Error(`Invalid input at "${path}": ${issue?.message}`);
+  }
+  const validParams = validation.data;
 
   // Per-spec courtesy confirm for tools flagged destructive (mirrors the DOM
   // executor). Guarded so the engine stays callable outside a browser (tests).
@@ -462,10 +485,10 @@ async function executeApiToolInner(
   const tokenCache = new Map<string, string>();
   const tokens: ResolvedToken[] = [];
   for (const authName of endpoint.auth ?? []) {
-    tokens.push(await resolveAuthToken(api, authName, params, tokenCache));
+    tokens.push(await resolveAuthToken(api, authName, validParams, tokenCache));
   }
 
-  const request = buildRequest(api, endpoint, params);
+  const request = buildRequest(api, endpoint, validParams);
   // Inject each token where its source's sendAs points: header, query param,
   // or an extra urlencoded form field appended to the built body.
   let url = request.url;

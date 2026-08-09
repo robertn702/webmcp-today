@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiBlockSchema, type ApiBlock } from "@webmcp-today/schema";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  apiBlockSchema,
+  type ApiBlock,
+  type InputSchema,
+  type ToolAnnotations,
+} from "@webmcp-today/schema";
 import {
   applyProjection,
   buildRequest,
@@ -10,7 +15,35 @@ import {
   interpolateDeep,
   isNonEmpty,
   resolveDocument,
+  type ApiToolDescriptor,
 } from "../src/api-executor.js";
+
+/** Builds an ApiToolDescriptor whose inputSchema exactly matches the string
+ *  params under test, then executes it — end-to-end tests below exercise
+ *  valid-execution behavior; input-schema rejection has its own dedicated
+ *  suite further down. */
+function callApiTool(
+  toolName: string,
+  api: ApiBlock,
+  endpointName: string,
+  params: Record<string, string>,
+  annotations?: ToolAnnotations,
+) {
+  const properties: InputSchema["properties"] = {};
+  for (const key of Object.keys(params)) properties[key] = { type: "string" };
+  const tool: ApiToolDescriptor = {
+    name: toolName,
+    inputSchema: {
+      type: "object",
+      properties,
+      required: Object.keys(params),
+      additionalProperties: false,
+    },
+    ...(annotations ? { annotations } : {}),
+    execution: { mode: "api", endpoint: endpointName },
+  };
+  return executeApiTool(tool, api, params);
+}
 
 // A Reddit-shaped api block exercising REST read/write, an auth token source,
 // query/path/form templates, a projection, and a GraphQL endpoint.
@@ -375,7 +408,7 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await executeApiTool("reddit_comment", redditApi, "comment", {
+    const result = await callApiTool("reddit_comment", redditApi, "comment", {
       thingId: "t3_abc",
       text: "nice",
     });
@@ -399,7 +432,7 @@ describe("executeApiTool — end to end with mocked fetch", () => {
       ),
     );
 
-    const result = await executeApiTool("reddit_comment", redditApi, "comment", {
+    const result = await callApiTool("reddit_comment", redditApi, "comment", {
       thingId: "t3_abc",
       text: "spam",
     });
@@ -416,8 +449,88 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await executeApiTool("leak", evil, "leak", {});
+    const result = await callApiTool("leak", evil, "leak", {});
     expect(result.content[0]?.text).toMatch(/same-origin/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("executeApiTool — invalid input never reaches a side effect", () => {
+  // redditApi's "comment" endpoint requires an auth token (an extra fetch) —
+  // exercising it here proves rejection happens before THAT fetch too, not
+  // just before the tool's own request.
+  const schema: InputSchema = {
+    type: "object",
+    properties: {
+      thingId: { type: "string", minLength: 3, maxLength: 10 },
+      text: { type: "string", enum: ["nice", "cool"] },
+      count: { type: "integer", minimum: 0, maximum: 100 },
+    },
+    required: ["thingId", "text"],
+    additionalProperties: false,
+  };
+  const destructiveTool: ApiToolDescriptor = {
+    name: "reddit_comment",
+    inputSchema: schema,
+    annotations: { destructiveHint: true },
+    execution: { mode: "api", endpoint: "comment" },
+  };
+
+  let fetchMock: ReturnType<typeof vi.fn>;
+  let confirmMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+    vi.stubGlobal("fetch", fetchMock);
+    confirmMock = vi.fn(() => true);
+    vi.stubGlobal("window", { confirm: confirmMock });
+  });
+
+  it.each([
+    ["missing required", { text: "nice" }, /Required property is missing/],
+    ["unknown extra property", { thingId: "abcd", text: "nice", bogus: "x" }, /Unknown property/],
+    ["wrong type", { thingId: 123, text: "nice" }, /Expected string/],
+    ["enum failure", { thingId: "abcd", text: "bad" }, /allowed enum/],
+    ["bounds failure", { thingId: "abcd", text: "nice", count: 999 }, /less than or equal to 100/],
+    [
+      "non-finite number",
+      { thingId: "abcd", text: "nice", count: Number.POSITIVE_INFINITY },
+      /Expected finite integer/,
+    ],
+    [
+      "unsafe integer",
+      { thingId: "abcd", text: "nice", count: Number.MAX_SAFE_INTEGER + 1 },
+      /safe integer/,
+    ],
+  ] as const)(
+    "rejects %s without confirming or fetching",
+    async (_label, params, messagePattern) => {
+      const result = await executeApiTool(destructiveTool, redditApi, params);
+
+      expect(result.content[0]?.text).toMatch(
+        /^Error executing "reddit_comment": Invalid input at/,
+      );
+      expect(result.content[0]?.text).toMatch(messagePattern);
+      expect(confirmMock).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects input over the 64 KiB serialized-size limit without confirming or fetching", async () => {
+    const permissive: ApiToolDescriptor = {
+      ...destructiveTool,
+      inputSchema: {
+        type: "object",
+        properties: { text: { type: "string" } },
+        required: ["text"],
+        additionalProperties: false,
+      },
+    };
+
+    const result = await executeApiTool(permissive, redditApi, { text: "x".repeat(70_000) });
+
+    expect(result.content[0]?.text).toMatch(/64 KiB/);
+    expect(confirmMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
@@ -484,7 +597,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
     const calls: { url: string; body?: string }[] = [];
     stubHnFetch(calls);
 
-    const result = await executeApiTool("hn_comment", hnApi, "comment", {
+    const result = await callApiTool("hn_comment", hnApi, "comment", {
       itemId: "42",
       text: "hello hn",
     });
@@ -501,7 +614,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
     const calls: { url: string; body?: string }[] = [];
     stubHnFetch(calls);
 
-    const result = await executeApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "up" });
+    const result = await callApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "up" });
 
     expect(result.content[0]?.text).not.toMatch(/^Error/);
     const voteCall = calls.find((c) => c.url.includes("/vote"));
@@ -536,12 +649,12 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
       }),
     );
 
-    const matched = await executeApiTool("action", patternApi, "action", { id: "a)+" });
+    const matched = await callApiTool("action", patternApi, "action", { id: "a)+" });
 
     expect(matched.content[0]?.text).not.toMatch(/^Error/);
     expect(new URL(calls[1] ?? "").searchParams.get("token")).toBe("literal");
 
-    const didNotMatch = await executeApiTool("action", patternApi, "action", { id: ".*" });
+    const didNotMatch = await callApiTool("action", patternApi, "action", { id: ".*" });
 
     expect(didNotMatch.content[0]?.text).toMatch(/pattern matched nothing/);
     expect(calls).toHaveLength(3);
@@ -568,7 +681,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
       }),
     );
 
-    const result = await executeApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "un" });
+    const result = await callApiTool("hn_vote", hnApi, "vote", { itemId: "42", how: "un" });
 
     expect(result.content[0]?.text).not.toMatch(/^Error/);
     const voteCall = calls.find((c) => c.url.includes("/vote"));
@@ -582,7 +695,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
       "fetch",
       vi.fn(() => Promise.resolve(new Response("<html>login required</html>"))),
     );
-    const result = await executeApiTool("hn_comment", hnApi, "comment", {
+    const result = await callApiTool("hn_comment", hnApi, "comment", {
       itemId: "42",
       text: "x",
     });
@@ -593,9 +706,9 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
     const calls: { url: string; body?: string }[] = [];
     const mock = stubHnFetch(calls);
 
-    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "a" });
-    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "2", text: "b" });
-    await executeApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "c" });
+    await callApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "a" });
+    await callApiTool("hn_comment", hnApi, "comment", { itemId: "2", text: "b" });
+    await callApiTool("hn_comment", hnApi, "comment", { itemId: "1", text: "c" });
 
     // Items 1 and 2 fetch their own page once; the repeat of item 1 hits the TTL cache.
     const pageFetches = mock.mock.calls.filter(([url]) => url.includes("/item"));
@@ -626,7 +739,7 @@ describe("executeApiTool — HTML pattern token sources (Hacker News shape)", ()
       "fetch",
       vi.fn(() => Promise.resolve(new Response(itemPageHtml("42", "H", "a")))),
     );
-    const result = await executeApiTool("hn_vote", broken, "vote", { itemId: "42" });
+    const result = await callApiTool("hn_vote", broken, "vote", { itemId: "42" });
     expect(result.content[0]?.text).toMatch(/no form body/);
   });
 });
@@ -666,8 +779,8 @@ describe("auth token TTL cache", () => {
 
   it("re-fetches the token on every call when ttlSeconds is omitted", async () => {
     const mock = stubFetch();
-    await executeApiTool("c", redditApi, "comment", { thingId: "t3_a", text: "x" });
-    await executeApiTool("c", redditApi, "comment", { thingId: "t3_b", text: "y" });
+    await callApiTool("c", redditApi, "comment", { thingId: "t3_a", text: "x" });
+    await callApiTool("c", redditApi, "comment", { thingId: "t3_b", text: "y" });
     // Two token fetches + two writes: the safe default, unchanged.
     expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
   });
@@ -675,8 +788,8 @@ describe("auth token TTL cache", () => {
   it("reuses a live token across calls when ttlSeconds is set", async () => {
     const api = withTtl(300);
     const mock = stubFetch();
-    await executeApiTool("c", api, "comment", { thingId: "t3_a" });
-    await executeApiTool("c", api, "comment", { thingId: "t3_b" });
+    await callApiTool("c", api, "comment", { thingId: "t3_a" });
+    await callApiTool("c", api, "comment", { thingId: "t3_b" });
     expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(1);
     expect(mock).toHaveBeenCalledTimes(3);
   });
@@ -686,9 +799,9 @@ describe("auth token TTL cache", () => {
     const mock = stubFetch();
     const now = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(now);
-    await executeApiTool("c", api, "comment", { thingId: "t3_a" });
+    await callApiTool("c", api, "comment", { thingId: "t3_a" });
     vi.spyOn(Date, "now").mockReturnValue(now + 61_000);
-    await executeApiTool("c", api, "comment", { thingId: "t3_b" });
+    await callApiTool("c", api, "comment", { thingId: "t3_b" });
     expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
   });
 
@@ -707,8 +820,8 @@ describe("auth token TTL cache", () => {
       },
     });
     const mock = stubFetch();
-    await executeApiTool("c", a, "comment", { thingId: "t3_a" });
-    const result = await executeApiTool("c", b, "comment", { thingId: "t3_b" });
+    await callApiTool("c", a, "comment", { thingId: "t3_a" });
+    const result = await callApiTool("c", b, "comment", { thingId: "t3_b" });
     // b's locator finds nothing, which is a loud failure rather than a silent
     // reuse of a's cached token.
     expect(mock.mock.calls.filter(([url]) => url.endsWith("/api/me.json"))).toHaveLength(2);
@@ -735,8 +848,8 @@ describe("auth token TTL cache", () => {
     });
     vi.stubGlobal("fetch", mock);
 
-    await executeApiTool("c", a, "comment", { thingId: "t3_a" });
-    await executeApiTool("c", b, "comment", { thingId: "t3_b" });
+    await callApiTool("c", a, "comment", { thingId: "t3_a" });
+    await callApiTool("c", b, "comment", { thingId: "t3_b" });
 
     // Distinct cache entries: each api block's own "me" is fetched once, not
     // reused from the other's cache.
