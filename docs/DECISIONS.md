@@ -284,6 +284,18 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   (`result.ts`) while `model-context.ts`'s DOM feature detection stays in the
   extension as host code.
 
+- 2026-08-09 — **Pre-launch contract hardening kept flat typed columns and one strict
+  primitive `inputSchema` profile, enforced identically at publish and at serve; no
+  content digest.** `webMcpPackageSchema`'s cross-field checks now run on every served
+  row too, not just at publish, so a legacy row fails closed; `inputSchema` stays a
+  discriminated union of primitive leaves with a runtime 64 KiB input cap the executor
+  enforces before `window.confirm` or any fetch. Rejected: a nested/free-form manifest
+  or full JSON Schema (`$ref`/`$defs`, unions) — no current consumer needs one and it
+  widens what a reader must audit to trust a tool. Also rejected: reintroducing
+  `apiContentHash`/`canonicalizeApiBlock` — pin checks, origin allowlisting, and served
+  validation already cover tamper-evidence. Consequence: undoing either means widening
+  the union or a digest column/migration, not relaxing a cap.
+
 - 2026-08-08 — **Bun is an accepted bridge runtime alongside Node 20+.** The stdio
   host and Unix-socket bridge use runtime-agnostic Node APIs that Bun implements, and
   the wrapper execs the interpreter's absolute path so Chrome launches either identically.

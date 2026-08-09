@@ -6,7 +6,7 @@ export const REDDIT_PACKAGE_DOMAIN = "reddit.com";
 export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
-export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.1.4";
+export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.2.0";
 export const DOWNLOAD_EXTENSION = `curl -L ${EXTENSION_RELEASE_URL} -o ~/Downloads/webmcp-today-extension.zip
 unzip ~/Downloads/webmcp-today-extension.zip -d ~/Downloads/webmcp-today-extension`;
 

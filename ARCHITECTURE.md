@@ -161,7 +161,9 @@ sequenceDiagram
     participant S as Target site
 
     A->>MC: invoke tool(name, input)
-    MC->>EX: execute(validated input)
+    MC->>EX: execute(input)
+    EX->>EX: validate input against inputSchema + 64 KiB cap — reject before any side effect
+    EX->>EX: destructiveHint? block on window.confirm
     EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
     EX->>S: same-origin fetch (user's cookies ride along)
     S-->>EX: JSON (errorPath checked, returns projection applied)
@@ -177,6 +179,10 @@ One execution mode, selected per tool by binding to an `api.endpoints` entry:
   again at execution. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
   2026-07-28.) Tiers 2–3 (scoped script slots, full `evaluate`) are designed
   but not shipped — see `docs/api-execution-model.md`.
+- **Validate before any side effect.** The executor re-validates input against the
+  tool's `inputSchema` (primitive-only profile) and a 64 KiB serialized-input cap
+  before the `destructiveHint` confirm prompt or any network access — an invalid call
+  never reaches the user-facing confirm dialog or the site.
 
 `destructiveHint` tools gate on a blocking `window.confirm` — writes wait for a human.
 
