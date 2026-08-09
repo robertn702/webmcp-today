@@ -502,6 +502,11 @@ describe("apiAuthSourceSchema pattern validation", () => {
     expect(withPattern("^(a{1,1}?)+$")).toBe(true);
   });
 
+  it("accepts fully bounded nested repetition", () => {
+    expect(withPattern("^((ab?){2})$")).toBe(true);
+    expect(withPattern("^((a{1,2}){2})$")).toBe(true);
+  });
+
   it("rejects a pattern with no capture group", () => {
     expect(withPattern('name="hmac" value="[^"]+"')).toBe(false);
   });
@@ -516,6 +521,7 @@ describe("apiAuthSourceSchema pattern validation", () => {
     expect(withPattern("^((a+){20})$")).toBe(false);
     expect(withPattern("^((a+){2,2})$")).toBe(false);
     expect(withPattern("^((a{0,1})+)$")).toBe(false);
+    expect(withPattern("^((a{1,2})+)$")).toBe(false);
   });
 
   it("accepts a pattern containing a {{param}} placeholder alongside a capture group", () => {

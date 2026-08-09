@@ -38,15 +38,16 @@ const locatorPath = z.array(z.string().min(1).max(PATH_SEGMENT_MAX)).min(1).max(
 function quantifierAt(
   pattern: string,
   start: number,
-): { end: number; repeats: boolean; variableWidth: boolean } | null {
-  const result = (end: number, repeats: boolean, variableWidth: boolean) => ({
+): { end: number; repeats: boolean; variableWidth: boolean; unbounded: boolean } | null {
+  const result = (end: number, repeats: boolean, variableWidth: boolean, unbounded: boolean) => ({
     end: pattern[end] === "?" ? end + 1 : end,
     repeats,
     variableWidth,
+    unbounded,
   });
   const character = pattern[start];
-  if (character === "*" || character === "+") return result(start + 1, true, true);
-  if (character === "?") return result(start + 1, false, true);
+  if (character === "*" || character === "+") return result(start + 1, true, true, true);
+  if (character === "?") return result(start + 1, false, true, false);
   if (character !== "{") return null;
 
   let end = start + 1;
@@ -54,23 +55,25 @@ function quantifierAt(
   while (/[0-9]/.test(pattern[end] ?? "")) end += 1;
 
   const minimum = Number(pattern.slice(start + 1, end));
-  if (pattern[end] === "}") return result(end + 1, minimum > 1, false);
+  if (pattern[end] === "}") return result(end + 1, minimum > 1, false, false);
   if (pattern[end] !== ",") return null;
   end += 1;
-  if (pattern[end] === "}") return result(end + 1, true, true);
+  if (pattern[end] === "}") return result(end + 1, true, true, true);
   if (!/[0-9]/.test(pattern[end] ?? "")) return null;
 
   const maximumStart = end;
   while (/[0-9]/.test(pattern[end] ?? "")) end += 1;
   if (pattern[end] !== "}") return null;
   const maximum = Number(pattern.slice(maximumStart, end));
-  return result(end + 1, maximum > 1, minimum !== maximum);
+  return result(end + 1, maximum > 1, minimum !== maximum, false);
 }
 
-/** Reject a high-risk ReDoS shape without evaluating the pattern. This is a
- * deliberately narrow structural screen, not a complete regex-safety proof. */
+/** Reject nested repetitions that remain unbounded. This is a deliberately
+ * narrow structural screen, not a complete regex-safety proof. */
 function hasNestedVariableRepeat(pattern: string): boolean {
-  const groups: { containsVariableRepeat: boolean }[] = [{ containsVariableRepeat: false }];
+  const groups: { hasUnboundedRepeat: boolean; hasVariableWidth: boolean }[] = [
+    { hasUnboundedRepeat: false, hasVariableWidth: false },
+  ];
 
   for (let index = 0; index < pattern.length; index += 1) {
     const character = pattern[index];
@@ -91,7 +94,7 @@ function hasNestedVariableRepeat(pattern: string): boolean {
       continue;
     }
     if (character === "(") {
-      groups.push({ containsVariableRepeat: false });
+      groups.push({ hasUnboundedRepeat: false, hasVariableWidth: false });
       // Skip the leading `?` in non-capturing, lookaround, and named groups so
       // it is not mistaken for a quantifier.
       if (pattern[index + 1] === "?") index += 1;
@@ -101,10 +104,20 @@ function hasNestedVariableRepeat(pattern: string): boolean {
     if (character === ")") {
       const group = groups.pop();
       const quantifier = quantifierAt(pattern, index + 1);
-      if (group?.containsVariableRepeat && quantifier?.repeats) return true;
-      if (group?.containsVariableRepeat || quantifier?.variableWidth) {
+      if (
+        (group?.hasUnboundedRepeat && quantifier?.repeats) ||
+        (group?.hasVariableWidth && quantifier?.unbounded)
+      ) {
+        return true;
+      }
+      if (group !== undefined || quantifier !== null) {
         const parent = groups.at(-1);
-        if (parent !== undefined) parent.containsVariableRepeat = true;
+        if (parent !== undefined) {
+          parent.hasUnboundedRepeat ||=
+            (group?.hasUnboundedRepeat ?? false) || quantifier?.unbounded === true;
+          parent.hasVariableWidth ||=
+            (group?.hasVariableWidth ?? false) || quantifier?.variableWidth === true;
+        }
       }
       if (quantifier !== null) {
         index = quantifier.end - 1;
@@ -119,7 +132,10 @@ function hasNestedVariableRepeat(pattern: string): boolean {
         continue;
       }
       const group = groups.at(-1);
-      if (group !== undefined) group.containsVariableRepeat = true;
+      if (group !== undefined) {
+        group.hasUnboundedRepeat ||= quantifier.unbounded;
+        group.hasVariableWidth ||= quantifier.variableWidth;
+      }
       index = quantifier.end - 1;
     }
   }
@@ -140,7 +156,7 @@ function validateAuthPattern(pattern: string): string | null {
     return `pattern must be valid JavaScript regex syntax: ${detail}`;
   }
   if (hasNestedVariableRepeat(staticPattern)) {
-    return "pattern must not repeat a group containing a variable-width repeat";
+    return "pattern must not nest an unbounded repeat inside another repeated group or variable-width group";
   }
   return null;
 }
