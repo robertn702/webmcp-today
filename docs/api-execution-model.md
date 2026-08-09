@@ -323,24 +323,10 @@ host is not: it needs an explicit future design because the invariant would get 
 
 ## Trust model
 
-The model is **curated + open source** — the Greasyfork analogy applied to packages that
-may now contain code:
-
-- **Human-readable or reject.** Publish-time lint rejects minified or obfuscated code
-  in tier-2/tier-3 fields (heuristics: line-length distribution, identifier entropy,
-  banned token density). Reviewers read what users run.
-- **Code is rendered prominently in the registry UI** before install — not buried behind
-  a "view source" link. Install = "I have seen the code" the way Greasyfork's install
-  page works.
-- **Install counts as signal** (already the data model — `COUNT(*) GROUP BY
-package_id` on `installs`).
-- **Version pinning is the containment mechanism.** Installs pin to
-  `package_versions.id`; a malicious or broken new version never auto-propagates —
-  users pull updates explicitly after reading the changelog, and rollback is moving the
-  pin back. This is what makes shipping executable content survivable: a bad actor who
-  edits a popular package reaches _zero_ installed users until each one opts in.
-- **Tier is visible in the UI.** Tier-3 packages carry a persistent flag; tier-2 shows
-  the slot code inline on the package page.
+Tier 1 packages are readable declarative data, not code. Users inspect the tool
+interface and explicitly install an exact version into local browser storage. A new
+publish never changes that installed version; updating or rolling back is an explicit
+local install choice.
 
 ## MV3 constraints + spike plan
 

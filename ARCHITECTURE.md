@@ -58,8 +58,8 @@ flowchart LR
 - **`apps/extension`** — the delivery mechanism. A content script on every page asks
   the background worker for packages matching the URL; the worker resolves them from
   `chrome.storage.local` (no network on page load) and the content script registers
-  their tools via `document.modelContext.registerTool()` so in-page agents can call
-  them. Installs arrive over an `externally_connectable` bridge from the registry
+  their tools through the native `document.modelContext` API when available, otherwise
+  a document-local fallback served through the WebMCP Today bridge. Installs arrive over an `externally_connectable` bridge from the registry
   site; the only other HTTP the extension makes is a revocation poll and a domain
   list, both on `chrome.alarms`.
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
@@ -279,6 +279,7 @@ webmcp-today/
 - Bun workspaces + Turborepo; root `bun run typecheck && bun run lint && bun run test`
   is the pre-commit gate (same as CI).
 - Publishing uses Changesets; published packages list `LICENSE` in `files`.
-- Local dev needs Chrome 149+ with WebMCP flags for the extension
-  (`--enable-features=WebMCP,WebMCPTesting`) and a Neon
-  `DATABASE_URL` + GitHub OAuth + `BETTER_AUTH_SECRET` for the web app.
+- Local dev needs Chrome 149+ for the extension; enable WebMCP flags
+  (`--enable-features=WebMCP,WebMCPTesting`) only to exercise Chrome's native
+  agent. The local bridge fallback works without them. The web app needs a Neon
+  `DATABASE_URL` + GitHub OAuth + `BETTER_AUTH_SECRET`.

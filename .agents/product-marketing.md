@@ -1,6 +1,6 @@
 # Product Marketing Context
 
-**Document version:** v8
+**Document version:** v9
 **Last updated:** 2026-08-09
 
 Source of truth for positioning, audience, and voice. Every marketing skill
@@ -22,9 +22,10 @@ agent gets real tools instead of a scraping loop.
 site has. Humans and agents author declarative API-only data packages — URL patterns
 plus tool definitions backed by the site's own HTTP API — and publish them to
 the registry. The extension looks up packages for the page you're on and registers
-their tools on `document.modelContext`, so an agent calls `reddit_comment`
-instead of guessing which div is the reply box. An MCP server exposes the same
-registry to agents outside the browser.
+their tools through the native WebMCP API when available, otherwise through its
+local bridge fallback, so an agent calls `reddit_comment` instead of guessing which
+div is the reply box. An MCP server exposes the same registry to agents outside
+the browser.
 
 **Product category:** Registry / package index for agent tooling. Nearest
 recognisable shelf: userscript registry (Greasyfork, OpenUserJS), but for agent
@@ -76,7 +77,7 @@ without confusing the other two.
 
 | Persona                             | Cares about                                                                | Challenge                                                                         | Value we promise                                                                              |
 | ----------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Agent operator** (installs)       | Does my browser agent get more capable in the next five minutes?           | Doesn't know what WebMCP is, or that a flag is required; may have no package for their site | Install a package, get named tools on the page — nothing to write                               |
+| **Agent operator** (installs)       | Does my browser agent get more capable in the next five minutes?           | Doesn't know what WebMCP is, or that the flag is only for Chrome's native agent; may have no package for their site | Install a package, get named tools on the page — nothing to write                               |
 | **Package author** (human developer) | Format legibility, validation feedback, ownership, versioning              | Writing a package blind, unsure what's valid until submit fails                     | A zod-validated format, append-only versions, and explicit local installs                         |
 | **Autonomous agent** (writes)       | Machine-actionable path: schema, endpoint, auth, error shape               | Copy written for humans buries the API affordance in prose                          | One `POST /api/packages` with a Bearer key; the agent that needed the tool contributes it       |
 
@@ -156,7 +157,7 @@ sites with no tools.
 **Habit:** Rewriting the same scraping glue per project; accepting that agents
 are bad at websites.
 **Anxiety:** Third-party packages executing in an authenticated session; Chrome
-flag friction; a registry that might be abandoned.
+native-agent flag friction; a registry that might be abandoned.
 
 ## Customer Language
 
@@ -178,8 +179,9 @@ split to remember.
   removed from the landing page (commit 6f5cba6). Keep it for README/investor/
   explainer contexts where a knowing reader is likely.
 - "Agents teaching agents" — same call: cute, and it was cut for being vague.
-- "Teach an agent to use any website" — overclaims (needs a package to exist, plus
-  Chrome 149+ and the flag) and misnames the user's verb, which is _install_.
+- "Teach an agent to use any website" — overclaims (needs a package to exist and,
+  for Chrome native-agent discovery, Chrome 149+ plus the flag) and misnames the
+  user's verb, which is _install_.
 - Hype vocabulary generally: seamless, effortless, revolutionary, unlock,
   supercharge, magic, "the future of". Also no exclamation points.
 - Any claim of verification, review, or safety guarantee — the trust model is
@@ -215,7 +217,8 @@ adjective ("secure"). A dry, wry register is welcome; jokes that cost clarity ar
 
 - Say what breaks and when. Skeptic-first: name the objection before the reader does.
 - Never claim verification or safety guarantees; describe the data model instead.
-- The Chrome flag requirement appears wherever someone might try to install.
+- State the Chrome flag requirement wherever copy discusses Chrome native-agent discovery;
+  local bridge fallback does not need it.
 - Describe the public beta at installation and first-run decision points. It
   signals active development and possible breaking changes, not a weaker trust
   model or a guarantee disclaimer.
@@ -264,7 +267,7 @@ but small — just the curated seed packages from `@webmcp-today/curated-package
 
 | Theme                             | Proof                                                                                          |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Tools without site cooperation    | Extension registers third-party packages on `document.modelContext`                            |
+| Tools without site cooperation    | Extension registers third-party packages through native WebMCP or its local bridge fallback    |
 | Bounded blast radius              | No `evaluate` step; API mode `baseUrl` origin-checked at publish and run time                    |
 | Updates can't ambush you          | `package_versions` append-only; installs pin; rollback is re-pinning                            |
 | Open by construction              | No approval queue; rival packages allowed; explicit local installs and pattern specificity       |
@@ -285,6 +288,7 @@ package.
 
 _Newest first. One line per revision: what changed and why._
 
+- v9 (2026-08-09) — Corrected the remaining blanket flag language: the flag is for Chrome's native agent, while the built-in fallback serves the local bridge without it.
 - v8 (2026-08-09) — Aligned active facts with the schema-hardening release: packages are API-only data with required `api` and `minEngine`; installs are explicit and local, not a trust or ranking count; the built-in fallback makes the Chrome flag native-agent-only; DOM mode is historical.
 - v7 (2026-08-07) — Licensing landed in code, so the v3 "undecided" note was
   stale: the repo is public, client-side code is MIT, the server half is

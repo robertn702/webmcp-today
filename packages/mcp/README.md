@@ -43,9 +43,10 @@ confirmed `uninstall_webmcp_bridge` call with `browser: "chrome"` to complete re
 closing Chrome and Brave. Do not claim the bridge is fully removed until that follow-up reports
 no residual paths.
 
-Chrome and Brave still need WebMCP enabled (`chrome://flags/#enable-webmcp-testing`
-or `brave://flags/#enable-webmcp-testing` in the current preview). The bridge does not
-enable WebMCP, run JavaScript, proxy CDP, or expose an HTTP port.
+The bridge works through the extension's built-in fallback without WebMCP enabled.
+Enable `chrome://flags/#enable-webmcp-testing` or
+`brave://flags/#enable-webmcp-testing` only when testing the browser's native agent.
+The bridge does not enable WebMCP, run JavaScript, proxy CDP, or expose an HTTP port.
 
 ## macOS development setup
 
@@ -80,9 +81,10 @@ enable WebMCP, run JavaScript, proxy CDP, or expose an HTTP port.
    Chrome tab, and call `list_connected_webmcp_tabs`. Confirm that Chrome can
    launch the installed host with this call before relying on it in an MCP client.
 
-Chrome still needs WebMCP enabled (`chrome://flags/#enable-webmcp-testing` in
-the current preview). This path removes Chrome DevTools MCP, port 9222, and the
-remote-debugging launch argument; it does not change WebMCP browser support.
+This path works through the built-in fallback without WebMCP enabled. Enable
+`chrome://flags/#enable-webmcp-testing` only to test Chrome's native agent. It
+removes Chrome DevTools MCP, port 9222, and the remote-debugging launch argument;
+it does not change WebMCP browser support.
 
 ## Packaging remaining
 

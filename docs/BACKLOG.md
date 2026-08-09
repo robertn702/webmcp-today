@@ -6,9 +6,9 @@ to detail gets deleted on sight; whoever completes an item deletes it in the
 same PR. Not a wishlist.
 
 **Launch (MVP) =** public announcement of `webmcp.today` to a developer audience
-— WebMCP is flag/origin-trial gated through Chrome 156, so every early user runs
-Chrome with `#enable-webmcp-testing` and drives tools from the Tool Inspector or
-their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
+— the extension's local bridge fallback works without the WebMCP testing flag;
+Chrome's native agent remains flag/origin-trial gated through Chrome 156. Tier-1
+packages only; extension installed unpacked or via CWS.
 
 ## Before launch (MVP)
 

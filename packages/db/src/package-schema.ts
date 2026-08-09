@@ -17,8 +17,8 @@ import { user } from "./auth-schema";
 
 /**
  * Package-level metadata. No uniqueness on domain (or domain + pattern) by
- * design: rival packages may target the same site — installs + specificity
- * rank them instead of a first-come registration.
+ * design: rival packages may target the same site — local browser installs select
+ * candidates and matching candidates rank by specificity instead of first-come registration.
  */
 export const packages = pgTable(
   "packages",
