@@ -507,9 +507,7 @@ describe("executeApiTool — invalid input never reaches a side effect", () => {
     async (_label, params, messagePattern) => {
       const result = await executeApiTool(destructiveTool, redditApi, params);
 
-      expect(result.content[0]?.text).toMatch(
-        /^Error executing "reddit_comment": Invalid input at/,
-      );
+      expect(result.content[0]?.text).toMatch(/^Error executing "reddit_comment": Invalid input: /);
       expect(result.content[0]?.text).toMatch(messagePattern);
       expect(confirmMock).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
@@ -532,6 +530,73 @@ describe("executeApiTool — invalid input never reaches a side effect", () => {
     expect(result.content[0]?.text).toMatch(/64 KiB/);
     expect(confirmMock).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("reports every simultaneous issue, not just the first", async () => {
+    // Two missing required properties, one unknown property, one bounds
+    // failure — all four must appear, each with its own path.
+    const result = await executeApiTool(destructiveTool, redditApi, {
+      bogus: "x",
+      count: 999,
+    });
+
+    const text = result.content[0]?.text ?? "";
+    expect(text).toContain("thingId: Required property is missing");
+    expect(text).toContain("text: Required property is missing");
+    expect(text).toContain("bogus: Unknown property");
+    expect(text).toContain("count: Number must be less than or equal to 100");
+    expect(confirmMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("executeApiTool — destructive confirmation gates on valid input (positive control)", () => {
+  // Proves the confirm gate itself still works post-validation: valid input
+  // reaches window.confirm exactly once, and a decline still makes zero
+  // fetch calls (including the auth-source fetch).
+  const destructiveTool: ApiToolDescriptor = {
+    name: "reddit_comment",
+    inputSchema: {
+      type: "object",
+      properties: { thingId: { type: "string" }, text: { type: "string" } },
+      required: ["thingId", "text"],
+      additionalProperties: false,
+    },
+    annotations: { destructiveHint: true },
+    execution: { mode: "api", endpoint: "comment" },
+  };
+  const validParams = { thingId: "t3_abc", text: "nice" };
+
+  function stubFetchAndConfirm(confirmReturns: boolean) {
+    const fetchMock = vi.fn((url: string) =>
+      url.endsWith("/api/me.json")
+        ? Promise.resolve(jsonResponse({ data: { modhash: "TOKEN" } }))
+        : Promise.resolve(jsonResponse({ json: { errors: [] } })),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const confirmMock = vi.fn(() => confirmReturns);
+    vi.stubGlobal("window", { confirm: confirmMock });
+    return { fetchMock, confirmMock };
+  }
+
+  it("cancels and makes zero fetch calls when the user declines", async () => {
+    const { fetchMock, confirmMock } = stubFetchAndConfirm(false);
+
+    const result = await executeApiTool(destructiveTool, redditApi, validParams);
+
+    expect(confirmMock).toHaveBeenCalledOnce();
+    expect(result.content[0]?.text).toMatch(/cancelled by user/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("proceeds to fetch once the user confirms", async () => {
+    const { fetchMock, confirmMock } = stubFetchAndConfirm(true);
+
+    const result = await executeApiTool(destructiveTool, redditApi, validParams);
+
+    expect(confirmMock).toHaveBeenCalledOnce();
+    expect(result.content[0]?.text).not.toMatch(/^Error/);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 

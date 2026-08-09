@@ -6,5 +6,6 @@
 // internal, not shipped.
 
 export { executeApiTool } from "./api-executor.js";
+export type { ApiToolDescriptor } from "./api-executor.js";
 export { requiredEngineLevel, supportsPackageEngine } from "./engine-gate.js";
 export type { McpResult, McpTextContent } from "./result.js";

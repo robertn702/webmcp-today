@@ -426,9 +426,11 @@ export function handleResponse(endpoint: ApiEndpoint, outcome: FetchOutcome): Mc
   return mcpResult(typeof projected === "string" ? projected : JSON.stringify(projected));
 }
 
-/** Everything executeApiTool needs from a tool descriptor — narrowed so
- *  callers (and tests) don't have to fabricate a `description` just to
- *  execute a tool. */
+/** The subset of a package's ToolDescriptor that executeApiTool actually
+ *  reads: `inputSchema` to validate params, `annotations` for the
+ *  destructiveHint confirm gate, and `execution` for the endpoint binding.
+ *  The engine never touches `description` (that's UI/registration-only), so
+ *  callers (and tests) don't have to fabricate one just to execute a tool. */
 export type ApiToolDescriptor = Pick<
   ToolDescriptor,
   "name" | "inputSchema" | "annotations" | "execution"
@@ -463,19 +465,23 @@ async function executeApiToolInner(
   // input must never trigger a confirmation prompt or touch the network.
   const validation = validateToolInput(tool.inputSchema, params);
   if (!validation.success) {
-    const issue = validation.issues[0];
-    const path = issue && issue.path.length > 0 ? issue.path.join(".") : "(root)";
-    throw new Error(`Invalid input at "${path}": ${issue?.message}`);
+    // Report every issue (not just the first) so an agent can fix its call in
+    // one round trip instead of rediscovering failures one at a time.
+    const summary = validation.issues
+      .map(
+        (issue) => `${issue.path.length > 0 ? issue.path.join(".") : "(root)"}: ${issue.message}`,
+      )
+      .join("; ");
+    throw new Error(`Invalid input: ${summary}`);
   }
+  // Object.create(null) (see validateToolInput): a declared property named
+  // "__proto__" lands as an ordinary own property here, never a prototype
+  // reassignment, before this data reaches interpolation/request-building.
   const validParams = validation.data;
 
   // Per-spec courtesy confirm for tools flagged destructive (mirrors the DOM
   // executor). Guarded so the engine stays callable outside a browser (tests).
-  if (
-    annotations &&
-    Reflect.get(annotations, "destructiveHint") === true &&
-    typeof window !== "undefined"
-  ) {
+  if (annotations?.destructiveHint === true && typeof window !== "undefined") {
     if (!window.confirm(`Allow "${toolName}" to call the site API and make changes?`)) {
       return mcpResult(`Tool "${toolName}" cancelled by user.`);
     }
