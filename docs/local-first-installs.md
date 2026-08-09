@@ -79,13 +79,15 @@ generous 5 KB per package, **500 installed packages ≈ 2.5 MB, a quarter of quo
 no permission warning, but asking for quota we demonstrably do not need is a review smell.
 Revisit if a single package approaches ~100 KB.
 
-**Migrations.** `schemaVersion` is an integer, bumped only when the on-disk shape changes.
-Migrate in `runtime.onInstalled` (`reason === "update"`) **and** check defensively at worker
-start. If the stored version is **newer** than the build (downgrade, profile sync), treat storage
-as unreadable and register nothing rather than guessing — the same invariant `minEngine` already
-enforces for package content (`packages/engine/src/engine-gate.ts:16`): never half-run content
-a build doesn't understand. Migrations are pure functions over the parsed object, unit-testable
-without a browser.
+**Migrations.** `schemaVersion` is an integer, bumped only when the on-disk shape changes. There
+is no shape-translating migration story: `installs-store.ts#initialize()` checks it on every
+worker wake (`runtime.onInstalled`, `onStartup`, and lazily on first use) and, if the stored
+version is **older** than the build's, wipes every `pkg:*` body and resets the index to `{}`
+rather than reinterpreting a contract the build doesn't understand — a discarded install, not a
+translated one. If the stored version is **newer** than the build (downgrade, profile sync), treat
+storage as unreadable and register nothing rather than guessing — the same invariant `minEngine`
+already enforces for package content (`packages/engine/src/engine-gate.ts:16`): never half-run
+content a build doesn't understand.
 
 ## 2. Page-load path
 

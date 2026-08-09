@@ -25,7 +25,7 @@ const ENTRY = {
 
 describe("store-schema", () => {
   it("pins the storage layout constants", () => {
-    expect(STORAGE_SCHEMA_VERSION).toBe(1);
+    expect(STORAGE_SCHEMA_VERSION).toBe(2);
     expect(SCHEMA_VERSION_KEY).toBe("schemaVersion");
     expect(INDEX_KEY).toBe("index");
     expect(REVOKED_KEY).toBe("revoked");

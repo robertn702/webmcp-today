@@ -4,7 +4,16 @@ import {
   type InstallOptions,
   type InstallResult,
 } from "../src/lib/installs-store.js";
-import { INDEX_KEY, SCHEMA_VERSION_KEY, pkgKey } from "../src/lib/store-schema.js";
+import {
+  DOMAINS_KEY,
+  INDEX_KEY,
+  REVOKED_KEY,
+  SCHEMA_VERSION_KEY,
+  STORAGE_SCHEMA_VERSION,
+  pkgKey,
+} from "../src/lib/store-schema.js";
+import { EXTENSION_UPDATE_KEY } from "../src/lib/extension-update.js";
+import { matchInstalled } from "../src/lib/match-installed.js";
 import { createFakeStorageArea } from "./fake-storage-area.js";
 
 const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.today" };
@@ -53,7 +62,7 @@ describe("installs-store", () => {
 
       expect(result.ok).toBe(true);
       const snapshot = area.snapshot();
-      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(1);
+      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(2);
       // Verbatim: unknown fields survive storage — zod's stripped output is
       // never what lands on disk.
       expect(snapshot[pkgKey("pkg-wiki")]).toEqual(body);
@@ -232,7 +241,7 @@ describe("installs-store", () => {
       expect(await store.initialize()).toBe("ok");
 
       const snapshot = area.snapshot();
-      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(1);
+      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(2);
       expect(snapshot[pkgKey("ghost")]).toBeUndefined();
     });
 
@@ -252,7 +261,7 @@ describe("installs-store", () => {
   describe("schemaVersion guard", () => {
     it("treats storage written by a newer build as unreadable and untouchable", async () => {
       const seed = {
-        [SCHEMA_VERSION_KEY]: 2,
+        [SCHEMA_VERSION_KEY]: 3,
         [pkgKey("future")]: { shape: "unknowable" },
       };
       const area = createFakeStorageArea(seed);
@@ -268,6 +277,9 @@ describe("installs-store", () => {
         ok: false,
         reason: "schema-unreadable",
       });
+      expect(await store.readIndex()).toEqual({});
+      expect(await store.loadPackage("future")).toEqual({ status: "missing" });
+      expect(await store.collectOrphans()).toEqual([]);
       // Nothing was written, downgraded, or GC'd.
       expect(area.snapshot()).toEqual(seed);
     });
@@ -283,9 +295,320 @@ describe("installs-store", () => {
       );
       expect(
         await createInstallsStore(
-          createFakeStorageArea({ [SCHEMA_VERSION_KEY]: 1 }),
+          createFakeStorageArea({ [SCHEMA_VERSION_KEY]: 2 }),
         ).readSchemaVersionState(),
       ).toBe("ok");
+    });
+
+    it("distinguishes a stored version older than the build's as its own state", async () => {
+      expect(
+        await createInstallsStore(
+          createFakeStorageArea({ [SCHEMA_VERSION_KEY]: 1 }),
+        ).readSchemaVersionState(),
+      ).toBe("older");
+    });
+
+    it("treats storage written by a corrupt marker as unreadable and untouchable", async () => {
+      const seed = {
+        [SCHEMA_VERSION_KEY]: "one",
+        [INDEX_KEY]: { "pkg-wiki": { packageId: "pkg-wiki" } },
+        [pkgKey("pkg-wiki")]: servedPackage(),
+      };
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.readSchemaVersionState()).toBe("corrupt");
+      expect(await store.initialize()).toBe("corrupt");
+      expect(await store.install(servedPackage({ id: "pkg-new" }), OPTS)).toEqual({
+        ok: false,
+        reason: "schema-unreadable",
+      });
+      expect(await store.uninstall("pkg-wiki")).toEqual({
+        ok: false,
+        reason: "schema-unreadable",
+      });
+      expect(await store.readIndex()).toEqual({});
+      expect(await store.loadPackage("pkg-wiki")).toEqual({ status: "missing" });
+      expect(await store.collectOrphans()).toEqual([]);
+      // Nothing was written, wiped, or GC'd.
+      expect(area.snapshot()).toEqual(seed);
+    });
+  });
+
+  describe("fail-closed before initialize() resets an older version", () => {
+    /** v1 storage: one installed package (body + index entry), never reset. */
+    function seedV1Single(): Record<string, unknown> {
+      return {
+        [SCHEMA_VERSION_KEY]: 1,
+        [INDEX_KEY]: {
+          "pkg-wiki": {
+            packageId: "pkg-wiki",
+            versionId: "ver-1",
+            version: 1,
+            domain: "en.wikipedia.org",
+            urlPatterns: ["*://en.wikipedia.org/wiki/*"],
+            title: "Wikipedia article",
+            installedAt: "2026-07-27T00:00:00.000Z",
+            source: "registry",
+            origin: "https://webmcp.today",
+          },
+        },
+        [pkgKey("pkg-wiki")]: servedPackage(),
+      };
+    }
+
+    it("install() on v1 storage refuses and stamps nothing, without calling initialize()", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      const result = await store.install(servedPackage({ id: "pkg-new" }), OPTS);
+
+      expect(result).toEqual({ ok: false, reason: "schema-unreadable" });
+      // No schemaVersion stamp, no new body, no index mutation.
+      expect(area.snapshot()).toEqual(seed);
+    });
+
+    it("uninstall() on v1 storage refuses and removes nothing, without calling initialize()", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      const result = await store.uninstall("pkg-wiki");
+
+      expect(result).toEqual({ ok: false, reason: "schema-unreadable" });
+      expect(area.snapshot()).toEqual(seed);
+    });
+
+    it("readIndex() on v1 storage reads empty (fail closed) rather than the stale v1 entries, and writes nothing", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.readIndex()).toEqual({});
+      expect(area.snapshot()).toEqual(seed);
+    });
+
+    it("loadPackage() on v1 storage reads missing (fail closed) rather than the stale v1 body, and writes nothing", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.loadPackage("pkg-wiki")).toEqual({ status: "missing" });
+      expect(area.snapshot()).toEqual(seed);
+    });
+
+    it("collectOrphans() on v1 storage removes nothing rather than GC'ing the stale v1 body", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.collectOrphans()).toEqual([]);
+      expect(area.snapshot()).toEqual(seed);
+    });
+
+    it("only initialize() advances an older version — direct reads/writes never do", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      // A battery of direct calls that must all fail closed without mutating.
+      await store.readIndex();
+      await store.loadPackage("pkg-wiki");
+      await store.install(servedPackage({ id: "pkg-new" }), OPTS);
+      await store.uninstall("pkg-wiki");
+      await store.collectOrphans();
+      expect(area.snapshot()).toEqual(seed);
+
+      // Only initialize() resets it.
+      expect(await store.initialize()).toBe("ok");
+      expect(area.snapshot()[SCHEMA_VERSION_KEY]).toBe(2);
+      expect(area.snapshot()[pkgKey("pkg-wiki")]).toBeUndefined();
+    });
+  });
+
+  describe("legacy storage reset", () => {
+    /** A v1 install: two installed packages (bodies + index entries), plus
+     * the revocation and domains docs a real install would have bootstrapped. */
+    function seedV1Storage(): Record<string, unknown> {
+      return {
+        [SCHEMA_VERSION_KEY]: 1,
+        [INDEX_KEY]: {
+          "pkg-wiki": {
+            packageId: "pkg-wiki",
+            versionId: "ver-1",
+            version: 1,
+            domain: "en.wikipedia.org",
+            urlPatterns: ["*://en.wikipedia.org/wiki/*"],
+            title: "Wikipedia article",
+            installedAt: "2026-07-27T00:00:00.000Z",
+            source: "registry",
+            origin: "https://webmcp.today",
+          },
+          "pkg-other": {
+            packageId: "pkg-other",
+            versionId: "ver-1",
+            version: 1,
+            domain: "example.com",
+            urlPatterns: ["*://example.com/*"],
+            title: "Example",
+            installedAt: "2026-07-27T00:00:00.000Z",
+            source: "registry",
+            origin: "https://webmcp.today",
+          },
+        },
+        [pkgKey("pkg-wiki")]: servedPackage(),
+        [pkgKey("pkg-other")]: servedPackage({
+          id: "pkg-other",
+          domain: "example.com",
+          urlPatterns: ["*://example.com/*"],
+          api: { ...API_BLOCK, baseUrl: "https://example.com" },
+        }),
+        [REVOKED_KEY]: { cursor: 4, fetchedAt: "2026-07-27T00:00:00.000Z", entries: [] },
+        [DOMAINS_KEY]: {
+          version: 1,
+          generatedAt: "2026-07-27T00:00:00.000Z",
+          fetchedAt: "2026-07-27T00:00:00.000Z",
+          domains: ["en.wikipedia.org"],
+        },
+        [EXTENSION_UPDATE_KEY]: {
+          checkedAt: "2026-07-27T00:00:00.000Z",
+          latest: {
+            channel: "stable",
+            version: "1.2.3",
+            releaseUrl: "https://webmcp.today/release",
+            downloadUrl: "https://webmcp.today/release.zip",
+            checksumsUrl: "https://webmcp.today/release.sha256",
+            publishedAt: "2026-07-27T00:00:00.000Z",
+          },
+        },
+      };
+    }
+
+    it("wipes every pkg:* body and the index, bumps to v2, and preserves unrelated keys", async () => {
+      const seed = seedV1Storage();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.initialize()).toBe("ok");
+
+      const snapshot = area.snapshot();
+      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(2);
+      expect(snapshot[INDEX_KEY]).toEqual({});
+      expect(await store.readIndex()).toEqual({});
+      expect(snapshot[pkgKey("pkg-wiki")]).toBeUndefined();
+      expect(snapshot[pkgKey("pkg-other")]).toBeUndefined();
+      expect(await store.loadPackage("pkg-wiki")).toEqual({ status: "missing" });
+      expect(await store.loadPackage("pkg-other")).toEqual({ status: "missing" });
+
+      // Compatible, unrelated documents survive untouched.
+      expect(snapshot[REVOKED_KEY]).toEqual(seed[REVOKED_KEY]);
+      expect(snapshot[DOMAINS_KEY]).toEqual(seed[DOMAINS_KEY]);
+      expect(snapshot[EXTENSION_UPDATE_KEY]).toEqual(seed[EXTENSION_UPDATE_KEY]);
+    });
+
+    it("registers nothing for a URL a v1 install used to match", async () => {
+      const area = createFakeStorageArea(seedV1Storage());
+      const store = createInstallsStore(area);
+
+      await store.initialize();
+
+      const index = await store.readIndex();
+      expect(matchInstalled(index, "https://en.wikipedia.org/wiki/Coffee")).toEqual([]);
+    });
+
+    it("fresh v2 installs work normally after the reset", async () => {
+      const area = createFakeStorageArea(seedV1Storage());
+      const store = createInstallsStore(area);
+      await store.initialize();
+
+      const result = await store.install(servedPackage({ id: "pkg-fresh" }), OPTS);
+
+      expect(result.ok).toBe(true);
+      expect(Object.keys(await store.readIndex())).toEqual(["pkg-fresh"]);
+      expect(await store.loadPackage("pkg-fresh")).toMatchObject({ status: "ok" });
+    });
+
+    it("leaves the version unbumped and nothing removed when the body removal fails", async () => {
+      const seed = seedV1Storage();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+      area.failNextRemove();
+
+      await expect(store.initialize()).rejects.toThrow("remove failed");
+
+      // No partial reset: still readable as "older" next time, bodies intact.
+      const snapshot = area.snapshot();
+      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(1);
+      expect(snapshot[pkgKey("pkg-wiki")]).toBeDefined();
+      expect(snapshot[pkgKey("pkg-other")]).toBeDefined();
+      expect(snapshot[INDEX_KEY]).toEqual(seed[INDEX_KEY]);
+
+      // Retrying completes the reset.
+      expect(await store.initialize()).toBe("ok");
+      const retried = area.snapshot();
+      expect(retried[SCHEMA_VERSION_KEY]).toBe(2);
+      expect(retried[pkgKey("pkg-wiki")]).toBeUndefined();
+    });
+
+    it("is idempotent when the version bump fails after bodies were already removed", async () => {
+      const seed = seedV1Storage();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+      area.failNextSet();
+
+      await expect(store.initialize()).rejects.toThrow("set failed");
+
+      // Bodies gone, but the version marker never advanced — the next
+      // initialize() must not choke on an already-empty removal.
+      const mid = area.snapshot();
+      expect(mid[SCHEMA_VERSION_KEY]).toBe(1);
+      expect(mid[pkgKey("pkg-wiki")]).toBeUndefined();
+
+      expect(await store.initialize()).toBe("ok");
+      const final = area.snapshot();
+      expect(final[SCHEMA_VERSION_KEY]).toBe(2);
+      expect(final[INDEX_KEY]).toEqual({});
+    });
+  });
+
+  describe("initialize() reset when no version was ever stamped and the index is corrupt", () => {
+    it("wipes every pkg:* body (not just orphans) before stamping v2, preserving unrelated docs", async () => {
+      const seed = {
+        // No SCHEMA_VERSION_KEY at all — indistinguishable from true first run
+        // except that the index is unparseable, so GC alone can't safely
+        // compute orphans (collectOrphansInner skips deletion in that case).
+        [INDEX_KEY]: { "pkg-wiki": { broken: true } },
+        [pkgKey("pkg-wiki")]: servedPackage(),
+        [REVOKED_KEY]: { cursor: 1, fetchedAt: "2026-07-27T00:00:00.000Z", entries: [] },
+      };
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.initialize()).toBe("ok");
+
+      const snapshot = area.snapshot();
+      expect(snapshot[SCHEMA_VERSION_KEY]).toBe(2);
+      expect(snapshot[INDEX_KEY]).toEqual({});
+      expect(snapshot[pkgKey("pkg-wiki")]).toBeUndefined();
+      expect(snapshot[REVOKED_KEY]).toEqual(seed[REVOKED_KEY]);
+    });
+
+    it("does NOT full-reset a corrupt index once a version is already stamped — GC's orphan-only skip still applies", async () => {
+      const seed = {
+        [SCHEMA_VERSION_KEY]: STORAGE_SCHEMA_VERSION,
+        [INDEX_KEY]: { "pkg-wiki": { broken: true } },
+        [pkgKey("pkg-wiki")]: servedPackage(),
+      };
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.initialize()).toBe("ok");
+
+      // Already at the current version: this is the popup's "index-corrupt"
+      // recovery case, not a legacy reset — the body must survive so GC
+      // doesn't misfire as "delete every body".
+      expect(area.snapshot()[pkgKey("pkg-wiki")]).toBeDefined();
     });
   });
 

@@ -83,7 +83,11 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   from the service-worker console using the keys in `src/lib/store-schema.ts`
   (`schemaVersion`, `index`, `pkg:<id>`, and `revoked` — the last one is
   mandatory: its absence is the fail-closed gate and pages then report
-  "paused, waiting on the safety list" instead of matching).
+  "paused, waiting on the safety list" instead of matching). Set `schemaVersion`
+  to the current `STORAGE_SCHEMA_VERSION` (`src/lib/store-schema.ts`), not a
+  hardcoded number — a stale value reads as "older" and `initialize()` wipes
+  every `pkg:*` body plus the index on the next worker wake before anything
+  seeded can be exercised.
 - **Isolated-world blind spot.** A content script cannot see the page's
   `history.pushState` — patching `history` only intercepts the isolated world's
   own calls, so SPA navigation is detected by polling `location.href`

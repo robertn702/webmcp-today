@@ -18,8 +18,16 @@ import {
 // a crash leaves only an orphaned body, invisible to reads and collectable.
 
 /** "newer" = storage written by a newer build; register nothing (same
- * invariant as minEngine). "corrupt" = schemaVersion isn't an integer. */
-export type SchemaVersionState = "ok" | "newer" | "corrupt";
+ * invariant as minEngine). "corrupt" = schemaVersion isn't an integer.
+ * "older" = storage written by an older build, not yet reset — initialize()
+ * is the only caller that resolves it (by wiping legacy `pkg:*` bodies and
+ * the index); every other read/mutation path treats it the same as
+ * "newer"/"corrupt": fail closed rather than stamp or use it. */
+export type SchemaVersionState = "ok" | "newer" | "corrupt" | "older";
+
+/** What initialize() settles on once it's had a chance to react to "older"
+ * by resetting storage — "older" itself never escapes initialize(). */
+export type ReadySchemaState = Exclude<SchemaVersionState, "older">;
 
 export interface InstallOptions {
   source: IndexEntry["source"];
@@ -39,17 +47,22 @@ export type LoadPackageResult =
   { status: "ok"; body: WebMcpPackage } | { status: "missing" } | { status: "invalid" };
 
 export interface InstallsStore {
-  /** First-run setup + startup GC: writes schemaVersion when absent, then
-   * reclaims bodies orphaned by an interrupted uninstall. Call on
+  /** First-run setup + startup GC: writes schemaVersion when absent, resets
+   * every `pkg:*` body and the index when the stored version is older than
+   * the build's (or when no version was ever stamped and the index is
+   * unparseable — GC can't tell orphans from live entries there either),
+   * then reclaims bodies orphaned by an interrupted uninstall. Call on
    * runtime.onStartup/onInstalled. Returns the schema state; does nothing
    * when it isn't "ok". */
-  initialize(): Promise<SchemaVersionState>;
+  initialize(): Promise<ReadySchemaState>;
   readSchemaVersionState(): Promise<SchemaVersionState>;
   readIndex(): Promise<InstallIndex>;
   install(body: unknown, options: InstallOptions): Promise<InstallResult>;
   uninstall(packageId: string): Promise<UninstallResult>;
   loadPackage(packageId: string): Promise<LoadPackageResult>;
-  /** Removes orphaned `pkg:` bodies; returns the removed keys. */
+  /** Removes orphaned `pkg:` bodies; returns the removed keys. Fails closed
+   * (removes nothing, returns `[]`) unless the schema state is "ok" — same
+   * guard as install/uninstall/readIndex/loadPackage. */
   collectOrphans(): Promise<string[]>;
 }
 
@@ -65,14 +78,47 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     return next;
   }
 
-  async function readSchemaVersionState(): Promise<SchemaVersionState> {
-    const stored = (await area.get(SCHEMA_VERSION_KEY))[SCHEMA_VERSION_KEY];
+  async function readStoredVersion(): Promise<unknown> {
+    return (await area.get(SCHEMA_VERSION_KEY))[SCHEMA_VERSION_KEY];
+  }
+
+  function classifyVersion(stored: unknown): SchemaVersionState {
     if (stored === undefined) return "ok";
     if (typeof stored !== "number" || !Number.isInteger(stored)) return "corrupt";
-    return stored > STORAGE_SCHEMA_VERSION ? "newer" : "ok";
+    if (stored > STORAGE_SCHEMA_VERSION) return "newer";
+    if (stored < STORAGE_SCHEMA_VERSION) return "older";
+    return "ok";
+  }
+
+  /** "older" fails closed exactly like "newer"/"corrupt" for every caller
+   * except initialize(), which reads the raw version itself so it can react
+   * to "older" instead of refusing it. */
+  async function readSchemaVersionState(): Promise<SchemaVersionState> {
+    return classifyVersion(await readStoredVersion());
+  }
+
+  async function isIndexCorrupt(): Promise<boolean> {
+    const raw = (await area.get(INDEX_KEY))[INDEX_KEY];
+    return raw !== undefined && !indexSchema.safeParse(raw).success;
+  }
+
+  /** Wipes every `pkg:*` body and resets the index to `{}` before stamping
+   * the current version — there is no migration story, so a package
+   * contract this build can't trust (a stale on-disk version, or an
+   * unparseable index paired with no version marker at all) is discarded
+   * rather than reinterpreted. Removal runs before the version-bump set() so
+   * a crash between the two leaves the version un-stamped (the next
+   * initialize() retries; removal of already-gone keys is a no-op). */
+  async function resetLegacyStorage(): Promise<void> {
+    const all = await area.get(null);
+    const pkgKeys = Object.keys(all).filter((key) => key.startsWith(PKG_KEY_PREFIX));
+    if (pkgKeys.length > 0) await area.remove(pkgKeys);
+    await area.set({ [SCHEMA_VERSION_KEY]: STORAGE_SCHEMA_VERSION, [INDEX_KEY]: {} });
   }
 
   async function readIndex(): Promise<InstallIndex> {
+    const state = await readSchemaVersionState();
+    if (state !== "ok") return {};
     const raw = (await area.get(INDEX_KEY))[INDEX_KEY];
     if (raw === undefined) return {};
     const parsed = indexSchema.safeParse(raw);
@@ -100,10 +146,25 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     readSchemaVersionState,
     readIndex,
 
-    initialize(): Promise<SchemaVersionState> {
+    initialize(): Promise<ReadySchemaState> {
       return enqueue(async () => {
-        const state = await readSchemaVersionState();
+        const stored = await readStoredVersion();
+        const state = classifyVersion(stored);
+        if (state === "older") {
+          await resetLegacyStorage();
+          return "ok";
+        }
         if (state !== "ok") return state;
+
+        // No version marker was ever stamped AND the index fails to parse:
+        // collectOrphansInner() can't tell orphans from live entries there
+        // (see its own guard below), so fall back to the same full reset
+        // rather than leave unreachable bodies behind once v2 is stamped.
+        if (stored === undefined && (await isIndexCorrupt())) {
+          await resetLegacyStorage();
+          return "ok";
+        }
+
         await area.set({ [SCHEMA_VERSION_KEY]: STORAGE_SCHEMA_VERSION });
         await collectOrphansInner();
         return state;
@@ -173,6 +234,8 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     },
 
     async loadPackage(packageId: string): Promise<LoadPackageResult> {
+      const state = await readSchemaVersionState();
+      if (state !== "ok") return { status: "missing" };
       const key = pkgKey(packageId);
       const raw = (await area.get(key))[key];
       if (raw === undefined) return { status: "missing" };
@@ -184,7 +247,11 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     collectOrphans(): Promise<string[]> {
       // Queued so GC's get-then-remove can't race an install and reclaim a
       // body that gained an index entry in between.
-      return enqueue(collectOrphansInner);
+      return enqueue(async () => {
+        const state = await readSchemaVersionState();
+        if (state !== "ok") return [];
+        return collectOrphansInner();
+      });
     },
   };
 }
