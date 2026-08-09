@@ -89,4 +89,37 @@ describe("hydratePackages", () => {
     expect(result[0]?.versionId).toBe("ver-safe");
     expect(result[0]?.version).toBe(2);
   });
+
+  it("drops a package whose only version binds a tool to an endpoint api.endpoints doesn't define", async () => {
+    // Domain-scope alone (what pickLatestVersions filters on) would select this
+    // version as "latest safe" — the dangling execution reference is only
+    // caught by hydrate()'s full webMcpPackageSchema validation.
+    state.versionRows = [
+      {
+        id: "ver-dangling",
+        packageId: "pkg-2",
+        version: 1,
+        urlPatterns: ["*://*.reddit.com/*"],
+        tools: [{ ...TOOLS[0], execution: { mode: "api", endpoint: "does-not-exist" } }],
+        api: API_BLOCK,
+        minEngine: 1,
+        changelog: null,
+        createdAt: new Date("2026-07-01T00:00:00.000Z"),
+      },
+    ];
+
+    const result = await hydratePackages([
+      {
+        id: "pkg-2",
+        domain: "reddit.com",
+        title: "Reddit",
+        description: "Read Reddit",
+        contributorId: "user-1",
+        createdAt: new Date("2026-07-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-07-01T00:00:00.000Z"),
+      },
+    ]);
+
+    expect(result).toEqual([]);
+  });
 });

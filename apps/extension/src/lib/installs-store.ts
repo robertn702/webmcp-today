@@ -1,8 +1,4 @@
-import {
-  packageWithinDomainScope,
-  webMcpPackageSchema,
-  type WebMcpPackage,
-} from "@webmcp-today/schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@webmcp-today/schema";
 import {
   INDEX_KEY,
   PKG_KEY_PREFIX,
@@ -119,10 +115,13 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
         const state = await readSchemaVersionState();
         if (state !== "ok") return { ok: false, reason: "schema-unreadable" };
 
+        // webMcpPackageSchema's cross-field superRefine (applyDomainCrossValidation)
+        // already enforces domain scope — including the api.baseUrl same-origin
+        // check — so a successful parse implies packageWithinDomainScope; no
+        // separate call is needed here.
         const parsed = webMcpPackageSchema.safeParse(body);
         if (!parsed.success) return { ok: false, reason: "invalid-body" };
         const pkg = parsed.data;
-        if (!packageWithinDomainScope(pkg)) return { ok: false, reason: "invalid-body" };
 
         const index = await readIndex();
         const previous = index[pkg.id];
@@ -177,10 +176,9 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
       const key = pkgKey(packageId);
       const raw = (await area.get(key))[key];
       if (raw === undefined) return { status: "missing" };
+      // See install()'s comment: a successful parse already covers domain scope.
       const parsed = webMcpPackageSchema.safeParse(raw);
-      return parsed.success && packageWithinDomainScope(parsed.data)
-        ? { status: "ok", body: parsed.data }
-        : { status: "invalid" };
+      return parsed.success ? { status: "ok", body: parsed.data } : { status: "invalid" };
     },
 
     collectOrphans(): Promise<string[]> {

@@ -26,7 +26,16 @@ const state = vi.hoisted(
   } => ({
     userId: "user-1",
     packageExists: true,
-    latest: { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: { baseUrl: "" } },
+    // Placeholder only — every test's beforeEach overwrites this before use.
+    // vi.hoisted's factory runs before module-scope consts, so it can't
+    // reference API_BLOCK; this literal must stay a well-formed https:// URL,
+    // not an empty string, so a future test can't be misled by an invalid one.
+    latest: {
+      id: "ver-2",
+      version: 2,
+      urlPatterns: ["*://acme.com/*"],
+      api: { baseUrl: "https://acme.com" },
+    },
     versionsById: {},
     installs: [],
   }),

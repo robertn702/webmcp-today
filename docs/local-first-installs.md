@@ -123,11 +123,11 @@ Concretely:
   the per-tab status map and badge (`:80`–`:93`, unchanged), and gains: the storage lookup, the
   install message handler (§3), and `chrome.alarms` for the domain list and revocation polls.
 - **Ranking** loses nothing. `rankPackagesByUrl` sorts on pattern specificity alone
-  (`packages/schema/src/url-matching.ts:151`); `installCount` is serialized
-  (`apps/web/lib/serialize.ts:28`) and displayed, but no code path has ever ordered by it —
+  (`packages/schema/src/url-matching.ts:151`); `installCount` was serialized and displayed at
+  the time this was written, but no code path ever ordered by it —
   `apps/web/lib/lookup.ts:33` ranks by specificity and browse orders by `updatedAt`
-  (`apps/web/lib/packages-repo.ts:84`). `ARCHITECTURE.md`'s "Trust = install count" note and
-  the landing mode-flow UI overstate this today; §7 resolves it.
+  (`apps/web/lib/packages-repo.ts:84`). §7's plan has since landed: `installCount` is gone from
+  the served schema entirely, and `ARCHITECTURE.md` reflects the resolved state.
 
 **Keep the lookup in the background worker**, even though `storage.local` is readable from
 content scripts. One in-memory index cache shared by every tab beats N per-frame reads, the
@@ -298,14 +298,13 @@ The reasoning, in order of weight:
 3. Six packages, zero users. The number carries no information today, and the cheap version
    (a counter table plus a public unauthenticated `POST`) buys a number nobody can trust.
 
-Mechanics: `installCount` is already optional in the schema
-(`packages/schema/src/registry.ts:16`), so simply stop populating it —
-`fetchInstallCounts`/`hydrate` (`apps/web/lib/packages-repo.ts:29`) drops out and no consumer
-breaks. `ARCHITECTURE.md:214` ("Trust = install count, not verification") and `docs/erd.md:138`
-need rewriting when this lands; the honest v1 line is **trust = readable data, explicit consent,
-and a version you hold**. Keep the `installs` table — it still records account-side pins made
-while signed in (§8) — but stop deriving a public trust number from it. The landing hero's
-`totalInstalls` (`apps/web/app/api/stats/route.ts:20`) becomes package and domain counts.
+Mechanics (as planned, and since landed): make `installCount` optional in the schema first, stop
+populating it, then remove the field from the schema entirely — `fetchInstallCounts`/`hydrate`
+drops out and no consumer breaks. `ARCHITECTURE.md` and `docs/erd.md` needed rewriting once this
+landed; the honest v1 line is **trust = readable data, explicit consent, and a version you
+hold**. Keep the `installs` table — it still records account-side pins made while signed in (§8)
+— but stop deriving a public trust number from it. The landing hero's `totalInstalls`
+(`apps/web/app/api/stats/route.ts:20`) becomes package and domain counts.
 
 Revisit when specificity ties are common **and** there is a plausible anti-inflation story
 (count only clients that later invoke the package, aggregate with noise). Both are post-launch

@@ -71,6 +71,30 @@ describe("webMcpPackageSchema", () => {
   it("rejects an id that is present but empty", () => {
     expect(webMcpPackageSchema.safeParse({ ...servedPackage, id: "" }).success).toBe(false);
   });
+
+  it("rejects a tool bound to an endpoint api.endpoints doesn't define (dangling execution reference)", () => {
+    const result = webMcpPackageSchema.safeParse({
+      ...servedPackage,
+      tools: [
+        {
+          ...servedPackage.tools[0],
+          execution: { mode: "api", endpoint: "does-not-exist" },
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a {{param}} placeholder with no matching inputSchema property", () => {
+    const result = webMcpPackageSchema.safeParse({
+      ...servedPackage,
+      api: {
+        ...servedPackage.api,
+        endpoints: { search: { method: "GET", path: "/search/{{missingParam}}" } },
+      },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 // Wire schemas shared by the registry and the extension: the client validates
