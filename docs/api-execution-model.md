@@ -263,10 +263,9 @@ the `auth` declaration model.
 > page (Joakim's model). The reversal rationale: (1) DOM packages rot silently, pushing
 > us toward API execution, and some real APIs need computed requests tier 1 cannot
 > express; (2) the executor now mediates all network access behind an origin-pinned wall,
-> which was not part of the original design; (3) installs pin to `version_id`, so a
-> malicious update never auto-propagates; (4) curation + prominent code display +
-> install-count signal is the Greasyfork model, which has carried a far larger arbitrary-
-> code ecosystem for years. Tier 3 is gated behind tiers 1–2 in the build order and
+> which was not part of the original design; (3) explicit local installs pin a chosen
+> `version_id`, so a malicious update never auto-propagates; (4) the declarative package
+> content remains readable before that install. Tier 3 is gated behind tiers 1–2 in the build order and
 > behind the MV3 spike (below) — it ships last, and only if the spike says it's shippable.
 
 ## GraphQL support
