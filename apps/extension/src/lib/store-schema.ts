@@ -5,9 +5,11 @@ import { revocationEntrySchema } from "@webmcp-today/schema";
 // Pure module — no wxt/browser import — so tests can exercise the real schemas
 // and store logic against a fake StorageArea (see storage.ts for the seam).
 
-/** Bump only with a migration story; there is deliberately no migration
- * framework while this is the only version. */
-export const STORAGE_SCHEMA_VERSION = 1;
+/** Bump only with a migration story. There is still no migration framework —
+ * `installs-store.ts#initialize()` handles a stale on-disk version by wiping
+ * every `pkg:*` body and resetting the index rather than translating the old
+ * shape forward. */
+export const STORAGE_SCHEMA_VERSION = 2;
 
 export const SCHEMA_VERSION_KEY = "schemaVersion";
 export const INDEX_KEY = "index";

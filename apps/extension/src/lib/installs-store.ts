@@ -39,10 +39,11 @@ export type LoadPackageResult =
   { status: "ok"; body: WebMcpPackage } | { status: "missing" } | { status: "invalid" };
 
 export interface InstallsStore {
-  /** First-run setup + startup GC: writes schemaVersion when absent, then
-   * reclaims bodies orphaned by an interrupted uninstall. Call on
-   * runtime.onStartup/onInstalled. Returns the schema state; does nothing
-   * when it isn't "ok". */
+  /** First-run setup + startup GC: writes schemaVersion when absent, resets
+   * every `pkg:*` body and the index when the stored version is older than
+   * the build's, then reclaims bodies orphaned by an interrupted uninstall.
+   * Call on runtime.onStartup/onInstalled. Returns the schema state; does
+   * nothing when it isn't "ok". */
   initialize(): Promise<SchemaVersionState>;
   readSchemaVersionState(): Promise<SchemaVersionState>;
   readIndex(): Promise<InstallIndex>;
@@ -65,11 +66,32 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     return next;
   }
 
+  async function readStoredVersion(): Promise<unknown> {
+    return (await area.get(SCHEMA_VERSION_KEY))[SCHEMA_VERSION_KEY];
+  }
+
+  /** A stored version older than the build's is "ok" here — safe to read,
+   * just not yet reset. initialize() is the only caller that needs to tell
+   * "older" apart from "current"; every other caller (install/uninstall/
+   * lookup) only runs after initialize() has already reset it, per the
+   * ensureInitialized() gate in background.ts. */
   async function readSchemaVersionState(): Promise<SchemaVersionState> {
-    const stored = (await area.get(SCHEMA_VERSION_KEY))[SCHEMA_VERSION_KEY];
+    const stored = await readStoredVersion();
     if (stored === undefined) return "ok";
     if (typeof stored !== "number" || !Number.isInteger(stored)) return "corrupt";
     return stored > STORAGE_SCHEMA_VERSION ? "newer" : "ok";
+  }
+
+  /** Wipes every `pkg:*` body and the index for an on-disk version older than
+   * the build's — there is no migration story, so a stale package contract
+   * is discarded rather than reinterpreted. Removal runs before the version
+   * bump so a crash between the two leaves the version still "older" (the
+   * next initialize() retries; removal of already-gone keys is a no-op). */
+  async function resetLegacyStorage(): Promise<void> {
+    const all = await area.get(null);
+    const pkgKeys = Object.keys(all).filter((key) => key.startsWith(PKG_KEY_PREFIX));
+    if (pkgKeys.length > 0) await area.remove(pkgKeys);
+    await area.set({ [SCHEMA_VERSION_KEY]: STORAGE_SCHEMA_VERSION, [INDEX_KEY]: {} });
   }
 
   async function readIndex(): Promise<InstallIndex> {
@@ -104,6 +126,13 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
       return enqueue(async () => {
         const state = await readSchemaVersionState();
         if (state !== "ok") return state;
+
+        const stored = await readStoredVersion();
+        if (typeof stored === "number" && stored < STORAGE_SCHEMA_VERSION) {
+          await resetLegacyStorage();
+          return "ok";
+        }
+
         await area.set({ [SCHEMA_VERSION_KEY]: STORAGE_SCHEMA_VERSION });
         await collectOrphansInner();
         return state;
