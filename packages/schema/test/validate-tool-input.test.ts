@@ -116,6 +116,38 @@ describe("validateToolInput", () => {
     });
   });
 
+  it("measures the sanitized input instead of a non-enumerable toJSON result", () => {
+    const bigSchema: InputSchema = {
+      type: "object",
+      properties: { text: { type: "string" } },
+      additionalProperties: false,
+    };
+    const input = { text: "a".repeat(70_000) };
+    const originalToJSON = Object.getOwnPropertyDescriptor(Object.prototype, "toJSON");
+    Object.defineProperty(Object.prototype, "toJSON", {
+      enumerable: false,
+      configurable: true,
+      value: () => ({ text: "small" }),
+    });
+    try {
+      expect(JSON.stringify(input)).toBe('{"text":"small"}');
+
+      const result = validateToolInput(bigSchema, input);
+      expect(result.success).toBe(false);
+      if (result.success) throw new Error("expected failure");
+      expect(result.issues).toContainEqual({
+        path: [],
+        message: "Tool input must not exceed 64 KiB when serialized",
+      });
+    } finally {
+      if (originalToJSON === undefined) {
+        Reflect.deleteProperty(Object.prototype, "toJSON");
+      } else {
+        Object.defineProperty(Object.prototype, "toJSON", originalToJSON);
+      }
+    }
+  });
+
   it("accepts input at just under the 64 KiB limit", () => {
     const bigSchema: InputSchema = {
       type: "object",

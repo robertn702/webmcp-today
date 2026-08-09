@@ -97,6 +97,7 @@ describe("toolDescriptorSchema", () => {
       description: "Delete",
       inputSchema,
       annotations: { destructiveHint: "yes" },
+      execution: { mode: "api", endpoint: "delete" },
     });
     expect(result.success).toBe(false);
   });

@@ -491,12 +491,31 @@ describe("apiAuthSourceSchema pattern validation", () => {
     expect(withPattern('name="hmac" value="([^"]+)"')).toBe(true);
   });
 
+  it("accepts the HN pattern with independently optional non-capturing groups", () => {
+    expect(withPattern('vote\\?id={{itemId}}&(?:amp;)?how={{how}}&(?:amp;)?auth=([^&"]+)')).toBe(
+      true,
+    );
+  });
+
+  it("accepts a lazy fixed-width quantifier", () => {
+    expect(withPattern("^(a{1}?)+$")).toBe(true);
+    expect(withPattern("^(a{1,1}?)+$")).toBe(true);
+  });
+
   it("rejects a pattern with no capture group", () => {
     expect(withPattern('name="hmac" value="[^"]+"')).toBe(false);
   });
 
   it("rejects a pattern that is not valid regex syntax", () => {
     expect(withPattern("(unterminated")).toBe(false);
+  });
+
+  it("rejects a nested variable-width repeat", () => {
+    expect(withPattern("^((a+)+)$")).toBe(false);
+    expect(withPattern("^((a?a?)+)$")).toBe(false);
+    expect(withPattern("^((a+){20})$")).toBe(false);
+    expect(withPattern("^((a+){2,2})$")).toBe(false);
+    expect(withPattern("^((a{0,1})+)$")).toBe(false);
   });
 
   it("accepts a pattern containing a {{param}} placeholder alongside a capture group", () => {

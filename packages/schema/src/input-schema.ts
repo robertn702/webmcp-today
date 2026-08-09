@@ -179,15 +179,6 @@ export function validateToolInput(schema: InputSchema, input: unknown): ToolInpu
   }
 
   const issues: ToolInputValidationIssue[] = [];
-  try {
-    const serialized = JSON.stringify(input);
-    if (new TextEncoder().encode(serialized).byteLength > INPUT_BYTES_MAX) {
-      issues.push({ path: [], message: "Tool input must not exceed 64 KiB when serialized" });
-    }
-  } catch {
-    issues.push({ path: [], message: "Tool input must be JSON-serializable" });
-  }
-
   for (const name of schema.required ?? []) {
     if (!Object.hasOwn(input, name)) {
       issues.push({ path: [name], message: "Required property is missing" });
@@ -266,6 +257,15 @@ export function validateToolInput(schema: InputSchema, input: unknown): ToolInpu
       });
     }
     data[name] = value;
+  }
+
+  try {
+    const serialized = JSON.stringify(data);
+    if (new TextEncoder().encode(serialized).byteLength > INPUT_BYTES_MAX) {
+      issues.push({ path: [], message: "Tool input must not exceed 64 KiB when serialized" });
+    }
+  } catch {
+    issues.push({ path: [], message: "Tool input must be JSON-serializable" });
   }
 
   return issues.length === 0 ? { success: true, data } : { success: false, issues };
