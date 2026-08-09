@@ -15,8 +15,9 @@ import {
   readExtensionUpdateState,
   shouldShowExtensionUpdate,
 } from "../lib/extension-update.js";
+import { createEnsureInitialized } from "../lib/ensure-initialized.js";
 import { handleBridgeRequest, installPackage, resolveInstallState } from "../lib/install-bridge.js";
-import { createInstallsStore, type SchemaVersionState } from "../lib/installs-store.js";
+import { createInstallsStore } from "../lib/installs-store.js";
 import { resolveLocalLookup, type LocalLookupResult } from "../lib/local-lookup.js";
 import { lookupMessageSchema } from "../lib/lookup-client.js";
 import { findRevocation, matchInstalled } from "../lib/match-installed.js";
@@ -58,20 +59,7 @@ const tabStatus = new Map<number, PageStatus>();
  * eviction while the worker is dead is undetectable in v1 (accepted). */
 let lastKnownInstallCount = 0;
 
-/** Memoized so every wake path (message, alarm, startup) gates on the same
- * initialize() before anything is served — readIndex/loadPackage do not
- * consult the schemaVersion guard themselves. */
-let initPromise: Promise<SchemaVersionState> | undefined;
-function ensureInitialized(): Promise<SchemaVersionState> {
-  if (initPromise !== undefined) return initPromise;
-
-  const initializing = store.initialize();
-  initPromise = initializing;
-  void initializing.catch(() => {
-    if (initPromise === initializing) initPromise = undefined;
-  });
-  return initializing;
-}
+const ensureInitialized = createEnsureInitialized(store);
 
 export default defineBackground(() => {
   const localBridgeRouter = createLocalBridgeRouter({

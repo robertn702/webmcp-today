@@ -12,7 +12,7 @@ import {
   type RevocationEntry,
 } from "@webmcp-today/schema";
 import { supportsPackageEngine } from "@webmcp-today/engine";
-import type { InstallsStore, LoadPackageResult, SchemaVersionState } from "./installs-store.js";
+import type { InstallsStore, LoadPackageResult, ReadySchemaState } from "./installs-store.js";
 import { findRevocation } from "./match-installed.js";
 import { isAllowedRegistryOrigin } from "./registry-origins.js";
 import { pollRevocations, readRevokedDoc } from "./revocations.js";
@@ -36,7 +36,7 @@ export interface BridgeDeps {
   area: StorageArea;
   fetchFn: (url: string) => Promise<Response>;
   extensionVersion: string;
-  ensureInitialized: () => Promise<SchemaVersionState>;
+  ensureInitialized: () => Promise<ReadySchemaState>;
 }
 
 /** Shared by the bridge's list-installs and the popup: one install's state

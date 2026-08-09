@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RevocationEntry } from "@webmcp-today/schema";
 import { handleBridgeRequest, type BridgeDeps } from "../src/lib/install-bridge.js";
-import { createInstallsStore, type SchemaVersionState } from "../src/lib/installs-store.js";
+import { createInstallsStore, type ReadySchemaState } from "../src/lib/installs-store.js";
 import { INDEX_KEY, REVOKED_KEY, pkgKey, type RevokedDoc } from "../src/lib/store-schema.js";
 import { createFakeStorageArea, type FakeStorageArea } from "./fake-storage-area.js";
 
@@ -83,7 +83,7 @@ function versionRoute(body: unknown | "network-error" | number = servedPackage()
 function makeDeps(opts: {
   area?: FakeStorageArea;
   routes?: Record<string, unknown | "network-error" | number>;
-  schemaState?: SchemaVersionState;
+  schemaState?: ReadySchemaState;
 }): {
   deps: BridgeDeps;
   area: FakeStorageArea;
