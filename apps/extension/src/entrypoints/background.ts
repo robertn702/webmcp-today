@@ -431,7 +431,11 @@ async function handleInstallSuggestion(request: { packageId: string; versionId: 
 }
 
 async function handleUninstall(packageId: string): Promise<{ removed: boolean }> {
-  await ensureInitialized();
+  // Unreadable storage means nothing was touched — readIndex() also reads
+  // as {} in that state, which must not be conflated with "already gone".
+  const schemaState = await ensureInitialized();
+  if (schemaState !== "ok") return { removed: false };
+
   let threw = false;
   try {
     await store.uninstall(packageId);

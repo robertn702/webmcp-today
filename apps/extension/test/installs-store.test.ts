@@ -277,6 +277,9 @@ describe("installs-store", () => {
         ok: false,
         reason: "schema-unreadable",
       });
+      expect(await store.readIndex()).toEqual({});
+      expect(await store.loadPackage("future")).toEqual({ status: "missing" });
+      expect(await store.collectOrphans()).toEqual([]);
       // Nothing was written, downgraded, or GC'd.
       expect(area.snapshot()).toEqual(seed);
     });
@@ -324,6 +327,9 @@ describe("installs-store", () => {
         ok: false,
         reason: "schema-unreadable",
       });
+      expect(await store.readIndex()).toEqual({});
+      expect(await store.loadPackage("pkg-wiki")).toEqual({ status: "missing" });
+      expect(await store.collectOrphans()).toEqual([]);
       // Nothing was written, wiped, or GC'd.
       expect(area.snapshot()).toEqual(seed);
     });
@@ -392,6 +398,15 @@ describe("installs-store", () => {
       expect(area.snapshot()).toEqual(seed);
     });
 
+    it("collectOrphans() on v1 storage removes nothing rather than GC'ing the stale v1 body", async () => {
+      const seed = seedV1Single();
+      const area = createFakeStorageArea(seed);
+      const store = createInstallsStore(area);
+
+      expect(await store.collectOrphans()).toEqual([]);
+      expect(area.snapshot()).toEqual(seed);
+    });
+
     it("only initialize() advances an older version — direct reads/writes never do", async () => {
       const seed = seedV1Single();
       const area = createFakeStorageArea(seed);
@@ -402,6 +417,7 @@ describe("installs-store", () => {
       await store.loadPackage("pkg-wiki");
       await store.install(servedPackage({ id: "pkg-new" }), OPTS);
       await store.uninstall("pkg-wiki");
+      await store.collectOrphans();
       expect(area.snapshot()).toEqual(seed);
 
       // Only initialize() resets it.

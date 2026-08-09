@@ -60,7 +60,9 @@ export interface InstallsStore {
   install(body: unknown, options: InstallOptions): Promise<InstallResult>;
   uninstall(packageId: string): Promise<UninstallResult>;
   loadPackage(packageId: string): Promise<LoadPackageResult>;
-  /** Removes orphaned `pkg:` bodies; returns the removed keys. */
+  /** Removes orphaned `pkg:` bodies; returns the removed keys. Fails closed
+   * (removes nothing, returns `[]`) unless the schema state is "ok" — same
+   * guard as install/uninstall/readIndex/loadPackage. */
   collectOrphans(): Promise<string[]>;
 }
 
@@ -245,7 +247,11 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
     collectOrphans(): Promise<string[]> {
       // Queued so GC's get-then-remove can't race an install and reclaim a
       // body that gained an index entry in between.
-      return enqueue(collectOrphansInner);
+      return enqueue(async () => {
+        const state = await readSchemaVersionState();
+        if (state !== "ok") return [];
+        return collectOrphansInner();
+      });
     },
   };
 }

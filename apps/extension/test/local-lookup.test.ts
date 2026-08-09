@@ -164,6 +164,41 @@ describe("resolveLocalLookup", () => {
     expect(result.diagnostics).toEqual({ matched: 1, revoked: 0, broken: 1 });
   });
 
+  it("serves nothing with blocked=storage-unreadable directly on v1 storage, without calling initialize()", async () => {
+    const seed = {
+      [SCHEMA_VERSION_KEY]: 1,
+      [INDEX_KEY]: {
+        "pkg-wiki": {
+          packageId: "pkg-wiki",
+          versionId: "ver-1",
+          version: 1,
+          domain: "en.wikipedia.org",
+          urlPatterns: ["*://en.wikipedia.org/wiki/*"],
+          title: "Wikipedia article",
+          installedAt: "2026-07-27T00:00:00.000Z",
+          source: "registry",
+          origin: "https://webmcp.today",
+        },
+      },
+      [pkgKey("pkg-wiki")]: servedPackage(),
+      [REVOKED_KEY]: emptyRevokedDoc(),
+    };
+    const area = createFakeStorageArea(seed);
+    const store = createInstallsStore(area);
+
+    const result = await resolveLocalLookup(PAGE_URL, store, area);
+
+    expect(result.packages).toEqual([]);
+    expect(result.diagnostics).toEqual({
+      matched: 0,
+      revoked: 0,
+      broken: 0,
+      blocked: "storage-unreadable",
+    });
+    // Fails closed without ever calling initialize() — storage untouched.
+    expect(area.snapshot()).toEqual(seed);
+  });
+
   it("matches nothing for a URL a v1 install used to match, once initialize() has reset storage", async () => {
     const area = createFakeStorageArea({
       [SCHEMA_VERSION_KEY]: 1,
