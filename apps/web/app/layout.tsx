@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s · WebMCP Today",
   },
   description:
-    "WebMCP Today is a public beta registry of inspectable WebMCP packages. Install one and your agent can call named, same-origin API tools instead of scraping the page.",
+    "WebMCP Today is a public beta registry of inspectable WebMCP packages. Install one and your agent can call named, origin-pinned API tools instead of scraping the page.",
 };
 
 // Applies the stored theme before first paint to avoid a flash of the wrong

@@ -9,8 +9,8 @@ Page loads do not ask the registry what to run.
 
 - The registry site's install button uses the validated external message bridge;
   the popup's discovery suggestions use an internal message. Both enter the same
-  install path: fetch that exact version, verify its content hash, bootstrap the
-  revocation list, and store the package locally.
+  install path: fetch the requested package and version IDs, validate the served
+  schema, check revocation, and store the package locally.
 - Page loads resolve matching packages entirely from local storage. The registry
   is contacted only for installs, revocation/domain polling, and a daily optional
   release-metadata poll for the unpacked-extension update notice.

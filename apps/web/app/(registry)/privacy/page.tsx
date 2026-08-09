@@ -58,11 +58,11 @@ export default function PrivacyPage() {
           below).
         </p>
         <p>
-          When an AI agent runs an installed tool, its same-origin request goes to that target site,
-          using your existing session; it is not proxied through WebMCP Today. Tool descriptors,
-          inputs, and outputs can pass locally through the extension, native bridge, and MCP client
-          to your configured MCP or AI provider. That provider&apos;s policies govern that data;
-          WebMCP Today&apos;s hosted servers do not receive it.
+          When an AI agent runs an installed tool, its request is pinned to that package's declared
+          API origin, using your existing session; it is not proxied through WebMCP Today. Tool
+          descriptors, inputs, and outputs can pass locally through the extension, native bridge,
+          and MCP client to your configured MCP or AI provider. That provider&apos;s policies govern
+          that data; WebMCP Today&apos;s hosted servers do not receive it.
         </p>
       </Section>
 

@@ -6,9 +6,9 @@ to detail gets deleted on sight; whoever completes an item deletes it in the
 same PR. Not a wishlist.
 
 **Launch (MVP) =** public announcement of `webmcp.today` to a developer audience
-— WebMCP is flag/origin-trial gated through Chrome 156, so every early user runs
-Chrome with `#enable-webmcp-testing` and drives tools from the Tool Inspector or
-their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
+— the extension's local bridge fallback works without the WebMCP testing flag;
+Chrome's native agent remains flag/origin-trial gated through Chrome 156. Tier-1
+packages only; extension installed unpacked or via CWS.
 
 ## Before launch (MVP)
 
@@ -66,11 +66,6 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   docs/local-first-installs.md §5. What is left for this item: the report path
   (who flags, where it lands) and the tier-2/3 review bar.
   (docs/api-execution-model.md → Open questions)
-- **Param-description budget gap** — `inputSchema` property descriptions allow
-  1,000 chars vs Chrome's 150 guidance; the removed DOM `fields[]` enforced
-  150, API tools bypass it. Align or consciously relax — tightening it after
-  strangers publish invalidates stored packages.
-  (packages/schema/src/input-schema.ts)
 - **`returns` projection for `reddit_comment`** — write output is Reddit's raw
   rendered HTML; project errors/permalink instead. Publish as v2 of the package
   (first exercise of the version-append path — worth proving before strangers

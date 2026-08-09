@@ -128,9 +128,10 @@ export default function PackageFormatPage() {
         </p>
         <div className="mt-5">
           <Field name="baseUrl" type="https:// URL · required">
-            Its host must be covered by one of your <Code>urlPatterns</Code>. That is the
-            same-origin rule: a package can only talk to the site it runs on, with the session the
-            user already has. There is no way to declare a request to somewhere else.
+            Its host must be your package <Code>domain</Code> or a subdomain. It need not be covered
+            by <Code>urlPatterns</Code> or equal the current page origin. After interpolation, every
+            derived request must still match this exact origin; requests to any other host are
+            refused.
           </Field>
           <Field name="endpoints" type="Record<string, ApiEndpoint> · required">
             Named requests. Tools bind to these keys.
@@ -149,7 +150,9 @@ export default function PackageFormatPage() {
         <div className="mt-3">
           <Field name="method / path" type="required">
             <Code>GET</Code>, <Code>POST</Code>, <Code>PUT</Code>, <Code>PATCH</Code>,{" "}
-            <Code>DELETE</Code>, and a path resolved against <Code>baseUrl</Code>.
+            <Code>DELETE</Code>, and a path resolved against <Code>baseUrl</Code>. Paths start with
+            exactly one <Code>/</Code> and cannot contain <Code>//</Code>, backslashes, queries,
+            fragments, or <Code>.</Code>/<Code>..</Code> segments.
           </Field>
           <Field name="query" type="Record<string, string> · optional">
             Query parameters. Values may carry <Code>{"{{param}}"}</Code>.
@@ -158,8 +161,9 @@ export default function PackageFormatPage() {
             <Code>body</Code> is a JSON template, <Code>form</Code> is form-encoded fields,{" "}
             <Code>graphql</Code> is <Code>{"{ document, variables }"}</Code>. Declaring two is
             rejected: the executor would pick one and you&apos;d ship a request you never asked for.
-            A <Code>body</Code> or <Code>graphql.variables</Code> leaf that is exactly one{" "}
-            <Code>{"{{param}}"}</Code> keeps its type, so a number stays a number.
+            <Code>GET</Code> endpoints cannot declare any of them. A <Code>body</Code> or{" "}
+            <Code>graphql.variables</Code> leaf that is exactly one <Code>{"{{param}}"}</Code> keeps
+            its type, so a number stays a number.
           </Field>
           <Field name="returns" type="JMESPath expression · optional">
             Reshapes the response into what the agent gets back. Compiled at publish time, so a
@@ -192,8 +196,8 @@ export default function PackageFormatPage() {
             <Code>[&quot;data&quot;, &quot;modhash&quot;]</Code>. <Code>pattern</Code> is a regex
             over the raw response text, for tokens served in HTML. Capture group 1 is the token, and
             no match is a loud failure. Declaring both, or neither, is rejected. Any{" "}
-            <Code>{"{{param}}"}</Code> inside <Code>pattern</Code> is interpolated raw before the
-            regex is compiled, so keep interpolated params identifier-shaped (numeric ids, slugs).
+            <Code>{"{{param}}"}</Code> inside <Code>pattern</Code> is regex-escaped before the regex
+            is compiled, so each interpolated value matches literal text.
           </Field>
           <Field name="sendAs" type="{ in, name } · required">
             Where the token goes: <Code>header</Code>, <Code>form</Code>, or <Code>query</Code>,
@@ -219,6 +223,11 @@ export default function PackageFormatPage() {
           <Code>body</Code>/<Code>graphql.variables</Code> leaf that is exactly one{" "}
           <Code>{"{{param}}"}</Code> yields <Code>undefined</Code> and drops out of the JSON
           entirely. There is no escape hatch for a literal <Code>{"{{"}</Code> yet.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          At invocation, input must be a plain object containing only declared primitive fields and
+          must serialize to at most 64 KiB. Invalid input reports validation issues before a
+          destructive confirmation or network request.
         </p>
       </Section>
 

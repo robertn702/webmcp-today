@@ -6,7 +6,7 @@ export const REDDIT_PACKAGE_DOMAIN = "reddit.com";
 export const FIRST_TOOL_NAME = "reddit_subreddit_hot";
 export const REDDIT_TOOL_COUNT = 6;
 
-export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.1.4";
+export const MCP_BRIDGE_PACKAGE = "@webmcp-today/mcp-bridge@0.2.0";
 export const DOWNLOAD_EXTENSION = `curl -L ${EXTENSION_RELEASE_URL} -o ~/Downloads/webmcp-today-extension.zip
 unzip ~/Downloads/webmcp-today-extension.zip -d ~/Downloads/webmcp-today-extension`;
 
@@ -154,7 +154,7 @@ Read https://webmcp.today/docs/package-format and the examples in packages/curat
 Requirements:
 - Use API execution only. Do not use DOM selectors or arbitrary page scripts.
 - Start with one useful read-only tool and the smallest required input schema.
-- Base the package on the site's documented or directly observed same-origin HTTP API.
+- Base the package on the site's documented or directly observed HTTP API at the package domain or a subdomain.
 - Project the response with returns so the tool returns only what it promises.
 - Save the result as webmcp-package.json in the repository root.
 - Validate it from the repository root with:

@@ -148,7 +148,8 @@ erDiagram
 ## Reading notes
 
 - **Served truth:** `package_versions` rows directly — no separate snapshot table.
-  Browse/fresh lookup serves `max(version)` per package. Installed users stay pinned
+  Browse/fresh lookup validates the highest in-scope candidate and omits the package
+  if that candidate is invalid. Installed users stay pinned
   to `installs.version_id` until they explicitly move the pin (npm-style, no
   auto-update); rollback is just setting `version_id` back to an older version.
 - **Append-only versions:** publishing a new version never mutates or deletes an old one.

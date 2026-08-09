@@ -67,8 +67,9 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 
 - **`package_versions` rows are the served truth directly** — no snapshot table.
   `GET /api/packages/lookup` and browse (`GET /api/packages`) both serve each
-  package's _latest_ **in-scope** version (the highest `version` whose `urlPatterns`
-  pass `packageWithinDomainScope`, not a raw `max(version)`); there is no
+  package's _latest_ **in-scope** candidate only after full envelope validation (the
+  highest `version` whose `urlPatterns` pass `packageWithinDomainScope`, not a raw
+  `max(version)`); packages whose candidate fails validation are omitted. There is no
   unverified/verified split and no `yolo` param. Seeded packages are immediately servable (0 installs, but
   visible) — see `docs/erd.md`.
 - **Versions are append-only.** `POST /api/packages/:id/versions` (owner-only) inserts

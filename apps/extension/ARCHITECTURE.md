@@ -146,16 +146,18 @@ _What happens when the in-page LLM invokes a registered tool._
 
 ```mermaid
 flowchart TB
-    CB["registerTool execute callback"] --> API["api-executor (packages/engine)<br/>(same-origin fetch, auth tokens,<br/>JMESPath projection,<br/>destructiveHint confirm)"]
+    CB["registerTool execute callback"] --> API["api-executor (packages/engine)<br/>(validate input first, same-origin fetch,<br/>auth tokens, JMESPath projection,<br/>destructiveHint confirm)"]
     API --> RESULT["mcp-result (packages/engine)<br/>(text → WebMCP result shape)"]
 ```
 
 `api-executor` (in `packages/engine/src/api-executor.ts`, MIT — extracted from
 `src/lib/` for license separation, `docs/DECISIONS.md` 2026-07-30) is the only
 executor — DOM mode was cut pre-launch
-(`docs/DECISIONS.md` 2026-07-28). It binds `{{param}}` templates from validated
-input, acquires tokens from the package's `api.auth` sources, performs the
-same-origin fetch, checks `errorPath`, and applies the `returns` projection.
+(`docs/DECISIONS.md` 2026-07-28). It re-validates input against `inputSchema` and a
+64 KiB serialized-input cap **before** the `destructiveHint` confirm prompt or any
+network access, then binds `{{param}}` templates from that validated input, acquires
+tokens from the package's `api.auth` sources, performs the same-origin fetch, checks
+`errorPath`, and applies the `returns` projection.
 
 ### ④ Local bridge flow — MCP → selected tab's live tools
 

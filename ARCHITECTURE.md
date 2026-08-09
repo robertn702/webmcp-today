@@ -29,7 +29,7 @@ flowchart LR
         PAGE["Any website<br/>(user's logged-in session)"]
         EXT -- "registerTool()" --> PAGE
         BA -- "invoke tool" --> PAGE
-        PAGE -- "same-origin API" --> EXT
+        PAGE -- "declared API tool" --> EXT
     end
 
     subgraph Registry["Registry (apps/web — Next.js)"]
@@ -58,8 +58,8 @@ flowchart LR
 - **`apps/extension`** — the delivery mechanism. A content script on every page asks
   the background worker for packages matching the URL; the worker resolves them from
   `chrome.storage.local` (no network on page load) and the content script registers
-  their tools via `document.modelContext.registerTool()` so in-page agents can call
-  them. Installs arrive over an `externally_connectable` bridge from the registry
+  their tools through the native `document.modelContext` API when available, otherwise
+  a document-local fallback served through the WebMCP Today bridge. Installs arrive over an `externally_connectable` bridge from the registry
   site; the only other HTTP the extension makes is a revocation poll and a domain
   list, both on `chrome.alarms`.
 - **`packages/mcp`** — a stdio MCP server so terminal agents can search, publish, and
@@ -75,7 +75,7 @@ flowchart LR
   against; published as `@webmcp-today/schema`.
 - **`packages/engine`** — the execution engine
   (`@webmcp-today/engine`, MIT): turns a package's declarative `api`
-  block into same-origin HTTP requests, plus the `minEngine` gate. Extracted from
+  block into HTTP requests pinned to its `api.baseUrl` origin, plus the `minEngine` gate. Extracted from
   the extension for license separation (`docs/DECISIONS.md` 2026-07-30); the
   extension is its only consumer today.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
@@ -161,9 +161,11 @@ sequenceDiagram
     participant S as Target site
 
     A->>MC: invoke tool(name, input)
-    MC->>EX: execute(validated input)
+    MC->>EX: execute(input)
+    EX->>EX: validate input against inputSchema + 64 KiB cap — reject before any side effect
+    EX->>EX: destructiveHint? block on window.confirm
     EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
-    EX->>S: same-origin fetch (user's cookies ride along)
+    EX->>S: fetch pinned to api.baseUrl origin (user's cookies ride along)
     S-->>EX: JSON (errorPath checked, returns projection applied)
     EX-->>A: tool output (uncapped in v1)
 ```
@@ -172,11 +174,16 @@ One execution mode, selected per tool by binding to an `api.endpoints` entry:
 
 - **API mode (tier 1)** — the package declares the site's own HTTP API as data
   (`api.endpoints`, `auth` token sources, `returns` projections); the executor derives
-  and performs the call. Ships zero code. The load-bearing invariant: **all network
-  access is same-origin with the package's `urlPatterns`**, enforced at publish and
-  again at execution. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
+  and performs the call. Ships zero code. The load-bearing invariant: **`api.baseUrl`
+  must use the package domain or a subdomain, and every derived request is pinned to
+  that exact origin after interpolation**. `urlPatterns` select pages for tool
+  registration; they do not constrain `api.baseUrl` or need to cover it. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
   2026-07-28.) Tiers 2–3 (scoped script slots, full `evaluate`) are designed
   but not shipped — see `docs/api-execution-model.md`.
+- **Validate before any side effect.** The executor re-validates input against the
+  tool's `inputSchema` (primitive-only profile) and a 64 KiB serialized-input cap
+  before the `destructiveHint` confirm prompt or any network access — an invalid call
+  never reaches the user-facing confirm dialog or the site.
 
 `destructiveHint` tools gate on a blocking `window.confirm` — writes wait for a human.
 
@@ -222,14 +229,17 @@ Account-side `installs` rows still record pins made through the MCP server
 
 ## Package format
 
-A package is pure data — `{ domain, urlPatterns[], title, description, tools[], api?, changelog? }`,
+A package is pure data — `{ version, domain, urlPatterns[], title, description, tools[], api, minEngine, changelog? }`,
 validated by zod in `packages/schema`:
 
-- `urlPatterns` — Chrome `@match`-style; used for lookup, ranking
-  (`rankPackagesByUrl`), and same-origin enforcement of `api.baseUrl`.
-- `tools[]` — `{ name, description, inputSchema, annotations?, execution? }` with
+- `urlPatterns` — Chrome `@match`-style; used for lookup and ranking
+  (`rankPackagesByUrl`).
+- `tools[]` — `{ name, description, inputSchema, annotations?, execution }` with
   WebMCP metadata budgets enforced (500/description, 150/param, 30/name — tool output
   is uncapped in v1; `packages/schema/src/budgets.ts`).
+- `api` — required API execution surface. Its `baseUrl` host must be the package
+  domain or a subdomain; the executor rejects a derived URL whose origin differs
+  from the exact `baseUrl` origin after interpolation.
 - `minEngine` — positive-integer capability level per version; lets the format evolve
   without old executors silently mis-running new packages.
 - Placeholders (`{{param}}`, double-brace) may only name `inputSchema` properties —
@@ -269,6 +279,7 @@ webmcp-today/
 - Bun workspaces + Turborepo; root `bun run typecheck && bun run lint && bun run test`
   is the pre-commit gate (same as CI).
 - Publishing uses Changesets; published packages list `LICENSE` in `files`.
-- Local dev needs Chrome 149+ with WebMCP flags for the extension
-  (`--enable-features=WebMCP,WebMCPTesting`) and a Neon
-  `DATABASE_URL` + GitHub OAuth + `BETTER_AUTH_SECRET` for the web app.
+- Local dev needs Chrome 149+ for the extension; enable WebMCP flags
+  (`--enable-features=WebMCP,WebMCPTesting`) only to exercise Chrome's native
+  agent. The local bridge fallback works without them. The web app needs a Neon
+  `DATABASE_URL` + GitHub OAuth + `BETTER_AUTH_SECRET`.

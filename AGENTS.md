@@ -97,8 +97,9 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## Package format
 
-- `{ version, domain, urlPatterns[], title, description, tools[], changelog? }`; `urlPatterns` is
-  Chrome `@match`-style (`scheme://host/path`), versioned alongside `tools`.
+- `{ version, domain, urlPatterns[], title, description, tools[], api, minEngine, changelog? }`;
+  `urlPatterns` is Chrome `@match`-style (`scheme://host/path`), versioned alongside
+  `tools`, `api`, and `minEngine`.
 - `version`: author-declared positive integer (not semver) — `1` on create, exactly
   `max(version)+1` on publish, or the API 409s with `expectedVersion`
   (docs/DECISIONS.md 2026-07-29).
@@ -125,11 +126,12 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 ## Registry data model
 
 - `packages` (mutable) / `package_versions` (append-only; the served truth) /
-  `installs` (auth-only per-user version pins). Browse serves max(version);
-  users stay on their pinned version. ERD: `docs/erd.md`; served-truth rules:
+  `installs` (auth-only per-user version pins). Browse serves the highest in-scope
+  candidate only after full envelope validation and omits a package whose candidate
+  is invalid; users stay on their pinned version. ERD: `docs/erd.md`; served-truth rules:
   `apps/web/AGENTS.md`.
 - No `(domain, url_pattern)` uniqueness — rival packages may target the same site;
-  installs + pattern specificity rank them.
+  local browser installs select candidates, and matching candidates rank by pattern specificity.
 - Two Postgres namespaces: app tables in `public`, better-auth's in `auth`
   (`auth.users`, …) — hand-run SQL must qualify. See `apps/web/AGENTS.md` § Auth.
 
