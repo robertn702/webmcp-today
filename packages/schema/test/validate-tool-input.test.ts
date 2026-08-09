@@ -127,6 +127,37 @@ describe("validateToolInput", () => {
     expect(result.success).toBe(true);
   });
 
+  it("rejects multibyte UTF-8 input whose byte length exceeds 64 KiB despite a small JS string length", () => {
+    const bigSchema: InputSchema = {
+      type: "object",
+      properties: { text: { type: "string" } },
+      additionalProperties: false,
+    };
+    // "€" is 1 UTF-16 code unit (JS .length) but 3 UTF-8 bytes — 25,000 of them
+    // is a 25,000-char string but ~75,000 bytes, well over the 64 KiB limit a
+    // naive .length-based check would have missed.
+    const text = "€".repeat(25_000);
+    expect(text.length).toBeLessThan(64 * 1024);
+    const result = validateToolInput(bigSchema, { text });
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error("expected failure");
+    expect(result.issues).toContainEqual({
+      path: [],
+      message: "Tool input must not exceed 64 KiB when serialized",
+    });
+  });
+
+  it("accepts multibyte UTF-8 input within the 64 KiB byte budget", () => {
+    const bigSchema: InputSchema = {
+      type: "object",
+      properties: { text: { type: "string" } },
+      additionalProperties: false,
+    };
+    const text = "€".repeat(1_000);
+    const result = validateToolInput(bigSchema, { text });
+    expect(result).toEqual({ success: true, data: { text } });
+  });
+
   it("is deterministic across repeated calls with the same input", () => {
     const input = { name: "a", age: 30 };
     const first = validateToolInput(schema, input);

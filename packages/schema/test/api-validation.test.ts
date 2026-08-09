@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   apiAuthSourceSchema,
+  apiBlockSchema,
   apiEndpointSchema,
   createPackageSchema,
   publishVersionSchema,
@@ -423,6 +424,22 @@ describe("apiEndpointSchema path validation", () => {
   it("rejects an embedded fragment in the path", () => {
     expect(withPath("/api/me.json#top")).toBe(false);
   });
+
+  it("rejects a '..' path traversal segment", () => {
+    expect(withPath("/api/../admin")).toBe(false);
+  });
+
+  it("rejects a '.' path segment", () => {
+    expect(withPath("/api/./me.json")).toBe(false);
+  });
+
+  it("accepts a segment that merely starts with a dot, like a dotfile-shaped name", () => {
+    expect(withPath("/api/.well-known/x")).toBe(true);
+  });
+
+  it("accepts a filename containing dots, like me.json", () => {
+    expect(withPath("/api/me.json")).toBe(true);
+  });
 });
 
 describe("apiEndpointSchema GET body rejection", () => {
@@ -484,5 +501,23 @@ describe("apiAuthSourceSchema pattern validation", () => {
 
   it("accepts a pattern containing a {{param}} placeholder alongside a capture group", () => {
     expect(withPattern("vote\\?id={{itemId}}&auth=([^&]+)")).toBe(true);
+  });
+});
+
+describe("apiBlockSchema endpoints requirement", () => {
+  it("rejects an empty endpoints object", () => {
+    const result = apiBlockSchema.safeParse({
+      baseUrl: "https://acme.com",
+      endpoints: {},
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a single endpoint", () => {
+    const result = apiBlockSchema.safeParse({
+      baseUrl: "https://acme.com",
+      endpoints: { me: { method: "GET", path: "/api/me" } },
+    });
+    expect(result.success).toBe(true);
   });
 });

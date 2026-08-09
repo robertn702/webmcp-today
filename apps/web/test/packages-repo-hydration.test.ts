@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
+const API_BLOCK = {
+  baseUrl: "https://reddit.com",
+  endpoints: { me: { method: "GET", path: "/api/me.json" } },
+};
+
 const state = vi.hoisted(
   (): {
     versionRows: {
@@ -8,9 +13,9 @@ const state = vi.hoisted(
       version: number;
       urlPatterns: string[];
       tools: [];
-      api: null;
+      api: { baseUrl: string; endpoints: Record<string, unknown> };
       apiContentHash: null;
-      minEngine: null;
+      minEngine: number;
       changelog: null;
       createdAt: Date;
     }[];
@@ -39,11 +44,12 @@ describe("hydratePackages", () => {
         id: "ver-unsafe",
         packageId: "pkg-1",
         version: 3,
+        // A global wildcard is what makes this version unsafe, not its api block.
         urlPatterns: ["*://*/*"],
         tools: [],
-        api: null,
+        api: API_BLOCK,
         apiContentHash: null,
-        minEngine: null,
+        minEngine: 1,
         changelog: null,
         createdAt: new Date("2026-07-03T00:00:00.000Z"),
       },
@@ -53,9 +59,9 @@ describe("hydratePackages", () => {
         version: 2,
         urlPatterns: ["*://*.reddit.com/*"],
         tools: [],
-        api: null,
+        api: API_BLOCK,
         apiContentHash: null,
-        minEngine: null,
+        minEngine: 1,
         changelog: null,
         createdAt: new Date("2026-07-02T00:00:00.000Z"),
       },

@@ -1,13 +1,13 @@
 import { z } from "zod";
+import { PARAM_DESCRIPTION_MAX } from "./budgets.js";
 
 // inputSchema is deliberately smaller than general JSON Schema. Keeping the
 // profile primitive-only makes author input auditable and keeps the schema sent
 // to MCP clients fully inline, without $ref/$defs.
 
-const DESCRIPTION_MAX = 150;
 const INPUT_BYTES_MAX = 64 * 1024;
 
-const descriptionSchema = z.string().max(DESCRIPTION_MAX).optional();
+const descriptionSchema = z.string().max(PARAM_DESCRIPTION_MAX).optional();
 
 const stringPropertySchema = z
   .strictObject({

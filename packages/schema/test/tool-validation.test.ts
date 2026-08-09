@@ -49,6 +49,15 @@ describe("toolDescriptorSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects a tool with execution omitted entirely", () => {
+    const result = toolDescriptorSchema.safeParse({
+      name: "search",
+      description: "Search",
+      inputSchema,
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("accepts a tool with a destructiveHint annotation", () => {
     const result = toolDescriptorSchema.safeParse({
       name: "delete",

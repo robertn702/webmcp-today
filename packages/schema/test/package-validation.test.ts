@@ -178,6 +178,16 @@ describe("createPackageSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("requires api and rejects a package that omits it", () => {
+    const noApi: Record<string, unknown> = { ...baseConfig };
+    delete noApi.api;
+    const result = createPackageSchema.safeParse(noApi);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.join(".") === "api")).toBe(true);
+    }
+  });
+
   it("requires minEngine as a positive integer and rejects non-integer/non-positive", () => {
     const noMinEngine: Record<string, unknown> = { ...baseConfig };
     delete noMinEngine.minEngine;

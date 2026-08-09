@@ -28,11 +28,12 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
     contributor: "robert",
     createdAt: "2026-07-27T00:00:00.000Z",
     updatedAt: "2026-07-27T00:00:00.000Z",
+    minEngine: 1,
     tools: [
       {
         name: "wiki_summary",
         description: "wiki_summary fixture tool",
-        inputSchema: { type: "object", properties: {} },
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true },
         execution: { mode: "api", endpoint: "summary" },
       },
@@ -122,16 +123,27 @@ describe("installs-store", () => {
       [
         "a hash that does not match the api block",
         { api: API_BLOCK, apiContentHash: "f".repeat(64) },
+        "hash-mismatch",
       ],
-      ["an api block without its hash", { api: API_BLOCK, apiContentHash: undefined }],
-      ["a hash without an api block", { api: undefined, apiContentHash: "f".repeat(64) }],
-    ])("rejects %s, writing nothing", async (_label, overrides) => {
+      [
+        "an api block without its hash",
+        { api: API_BLOCK, apiContentHash: undefined },
+        "hash-mismatch",
+      ],
+      // api is now a required field, so a body without one fails schema
+      // validation before the store's own hash-consistency check ever runs.
+      [
+        "a hash without an api block",
+        { api: undefined, apiContentHash: "f".repeat(64) },
+        "invalid-body",
+      ],
+    ] as const)("rejects %s, writing nothing", async (_label, overrides, reason) => {
       const area = createFakeStorageArea();
       const store = createInstallsStore(area);
 
       const result = await store.install(servedPackage(overrides), OPTS);
 
-      expect(result).toEqual({ ok: false, reason: "hash-mismatch" });
+      expect(result).toEqual({ ok: false, reason });
       expect(area.snapshot()).toEqual({});
     });
 

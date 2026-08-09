@@ -127,8 +127,9 @@ export const apiEndpointSchema = z
           !path.includes("//") &&
           !path.includes("\\") &&
           !path.includes("?") &&
-          !path.includes("#"),
-        "path must begin with exactly one '/', contain no '//', and contain no URL, backslash, query, or fragment",
+          !path.includes("#") &&
+          !path.split("/").some((segment) => segment === "." || segment === ".."),
+        "path must begin with exactly one '/', contain no '//', no '.'/'..' segments, and contain no URL, backslash, query, or fragment",
       ),
     query: z.record(z.string(), z.string()).optional(),
     // Opaque body template; string leaves may carry {{param}} placeholders.

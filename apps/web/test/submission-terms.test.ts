@@ -114,7 +114,13 @@ describe("publish routes — submission terms", () => {
     const response = await postVersion(
       post(
         "https://webmcp.today/api/packages/pkg-1/versions",
-        { version: 2, urlPatterns: pkg.urlPatterns, tools: pkg.tools, api: pkg.api },
+        {
+          version: 2,
+          urlPatterns: pkg.urlPatterns,
+          tools: pkg.tools,
+          api: pkg.api,
+          minEngine: pkg.minEngine,
+        },
         termsVersion,
       ),
       { params: Promise.resolve({ id: "pkg-1" }) },
@@ -133,6 +139,7 @@ describe("publish routes — submission terms", () => {
           urlPatterns: pkg.urlPatterns,
           tools: pkg.tools,
           api: pkg.api,
+          minEngine: pkg.minEngine,
         },
         SUBMISSION_TERMS_VERSION,
       ),

@@ -53,12 +53,6 @@ const redditApi: ApiBlock = apiBlockSchema.parse({
         variables: { query: "{{query}}", first: "{{first}}", label: "top {{first}}" },
       },
     },
-    searchPersisted: {
-      method: "POST",
-      path: "/svc/shreddit/graphql",
-      graphql: { document: "@documents/search", variables: {} },
-      persistedQuery: true,
-    },
   },
   documents: {
     search: "query Search($query: String!, $first: Int) { search { title } }",
@@ -255,28 +249,27 @@ describe("buildRequest — construction + interpolation", () => {
     expect(getByPath(body, ["variables", "first"])).toBe(25);
     expect(getByPath(body, ["variables", "label"])).toBe("top 25");
   });
-
-  it("throws 'not yet supported' for persistedQuery endpoints (APQ stub)", () => {
-    expect(() =>
-      buildRequest(redditApi, redditApi.endpoints.searchPersisted!, { query: "x" }),
-    ).toThrow(/persistedQuery/);
-  });
 });
 
 describe("buildRequest — same-origin enforcement", () => {
+  // These two paths are no longer publishable — apiEndpointSchema's path
+  // refine rejects a literal "//" or absolute-URL path at parse time. Built
+  // as plain ApiBlock-shaped literals (bypassing apiBlockSchema.parse) to
+  // unit-test buildRequest's own defense-in-depth check in isolation, which
+  // still matters for any path the schema's static check cannot see through.
   it("refuses a protocol-relative path that changes the origin", () => {
-    const evil: ApiBlock = apiBlockSchema.parse({
+    const evil: ApiBlock = {
       baseUrl: "https://www.reddit.com",
       endpoints: { leak: { method: "GET", path: "//evil.example.com/steal" } },
-    });
+    };
     expect(() => buildRequest(evil, evil.endpoints.leak!, {})).toThrow(/same-origin/);
   });
 
   it("refuses an absolute cross-origin path", () => {
-    const evil: ApiBlock = apiBlockSchema.parse({
+    const evil: ApiBlock = {
       baseUrl: "https://www.reddit.com",
       endpoints: { leak: { method: "GET", path: "https://evil.example.com/x" } },
-    });
+    };
     expect(() => buildRequest(evil, evil.endpoints.leak!, {})).toThrow(/same-origin/);
   });
 });
@@ -415,10 +408,11 @@ describe("executeApiTool — end to end with mocked fetch", () => {
   });
 
   it("refuses (as an error result) a package whose endpoint escapes the origin", async () => {
-    const evil = apiBlockSchema.parse({
+    // Not publishable — see the "buildRequest — same-origin enforcement" note above.
+    const evil: ApiBlock = {
       baseUrl: "https://www.reddit.com",
       endpoints: { leak: { method: "GET", path: "https://evil.example.com/x" } },
-    });
+    };
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
     vi.stubGlobal("fetch", fetchMock);
 

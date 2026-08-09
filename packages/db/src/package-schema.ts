@@ -55,18 +55,18 @@ export const packageVersions = pgTable(
     version: integer("version").notNull(),
     urlPatterns: jsonb("url_patterns").$type<string[]>().notNull(),
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
-    /** Tier-1 API execution surface for this version's API-mode tools (see docs/api-execution-model.md). */
-    api: jsonb("api").$type<ApiBlock>(),
+    /** Tier-1 API execution surface for this version's API-mode tools (see docs/api-execution-model.md). Required — execution is api-mode only. */
+    api: jsonb("api").$type<ApiBlock>().notNull(),
     /**
-     * Content identifier for `api` (apiContentHash in packages/schema) — null
-     * exactly when `api` is null. The same surface recurs across a package's
-     * versions and across rival packages targeting the same site, so clients
-     * use it to recognise a surface they already hold. Bodies are stored
-     * whole — it is a recognition key, not a storage key.
+     * Content identifier for `api` (apiContentHash in packages/schema). The
+     * same surface recurs across a package's versions and across rival
+     * packages targeting the same site, so clients use it to recognise a
+     * surface they already hold. Bodies are stored whole — it is a
+     * recognition key, not a storage key.
      */
     apiContentHash: text("api_content_hash"),
-    /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). */
-    minEngine: integer("min_engine"),
+    /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). Required. */
+    minEngine: integer("min_engine").notNull(),
     changelog: text("changelog"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

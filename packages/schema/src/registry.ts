@@ -7,28 +7,37 @@ import { createPackageObjectSchema } from "./package.js";
  * A package + one of its versions, as served by the registry. `id` is the
  * package id (stable identity); `versionId` + `version` identify which
  * version this document is. Install counts are derived, not denormalized.
+ *
+ * `.loose()`: unlike the strict author-submission contract, a served envelope
+ * must tolerate a top-level field a newer registry added that this build
+ * doesn't know about yet — clients persist the raw body verbatim, not the
+ * parsed/stripped one, so an unrecognized field here must not be a hard
+ * validation failure. The nested `tools`/`api`/`inputSchema` shapes stay
+ * strict; only this outer envelope is loosened.
  */
-export const webMcpPackageSchema = createPackageObjectSchema.extend({
-  id: z.string(),
-  versionId: z.string(),
-  version: z.number().int().min(1),
-  /**
-   * Content identifier for this version's `api` block (see apiContentHash);
-   * absent exactly when there is no `api`. Lets a client recognise a surface
-   * it already holds — the same block recurs across a package's versions and
-   * across rival packages targeting the same site.
-   */
-  apiContentHash: z.string().optional(),
-  contributor: z.string(),
-  /**
-   * @deprecated Trust is derived from readable data and explicit consent, not
-   * install count (docs/local-first-installs.md). Kept optional so existing
-   * consumers don't break; no longer populated by the registry.
-   */
-  installCount: z.number().int().min(0).optional(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+export const webMcpPackageSchema = createPackageObjectSchema
+  .extend({
+    id: z.string(),
+    versionId: z.string(),
+    version: z.number().int().min(1),
+    /**
+     * Content identifier for this version's `api` block (see apiContentHash);
+     * absent exactly when there is no `api`. Lets a client recognise a surface
+     * it already holds — the same block recurs across a package's versions and
+     * across rival packages targeting the same site.
+     */
+    apiContentHash: z.string().optional(),
+    contributor: z.string(),
+    /**
+     * @deprecated Trust is derived from readable data and explicit consent, not
+     * install count (docs/local-first-installs.md). Kept optional so existing
+     * consumers don't break; no longer populated by the registry.
+     */
+    installCount: z.number().int().min(0).optional(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .loose();
 
 export const packageListResponseSchema = z.object({
   packages: z.array(webMcpPackageSchema),

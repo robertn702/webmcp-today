@@ -159,4 +159,25 @@ describe("inputSchemaSchema primitive-only profile", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it("rejects a string property whose minLength exceeds its maxLength", () => {
+    const result = inputSchemaSchema.safeParse({
+      type: "object",
+      properties: { name: { type: "string", minLength: 10, maxLength: 5 } },
+      additionalProperties: false,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it.each(["number", "integer"] as const)(
+    "rejects a %s property whose minimum exceeds its maximum",
+    (type) => {
+      const result = inputSchemaSchema.safeParse({
+        type: "object",
+        properties: { n: { type, minimum: 10, maximum: 5 } },
+        additionalProperties: false,
+      });
+      expect(result.success).toBe(false);
+    },
+  );
 });

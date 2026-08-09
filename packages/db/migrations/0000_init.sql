@@ -81,9 +81,9 @@ CREATE TABLE "package_versions" (
 	"version" integer NOT NULL,
 	"url_patterns" jsonb NOT NULL,
 	"tools" jsonb NOT NULL,
-	"api" jsonb,
+	"api" jsonb NOT NULL,
 	"api_content_hash" text,
-	"min_engine" integer,
+	"min_engine" integer NOT NULL,
 	"changelog" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "uq_package_versions_package_version" UNIQUE("package_id","version")

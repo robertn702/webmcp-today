@@ -26,11 +26,12 @@ function redditPackage(): WebMcpPackage {
     urlPatterns: ["*://*.reddit.com/*"],
     title: "Reddit",
     description: "Fixture package",
+    minEngine: 1,
     tools: [
       {
         name: "reddit_subreddit_hot",
         description: "List hot posts from a subreddit",
-        inputSchema: { type: "object", properties: {} },
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
         execution: { mode: "api", endpoint: "hot" },
       },
     ],
