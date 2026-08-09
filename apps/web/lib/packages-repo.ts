@@ -1,4 +1,8 @@
-import { packageWithinDomainScope, type WebMcpPackage } from "@webmcp-today/schema";
+import {
+  packageWithinDomainScope,
+  webMcpPackageSchema,
+  type WebMcpPackage,
+} from "@webmcp-today/schema";
 import { installs, packages, packageVersions, user } from "@webmcp-today/db";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
@@ -18,11 +22,7 @@ function pickLatestVersions(
     const pkg = packageById.get(row.packageId);
     if (
       !pkg ||
-      !packageWithinDomainScope({
-        domain: pkg.domain,
-        urlPatterns: row.urlPatterns,
-        ...(row.api === null ? {} : { api: row.api }),
-      })
+      !packageWithinDomainScope({ domain: pkg.domain, urlPatterns: row.urlPatterns, api: row.api })
     ) {
       continue;
     }
@@ -51,11 +51,14 @@ async function hydrate(
   return packageRows.flatMap((pkg) => {
     const version = versionByPackage.get(pkg.id);
     if (!version) return [];
-    // Legacy rows bypassed current publish validation; never serve them.
     const served = serializePackage(pkg, version, {
       contributorName: names.get(pkg.contributorId),
     });
-    return packageWithinDomainScope(served) ? [served] : [];
+    // Full structural + cross-field validation (the same contract a fresh
+    // publish must satisfy) — a legacy row that predates a tightened check
+    // fails closed here instead of being served as-is.
+    const parsed = webMcpPackageSchema.safeParse(served);
+    return parsed.success ? [parsed.data] : [];
   });
 }
 
@@ -111,7 +114,7 @@ export async function getLatestVersion(packageId: string): Promise<VersionRow | 
       packageWithinDomainScope({
         domain: pkg.domain,
         urlPatterns: version.urlPatterns,
-        ...(version.api === null ? {} : { api: version.api }),
+        api: version.api,
       }),
     ) ?? null
   );
@@ -171,7 +174,7 @@ export async function listVersions(packageId: string): Promise<VersionSummary[]>
     packageWithinDomainScope({
       domain: pkg.domain,
       urlPatterns: version.urlPatterns,
-      ...(version.api === null ? {} : { api: version.api }),
+      api: version.api,
     })
       ? [
           {

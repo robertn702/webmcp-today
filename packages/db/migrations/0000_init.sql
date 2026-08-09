@@ -82,7 +82,6 @@ CREATE TABLE "package_versions" (
 	"url_patterns" jsonb NOT NULL,
 	"tools" jsonb NOT NULL,
 	"api" jsonb NOT NULL,
-	"api_content_hash" text,
 	"min_engine" integer NOT NULL,
 	"changelog" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -110,7 +109,6 @@ CREATE TABLE "revocations" (
 CREATE TABLE "packages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"domain" text NOT NULL,
-	"page_type" text,
 	"title" text NOT NULL,
 	"description" text NOT NULL,
 	"contributor_id" text NOT NULL,

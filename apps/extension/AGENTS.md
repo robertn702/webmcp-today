@@ -138,10 +138,11 @@ uploads an unsigned ZIP artifact per commit for eyeballing a build only.
   ping/install/uninstall/list-installs (protocol:
   `packages/schema/src/bridge.ts` — both sides validate against it; never
   redeclare the shapes). Install fetches the version body from the SENDER's
-  origin, re-verifies `apiContentHash` (mismatch ⇒ distinct `hash-mismatch`
-  refusal), bootstraps the revocation list on first install
-  (`revocation-unavailable` refusal if that fetch fails — nothing is written),
-  and writes body+index in one atomic set. Site side:
+  origin, validates it against `webMcpPackageSchema` (structural + cross-field,
+  including domain scope — `invalid-body` refusal on failure), bootstraps the
+  revocation list on first install (`revocation-unavailable` refusal if that
+  fetch fails — nothing is written), and writes body+index in one atomic set.
+  Site side:
   `apps/web/lib/extension-bridge.ts` (probes `NEXT_PUBLIC_WEBMCP_EXTENSION_IDS`)
   - `apps/web/components/install-button.tsx`.
 - E2E for the install path (replaces "did the registry fetch work"): `bun run
@@ -177,4 +178,4 @@ package(s) matched this URL` → bridge `list_webmcp_tools` shows the tools.
 - `public/THIRD-PARTY-LICENSES.md` ships verbatim in the packaged bundle and
   lists the deps the build inlines (currently zod + the MPL-2.0 jmespath).
   Update it whenever bundled dependencies change — including if a tree-shaken
-  dep (e.g. `@noble/hashes`) ever starts reaching `.output/`.
+  dep ever starts reaching `.output/`.

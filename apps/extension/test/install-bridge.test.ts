@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiContentHash, type RevocationEntry } from "@webmcp-today/schema";
+import type { RevocationEntry } from "@webmcp-today/schema";
 import { handleBridgeRequest, type BridgeDeps } from "../src/lib/install-bridge.js";
 import { createInstallsStore, type SchemaVersionState } from "../src/lib/installs-store.js";
 import { INDEX_KEY, REVOKED_KEY, pkgKey, type RevokedDoc } from "../src/lib/store-schema.js";
@@ -36,7 +36,6 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
       },
     ],
     api: API_BLOCK,
-    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }
@@ -292,30 +291,6 @@ describe("handleBridgeRequest", () => {
 
       expect(response).toEqual({ ok: false, reason: "id-mismatch" });
       expect(area.snapshot()).toEqual({ [REVOKED_KEY]: revokedDoc() });
-    });
-
-    it("refuses a hash mismatch — the distinct failure, writing nothing", async () => {
-      const area = createFakeStorageArea({ [REVOKED_KEY]: revokedDoc() });
-      const { deps } = makeDeps({
-        area,
-        routes: versionRoute(servedPackage({ api: API_BLOCK, apiContentHash: "f".repeat(64) })),
-      });
-
-      const response = await handleBridgeRequest(installMessage(), ORIGIN, deps);
-
-      expect(response).toEqual({ ok: false, reason: "hash-mismatch" });
-      expect(area.snapshot()).toEqual({ [REVOKED_KEY]: revokedDoc() });
-    });
-
-    it("accepts a body whose apiContentHash recomputes correctly", async () => {
-      const area = createFakeStorageArea({ [REVOKED_KEY]: revokedDoc() });
-      const body = servedPackage({ api: API_BLOCK, apiContentHash: apiContentHash(API_BLOCK) });
-      const { deps } = makeDeps({ area, routes: versionRoute(body) });
-
-      const response = await handleBridgeRequest(installMessage(), ORIGIN, deps);
-
-      expect(response).toMatchObject({ ok: true });
-      expect(area.snapshot()[pkgKey("pkg-wiki")]).toEqual(body);
     });
 
     it("upserts: reinstalling a newer version reports the replaced pin", async () => {

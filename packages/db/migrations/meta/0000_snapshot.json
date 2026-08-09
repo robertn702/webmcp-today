@@ -522,12 +522,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "api_content_hash": {
-          "name": "api_content_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "min_engine": {
           "name": "min_engine",
           "type": "integer",
@@ -805,12 +799,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
-        },
-        "page_type": {
-          "name": "page_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "title": {
           "name": "title",

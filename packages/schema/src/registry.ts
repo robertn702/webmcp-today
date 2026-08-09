@@ -1,12 +1,31 @@
 import { z } from "zod";
-import { createPackageObjectSchema } from "./package.js";
+import { applyDomainCrossValidation, createPackageObjectSchema } from "./package.js";
 
 // Shapes served by the registry API (superset of the submission format).
 
 /**
+ * The served envelope's shape, before the `.loose()` that lets an outer field
+ * this build doesn't recognize yet through unvalidated (see webMcpPackageSchema).
+ * Exported separately so producer code (`apps/web/lib/serialize.ts`) can type
+ * its return value against this STRICT shape instead: TypeScript's excess-
+ * property check only fires against a type without an index signature, so
+ * typing the producer's return value as `WebMcpPackageStrict` (rather than the
+ * loose `WebMcpPackage`) still catches a typo'd field there, while every
+ * consumer keeps parsing/reading the forward-compatible loose type.
+ */
+const webMcpPackageObjectSchema = createPackageObjectSchema.extend({
+  id: z.string().min(1),
+  versionId: z.string().min(1),
+  version: z.number().int().min(1),
+  contributor: z.string().min(1),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+/**
  * A package + one of its versions, as served by the registry. `id` is the
  * package id (stable identity); `versionId` + `version` identify which
- * version this document is. Install counts are derived, not denormalized.
+ * version this document is.
  *
  * `.loose()`: unlike the strict author-submission contract, a served envelope
  * must tolerate a top-level field a newer registry added that this build
@@ -14,30 +33,15 @@ import { createPackageObjectSchema } from "./package.js";
  * parsed/stripped one, so an unrecognized field here must not be a hard
  * validation failure. The nested `tools`/`api`/`inputSchema` shapes stay
  * strict; only this outer envelope is loosened.
+ *
+ * The cross-field checks (`applyDomainCrossValidation`, shared with
+ * `createPackageSchema`) run here too, so a row stored before one of those
+ * checks existed fails closed instead of being served as-is — see
+ * `apps/web/lib/packages-repo.ts`'s `hydrate`.
  */
-export const webMcpPackageSchema = createPackageObjectSchema
-  .extend({
-    id: z.string(),
-    versionId: z.string(),
-    version: z.number().int().min(1),
-    /**
-     * Content identifier for this version's `api` block (see apiContentHash);
-     * absent exactly when there is no `api`. Lets a client recognise a surface
-     * it already holds — the same block recurs across a package's versions and
-     * across rival packages targeting the same site.
-     */
-    apiContentHash: z.string().optional(),
-    contributor: z.string(),
-    /**
-     * @deprecated Trust is derived from readable data and explicit consent, not
-     * install count (docs/local-first-installs.md). Kept optional so existing
-     * consumers don't break; no longer populated by the registry.
-     */
-    installCount: z.number().int().min(0).optional(),
-    createdAt: z.iso.datetime(),
-    updatedAt: z.iso.datetime(),
-  })
-  .loose();
+export const webMcpPackageSchema = webMcpPackageObjectSchema
+  .loose()
+  .superRefine((pkg, ctx) => applyDomainCrossValidation(pkg, ctx));
 
 export const packageListResponseSchema = z.object({
   packages: z.array(webMcpPackageSchema),
@@ -53,7 +57,7 @@ export const packageLookupResponseSchema = z.object({
 
 export const statsResponseSchema = z.object({
   totalPackages: z.number().int().min(0),
-  /** Domain coverage, not adoption — trust is derived, not counted (see installCount). */
+  /** Domain coverage, not adoption — trust is derived from readable data, not counted. */
   totalDomains: z.number().int().min(0),
   topDomains: z.array(z.object({ domain: z.string(), count: z.number().int().min(0) })),
 });
@@ -102,6 +106,9 @@ export const revocationsResponseSchema = z.object({
 });
 
 export type WebMcpPackage = z.infer<typeof webMcpPackageSchema>;
+/** See `webMcpPackageObjectSchema`'s doc comment: type a served-envelope
+ * producer's return value against this instead of `WebMcpPackage`. */
+export type WebMcpPackageStrict = z.infer<typeof webMcpPackageObjectSchema>;
 export type PackageListResponse = z.infer<typeof packageListResponseSchema>;
 export type StatsResponse = z.infer<typeof statsResponseSchema>;
 export type DomainsResponse = z.infer<typeof domainsResponseSchema>;

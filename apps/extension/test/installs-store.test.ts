@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { apiContentHash } from "@webmcp-today/schema";
 import {
   createInstallsStore,
   type InstallOptions,
@@ -39,7 +38,6 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
       },
     ],
     api: API_BLOCK,
-    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }
@@ -105,45 +103,13 @@ describe("installs-store", () => {
       expect(area.snapshot()).toEqual({});
     });
 
-    it("verifies apiContentHash by recomputation and carries it in the index", async () => {
-      const area = createFakeStorageArea();
-      const store = createInstallsStore(area);
-      const goodHash = apiContentHash(API_BLOCK);
-
-      const ok = await store.install(
-        servedPackage({ api: API_BLOCK, apiContentHash: goodHash }),
-        OPTS,
-      );
-      expect(ok.ok).toBe(true);
-      const index = await store.readIndex();
-      expect(index["pkg-wiki"]?.apiContentHash).toBe(goodHash);
-    });
-
-    it.each([
-      [
-        "a hash that does not match the api block",
-        { api: API_BLOCK, apiContentHash: "f".repeat(64) },
-        "hash-mismatch",
-      ],
-      [
-        "an api block without its hash",
-        { api: API_BLOCK, apiContentHash: undefined },
-        "hash-mismatch",
-      ],
-      // api is now a required field, so a body without one fails schema
-      // validation before the store's own hash-consistency check ever runs.
-      [
-        "a hash without an api block",
-        { api: undefined, apiContentHash: "f".repeat(64) },
-        "invalid-body",
-      ],
-    ] as const)("rejects %s, writing nothing", async (_label, overrides, reason) => {
+    it("rejects a body without an api block (required field), writing nothing", async () => {
       const area = createFakeStorageArea();
       const store = createInstallsStore(area);
 
-      const result = await store.install(servedPackage(overrides), OPTS);
+      const result = await store.install(servedPackage({ api: undefined }), OPTS);
 
-      expect(result).toEqual({ ok: false, reason });
+      expect(result).toEqual({ ok: false, reason: "invalid-body" });
       expect(area.snapshot()).toEqual({});
     });
 

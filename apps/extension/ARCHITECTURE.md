@@ -102,7 +102,8 @@ flowchart LR
 - `install-bridge.ts` — the bouncer. Validates the sender origin against
   `registry-origins.ts`'s allowlist (the same constant `wxt.config.ts` turns into
   `externally_connectable` manifest patterns), fetches the version body from the
-  _sender's_ origin, re-verifies `apiContentHash`, and bootstraps the revocation list
+  _sender's_ origin, validates it against `webMcpPackageSchema` (structural +
+  cross-field, including domain scope), and bootstraps the revocation list
   on first install (refuses with `revocation-unavailable` if it can't — nothing is
   written).
 - `installs-store.ts` — atomic install, ordered uninstall, orphan GC, body loading.

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { apiBlockSchema, collectApiIssues } from "./api.js";
+import { apiBlockSchema, collectApiIssues, type ApiValidationTarget } from "./api.js";
 import { toolDescriptorSchema } from "./tool.js";
 import {
   domainCoveredByPatterns,
@@ -76,7 +76,6 @@ export const createPackageObjectSchema = z.strictObject({
   version: z.number().int().min(1),
   domain: domainSchema,
   urlPatterns: z.array(urlPatternSchema).min(1).max(20),
-  pageType: z.string().max(100).optional(),
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   tools: toolsArraySchema,
@@ -87,8 +86,23 @@ export const createPackageObjectSchema = z.strictObject({
   changelog: z.string().max(2000).optional(),
 });
 
-/** What contributors submit (contributor identity comes from auth, not the body). */
-export const createPackageSchema = createPackageObjectSchema.superRefine((pkg, ctx) => {
+/**
+ * Cross-field checks shared by every schema that carries a `domain` alongside
+ * `urlPatterns`/`tools`/`api`: reference integrity within `api` (collectApiIssues),
+ * urlPatterns scoped to the domain, and the domain reachable through those
+ * patterns. `createPackageSchema` wires this in directly; the served-registry
+ * envelope (`webMcpPackageSchema` in registry.ts) reuses it so a legacy row that
+ * predates one of these checks fails closed instead of being served anyway.
+ *
+ * `domainIssuePath` lets a version-body schema (which has no `domain` field of
+ * its own — the parent package supplies it) point the coverage issue at
+ * `urlPatterns` instead of a field that doesn't exist in its input.
+ */
+export function applyDomainCrossValidation(
+  pkg: ApiValidationTarget & { domain: string },
+  ctx: z.RefinementCtx,
+  domainIssuePath: (string | number)[] = ["domain"],
+): void {
   for (const issue of collectApiIssues(pkg)) {
     ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
   }
@@ -105,21 +119,24 @@ export const createPackageSchema = createPackageObjectSchema.superRefine((pkg, c
     ctx.addIssue({
       code: "custom",
       message: `domain "${pkg.domain}" is not covered by any urlPatterns host, so it would be unreachable by lookup. Add a urlPattern whose host covers it (e.g. "*://${pkg.domain}/*").`,
-      path: ["domain"],
+      path: domainIssuePath,
     });
   }
-});
+}
 
-/** Metadata-only edits (packages row) — excludes versioned fields. */
+/** What contributors submit (contributor identity comes from auth, not the body). */
+export const createPackageSchema = createPackageObjectSchema.superRefine(
+  applyDomainCrossValidation,
+);
+
+/**
+ * Metadata-only edits (packages row) — title and description. `domain` is the
+ * package's immutable identity: it is set once at creation and never patched,
+ * so a metadata edit can never move a package outside the content
+ * (urlPatterns/api) its published versions already declared.
+ */
 export const updatePackageMetaSchema = createPackageObjectSchema
-  .omit({
-    version: true,
-    urlPatterns: true,
-    tools: true,
-    api: true,
-    changelog: true,
-    minEngine: true,
-  })
+  .pick({ title: true, description: true })
   .partial();
 
 /** A new version of an existing package (package_versions row) — append-only.
@@ -156,25 +173,9 @@ export function publishVersionSchemaForDomain(domain: string) {
       changelog: true,
       minEngine: true,
     })
-    .superRefine((pkg, ctx) => {
-      for (const issue of collectApiIssues({ ...pkg, domain })) {
-        ctx.addIssue({ code: "custom", message: issue.message, path: issue.path });
-      }
-      if (!urlPatternsWithinDomain(domain, pkg.urlPatterns)) {
-        ctx.addIssue({
-          code: "custom",
-          message: `Every urlPatterns host must be "${domain}" or one of its subdomains; global and public-suffix wildcards are not allowed.`,
-          path: ["urlPatterns"],
-        });
-      }
-      if (!domainCoveredByPatterns(domain, pkg.urlPatterns)) {
-        ctx.addIssue({
-          code: "custom",
-          message: `domain "${domain}" is not covered by any urlPatterns host, so it would be unreachable by lookup. Add a urlPattern whose host covers it (e.g. "*://${domain}/*").`,
-          path: ["urlPatterns"],
-        });
-      }
-    });
+    .superRefine((pkg, ctx) =>
+      applyDomainCrossValidation({ ...pkg, domain }, ctx, ["urlPatterns"]),
+    );
 }
 
 export type CreatePackageInput = z.infer<typeof createPackageSchema>;

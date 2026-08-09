@@ -1,9 +1,4 @@
-import {
-  apiContentHash,
-  packageWithinDomainScope,
-  webMcpPackageSchema,
-  type WebMcpPackage,
-} from "@webmcp-today/schema";
+import { webMcpPackageSchema, type WebMcpPackage } from "@webmcp-today/schema";
 import {
   INDEX_KEY,
   PKG_KEY_PREFIX,
@@ -35,7 +30,7 @@ export interface InstallOptions {
 
 export type InstallResult =
   | { ok: true; entry: IndexEntry; replaced?: { versionId: string; version: number } }
-  | { ok: false; reason: "schema-unreadable" | "invalid-body" | "hash-mismatch" };
+  | { ok: false; reason: "schema-unreadable" | "invalid-body" };
 
 export type UninstallResult =
   { ok: true } | { ok: false; reason: "schema-unreadable" | "not-installed" };
@@ -120,15 +115,13 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
         const state = await readSchemaVersionState();
         if (state !== "ok") return { ok: false, reason: "schema-unreadable" };
 
+        // webMcpPackageSchema's cross-field superRefine (applyDomainCrossValidation)
+        // already enforces domain scope — including the api.baseUrl same-origin
+        // check — so a successful parse implies packageWithinDomainScope; no
+        // separate call is needed here.
         const parsed = webMcpPackageSchema.safeParse(body);
         if (!parsed.success) return { ok: false, reason: "invalid-body" };
         const pkg = parsed.data;
-        if (!packageWithinDomainScope(pkg)) return { ok: false, reason: "invalid-body" };
-
-        // Recompute rather than trust: the served hash must match the served
-        // api block, or the body isn't what its identifier claims.
-        const computedHash = pkg.api === undefined ? undefined : apiContentHash(pkg.api);
-        if (pkg.apiContentHash !== computedHash) return { ok: false, reason: "hash-mismatch" };
 
         const index = await readIndex();
         const previous = index[pkg.id];
@@ -140,7 +133,6 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
           urlPatterns: pkg.urlPatterns,
           title: pkg.title,
           ...(pkg.minEngine !== undefined ? { minEngine: pkg.minEngine } : {}),
-          ...(computedHash !== undefined ? { apiContentHash: computedHash } : {}),
           installedAt: (options.now?.() ?? new Date()).toISOString(),
           source: options.source,
           origin: options.origin,
@@ -184,10 +176,9 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
       const key = pkgKey(packageId);
       const raw = (await area.get(key))[key];
       if (raw === undefined) return { status: "missing" };
+      // See install()'s comment: a successful parse already covers domain scope.
       const parsed = webMcpPackageSchema.safeParse(raw);
-      return parsed.success && packageWithinDomainScope(parsed.data)
-        ? { status: "ok", body: parsed.data }
-        : { status: "invalid" };
+      return parsed.success ? { status: "ok", body: parsed.data } : { status: "invalid" };
     },
 
     collectOrphans(): Promise<string[]> {

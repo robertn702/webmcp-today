@@ -7,7 +7,7 @@ const state = vi.hoisted(
       id: string;
       version: number;
       urlPatterns: string[];
-      api: null;
+      api: { baseUrl: string };
       changelog: string | null;
       createdAt: Date;
     }[];
@@ -29,6 +29,8 @@ vi.mock("@/lib/db", () => ({
 
 import { listVersions } from "@/lib/packages-repo";
 
+const API_BLOCK = { baseUrl: "https://reddit.com" };
+
 describe("listVersions", () => {
   beforeEach(() => {
     state.packageRows = [{ domain: "reddit.com" }];
@@ -37,7 +39,7 @@ describe("listVersions", () => {
         id: "ver-3",
         version: 3,
         urlPatterns: ["*://*/*"],
-        api: null,
+        api: API_BLOCK,
         changelog: "Unsafe legacy scope",
         createdAt: new Date("2026-07-03T00:00:00.000Z"),
       },
@@ -45,7 +47,7 @@ describe("listVersions", () => {
         id: "ver-2",
         version: 2,
         urlPatterns: ["*://*.reddit.com/*"],
-        api: null,
+        api: API_BLOCK,
         changelog: "Safe version",
         createdAt: new Date("2026-07-02T00:00:00.000Z"),
       },
@@ -53,7 +55,7 @@ describe("listVersions", () => {
         id: "ver-1",
         version: 1,
         urlPatterns: ["*://reddit.com/*"],
-        api: null,
+        api: API_BLOCK,
         changelog: null,
         createdAt: new Date("2026-07-01T00:00:00.000Z"),
       },

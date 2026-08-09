@@ -42,11 +42,11 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
 - **Idempotent, version-aware curated seed** — re-running `seed.ts` today
   inserts duplicate `packages` rows (harmless while DB wipes are fine). Once
   curated packages accrue real versions, seed must instead: look up the
-  seed-owned package by domain, canonical-hash the version-scoped payload
-  (urlPatterns+tools+api+minEngine — `apiContentHash` alone misses tool-only
-  changes), no-op on match, insert `max(version)+1` with the JSON's `changelog`
-  on change. Then curated updates are edit-JSON + run-seed.
-  (apps/web/scripts/seed.ts; packages/schema/src/api-hash.ts)
+  seed-owned package by domain, content-hash the version-scoped payload
+  (urlPatterns+tools+api+minEngine — a hash over `api` alone would miss
+  tool-only changes), no-op on match, insert `max(version)+1` with the JSON's
+  `changelog` on change. Then curated updates are edit-JSON + run-seed.
+  (apps/web/scripts/seed.ts)
 - **Vercel Preview OAuth smoke test** — Preview now has isolated Neon URLs,
   distinct session secret, GitHub credentials, `BETTER_AUTH_URL`, and shared
   OAuth-proxy settings. Verify a deployed Preview's GitHub sign-in after the

@@ -25,7 +25,6 @@ export const packages = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     domain: text("domain").notNull(),
-    pageType: text("page_type"),
     title: text("title").notNull(),
     description: text("description").notNull(),
     contributorId: text("contributor_id")
@@ -57,14 +56,6 @@ export const packageVersions = pgTable(
     tools: jsonb("tools").$type<ToolDescriptor[]>().notNull(),
     /** Tier-1 API execution surface for this version's API-mode tools (see docs/api-execution-model.md). Required — execution is api-mode only. */
     api: jsonb("api").$type<ApiBlock>().notNull(),
-    /**
-     * Content identifier for `api` (apiContentHash in packages/schema). The
-     * same surface recurs across a package's versions and across rival
-     * packages targeting the same site, so clients use it to recognise a
-     * surface they already hold. Bodies are stored whole — it is a
-     * recognition key, not a storage key.
-     */
-    apiContentHash: text("api_content_hash"),
     /** Capability floor this version's content requires (see engineLevelSchema in packages/schema). Required. */
     minEngine: integer("min_engine").notNull(),
     changelog: text("changelog"),
