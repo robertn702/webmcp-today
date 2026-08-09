@@ -41,8 +41,9 @@ export const packages = pgTable(
 
 /**
  * Append-only: publishing a new version never mutates an old one. Served
- * truth — there is no separate snapshot table. Browse/fresh lookups serve
- * max(version); installed users stay pinned via `installs.versionId`.
+ * truth — there is no separate snapshot table. Browse/fresh lookups validate the
+ * highest in-scope candidate and omit a package when it is invalid; installed users
+ * stay pinned via `installs.versionId`.
  */
 export const packageVersions = pgTable(
   "package_versions",
@@ -70,8 +71,8 @@ export const packageVersions = pgTable(
 );
 
 /**
- * Auth-only per-user install records pin a user to a version. Browse serves
- * max(version); installed users stay pinned via `installs.versionId`.
+ * Auth-only per-user install records pin a user to a version. Browse validates the
+ * highest in-scope candidate; installed users stay pinned via `installs.versionId`.
  */
 export const installs = pgTable(
   "installs",

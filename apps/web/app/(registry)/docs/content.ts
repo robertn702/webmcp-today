@@ -154,7 +154,7 @@ Read https://webmcp.today/docs/package-format and the examples in packages/curat
 Requirements:
 - Use API execution only. Do not use DOM selectors or arbitrary page scripts.
 - Start with one useful read-only tool and the smallest required input schema.
-- Base the package on the site's documented or directly observed same-origin HTTP API.
+- Base the package on the site's documented or directly observed HTTP API at the package domain or a subdomain.
 - Project the response with returns so the tool returns only what it promises.
 - Save the result as webmcp-package.json in the repository root.
 - Validate it from the repository root with:

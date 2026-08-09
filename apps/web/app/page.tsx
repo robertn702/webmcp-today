@@ -101,7 +101,7 @@ export default async function LandingPage() {
           <Reason
             index="02"
             title="Read the whole capability first"
-            body="Packages are data, not remote code. The page shows every tool, same-origin endpoint, parameter, and response projection before you install it."
+            body="Packages are data, not remote code. The page shows every tool, origin-pinned endpoint, parameter, and response projection before you install it."
           />
           <Reason
             index="03"

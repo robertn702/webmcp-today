@@ -37,16 +37,18 @@ fallback shrank the schema, executor, and docs surface to one model.
 Three tiers, in strict order of preference. A package author reaches for the lowest tier
 that expresses the tool; the registry's curation bar rises with the tier.
 
-| Tier | What it is                                                                    | Code shipped                         | Network                                | Curation bar           |
-| ---- | ----------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------- | ---------------------- |
-| 1    | Declarative `api` block — the executor derives and performs the HTTP call     | None (pure data)                     | Executor-mediated, same-origin only    | Normal                 |
-| 2    | Scoped script slots — small stringified-JS hooks bound to narrow capabilities | Small string functions, pure compute | Never — slots cannot touch the network | Elevated (code review) |
-| 3    | Full `evaluate` — stringified async JS escape hatch                           | Arbitrary async function             | Executor-mediated, same-origin only    | Highest; flagged in UI |
+| Tier | What it is                                                                    | Code shipped                         | Network                                       | Curation bar           |
+| ---- | ----------------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------- | ---------------------- |
+| 1    | Declarative `api` block — the executor derives and performs the HTTP call     | None (pure data)                     | Executor-mediated, pinned to `baseUrl` origin | Normal                 |
+| 2    | Scoped script slots — small stringified-JS hooks bound to narrow capabilities | Small string functions, pure compute | Never — slots cannot touch the network        | Elevated (code review) |
+| 3    | Full `evaluate` — stringified async JS escape hatch                           | Arbitrary async function             | Executor-mediated, pinned to `baseUrl` origin | Highest; flagged in UI |
 
 The unifying safety property: **the executor only ever sends requests to the declared
-same-origin `baseUrl`.** Tiers 1–2 cannot exfiltrate data at all (tier 2 has no network
-access; tier 1 has no code). Tier 3 has network access but only through the executor's
-same-origin fetch. Exfiltration from tiers 1–2 is structurally near-impossible — which
+`baseUrl` origin.** `baseUrl` must use the package domain or a subdomain, but does not
+need to equal the current page origin or be covered by `urlPatterns`. Tiers 1–2 cannot
+exfiltrate data at all (tier 2 has no network access; tier 1 has no code). Tier 3 has
+network access but only through the executor's origin-pinned fetch. Exfiltration from
+tiers 1–2 is structurally near-impossible — which
 is what makes human curation tractable. Reviewers check _what the tool does on the
 site_, not whether it leaks data off it.
 
@@ -55,7 +57,7 @@ site_, not whether it leaks data off it.
 The package declares the site's API surface as data; the executor constructs the request,
 performs it, and projects the response. Zero code is shipped.
 
-Sketch of the schema additions (zod to come in `packages/schema`; JSON here for review):
+Current schema shape (implemented and validated in `packages/schema`):
 
 ```jsonc
 {
@@ -131,17 +133,18 @@ And a tool binds to an endpoint:
 
 Field semantics:
 
-- **`baseUrl`** — hard-enforced same-origin. Must be the package's declared domain or
-  one of its subdomains; the executor refuses any derived URL whose origin differs.
+- **`baseUrl`** — must use the package's declared domain or one of its subdomains.
+  It need not equal the current page origin or be covered by `urlPatterns`; after
+  interpolation, the executor refuses every derived URL whose origin differs from
+  this exact `baseUrl` origin.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
   GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
   `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along
-  automatically (the executor runs in the page's origin, so the user's existing session
-  authenticates). Extraction is exactly one of: **`extract`** (a locator into a JSON
+  automatically (the executor sends credentials with the origin-pinned request). Extraction is exactly one of: **`extract`** (a locator into a JSON
   response) or **`pattern`** (a regex against the raw response text, capture group 1 =
   the token — for sites like Hacker News whose tokens live in HTML: a hidden form input,
-  an `auth=` href). A `pattern` may carry `{{param}}` placeholders (interpolated raw —
-  keep them to identifier shapes). `sendAs` is `{in, name}` with `in` one of `"header"`
+  an `auth=` href). A `pattern` may carry `{{param}}` placeholders; each value is
+  regex-escaped and therefore matches literal text. `sendAs` is `{in, name}` with `in` one of `"header"`
   (Reddit's X-Modhash), `"form"` (HN's hmac — the endpoint must declare a `form` body),
   or `"query"` (HN's vote auth). **`ttlSeconds`** caches a fetched token across tool
   calls, keyed by the RESOLVED fetch URL + extraction spec — a parameterized source
@@ -154,6 +157,12 @@ Field semantics:
   `graphql.variables`, a string that is **exactly** one placeholder emits the raw typed
   value — `"{{n}}"` sends `10`, not `"10"` — while `"page {{n}}"` concatenates. `query`
   and `form` are always strings on the wire, so the distinction doesn't arise there.
+- **Tool input** — must be a plain object with only declared primitive fields and a
+  serialized size of at most 64 KiB. Invalid input returns validation issues before a
+  destructive confirmation or network request.
+- **Endpoint path and method** — `path` starts with exactly one `/` and cannot contain
+  `//`, backslashes, query strings, fragments, or `.`/`..` segments. An endpoint may
+  declare at most one of `body`, `form`, or `graphql`; `GET` declares none of them.
 - **`returns`** — a **JMESPath** expression applied to the JSON response to trim output
   for density and relevance. There is no hard output cap in v1 (the 1.5K
   `TOOL_OUTPUT_MAX` was removed — model-dependent; the budget question is deferred, see
@@ -242,7 +251,7 @@ request signing, computed multipart payloads, multi-step token dances that don't
 the `auth` declaration model.
 
 - Executor-mediated: the script receives an executor-provided `request()` that is
-  same-origin-enforced — it cannot fetch arbitrary hosts even here.
+  pinned to the declared `baseUrl` origin — it cannot fetch arbitrary hosts even here.
 - **Flagged in the registry UI** (package card + install flow show "contains arbitrary
   code" prominently) and held to the highest curation bar.
 - Registered tools from tier-3 packages should set `untrustedContentHint` where output
@@ -253,7 +262,7 @@ the `auth` declaration model.
 > logged-in page." That rule was written when execution meant _unmediated_ code in the
 > page (Joakim's model). The reversal rationale: (1) DOM packages rot silently, pushing
 > us toward API execution, and some real APIs need computed requests tier 1 cannot
-> express; (2) the executor now mediates all network access behind a same-origin wall,
+> express; (2) the executor now mediates all network access behind an origin-pinned wall,
 > which was not part of the original design; (3) installs pin to `version_id`, so a
 > malicious update never auto-propagates; (4) curation + prominent code display +
 > install-count signal is the Greasyfork model, which has carried a far larger arbitrary-
@@ -265,7 +274,7 @@ the `auth` declaration model.
 To the executor, GraphQL is just POST + a JSON body. Two things make it _first-class_
 rather than merely possible:
 
-1. **`errorPath: "errors"`** — GraphQL returns HTTP 200 with an `errors` array on
+1. **`errorPath: ["errors"]`** — GraphQL returns HTTP 200 with an `errors` array on
    failure. Without error-path handling every failure looks like success. With it,
    a 200 + non-empty `errors` is a tool error, surfaced to the agent.
 2. **`documents` block** — captured real-world queries (Reddit's shreddit, GitHub's
@@ -292,26 +301,25 @@ the GraphQL analog of selector rot, but loud instead of silent.
 **Out of scope for v1:** subscriptions / WebSockets. WebMCP tools are request/response;
 a subscription has no place to stream to.
 
-## Same-origin enforcement
+## Base URL origin enforcement
 
 The single load-bearing invariant, so it gets its own section:
 
-- `api.baseUrl` must be the package's declared domain or one of its subdomains; every
-  `urlPatterns` host is constrained to that same visible scope. Validated at publish
-  (schema-level) and again when an extension installs or matches stored package data —
-  a registry-side bug or legacy body must not be enough to break the invariant.
+- `api.baseUrl` must use the package's declared domain or one of its subdomains.
+  `urlPatterns` independently determine where a tool registers and do not need to
+  cover `baseUrl`. Both relationships are validated at publish and again for stored
+  data — a registry-side bug or legacy body must not be enough to break the invariant.
 - The executor constructs the final URL itself from `baseUrl` + `path` + `query`;
   path/query templates are bound from _validated_ tool input, and the resolved URL is
   re-checked against `baseUrl`'s origin after binding (placeholder values cannot
   smuggle an origin change — `subreddit = "x HTTP/1.1\r\nHost:"` class attacks included).
 - `auth` token sources fetch only from declared endpoints; tier-3 `request()` goes
   through the same check.
-- Cookies/credentials are the page's own (`credentials: "include"` equivalent) — that's
-  the point: tools act as the logged-in user _on that site_, and only there.
+- Cookies/credentials are sent with the derived request (`credentials: "include"`
+  equivalent), so tools act as the logged-in user only at the allowed `baseUrl` origin.
 
-Cross-origin APIs (a site whose data lives on `api.otherhost.com`) are deliberately not
-supported in v1. Same-site APIs such as `api.example.com` are allowed; unrelated origins
-need an explicit future design because the invariant gets looser.
+APIs on a package-domain subdomain such as `api.example.com` are allowed. An unrelated
+host is not: it needs an explicit future design because the invariant would get looser.
 
 ## Trust model
 
@@ -361,7 +369,7 @@ data — so it is buildable today and is not blocked on the spike.
 
 1. ~~**`packages/schema`: zod for the `api` block + tests.**~~ **Done.** Endpoint/auth/
    document/projection schemas, placeholder↔inputSchema cross-validation (mirroring the
-   `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔package-domain check.
+   `{{param}}` check in `tool.ts`), `baseUrl` host↔package-domain check.
 2. ~~**Executor derived-call engine** (extension).~~ **Done**, except APQ: request
    construction, token sources (with TTL), `returns` projection, `errorPath` failure.
    APQ has no accepted schema field yet — adding it means a new field plus an
@@ -404,9 +412,9 @@ data — so it is buildable today and is not blocked on the spike.
 - **How does `ctx` compose?** What tier-2 slots and tier-3 scripts receive (tokens from
   `auth` sources, prior step outputs, endpoint metadata) is under-specified; pin down
   when the executor is built.
-- **Cross-origin APIs.** v1 is same-origin-only (see above). Real candidate sites with
-  split frontend/API hosts will pressure this — what's the loosest invariant we can
-  live with?
+- **Unrelated API hosts.** A package-domain subdomain is supported; a separate host is
+  not. Real candidate sites with unrelated frontend/API hosts will pressure this —
+  what's the loosest invariant we can live with?
 - **Health canary for API packages.** Loud failures are only useful if something listens.
   The canary (out of scope per SPEC but reserved-for in the schema) should replay
   tier-1 calls against live sites; what runs it, and how do auth'd writes get canaried

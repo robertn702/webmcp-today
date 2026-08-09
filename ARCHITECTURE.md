@@ -29,7 +29,7 @@ flowchart LR
         PAGE["Any website<br/>(user's logged-in session)"]
         EXT -- "registerTool()" --> PAGE
         BA -- "invoke tool" --> PAGE
-        PAGE -- "same-origin API" --> EXT
+        PAGE -- "declared API tool" --> EXT
     end
 
     subgraph Registry["Registry (apps/web — Next.js)"]
@@ -75,7 +75,7 @@ flowchart LR
   against; published as `@webmcp-today/schema`.
 - **`packages/engine`** — the execution engine
   (`@webmcp-today/engine`, MIT): turns a package's declarative `api`
-  block into same-origin HTTP requests, plus the `minEngine` gate. Extracted from
+  block into HTTP requests pinned to its `api.baseUrl` origin, plus the `minEngine` gate. Extracted from
   the extension for license separation (`docs/DECISIONS.md` 2026-07-30); the
   extension is its only consumer today.
 - **`packages/db`** — Drizzle schema + Neon client, shared by `apps/web`.
@@ -165,7 +165,7 @@ sequenceDiagram
     EX->>EX: validate input against inputSchema + 64 KiB cap — reject before any side effect
     EX->>EX: destructiveHint? block on window.confirm
     EX->>EX: bind param templates, acquire auth tokens (e.g. CSRF)
-    EX->>S: same-origin fetch (user's cookies ride along)
+    EX->>S: fetch pinned to api.baseUrl origin (user's cookies ride along)
     S-->>EX: JSON (errorPath checked, returns projection applied)
     EX-->>A: tool output (uncapped in v1)
 ```
@@ -174,9 +174,10 @@ One execution mode, selected per tool by binding to an `api.endpoints` entry:
 
 - **API mode (tier 1)** — the package declares the site's own HTTP API as data
   (`api.endpoints`, `auth` token sources, `returns` projections); the executor derives
-  and performs the call. Ships zero code. The load-bearing invariant: **all network
-  access is same-origin with the package's `urlPatterns`**, enforced at publish and
-  again at execution. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
+  and performs the call. Ships zero code. The load-bearing invariant: **`api.baseUrl`
+  must use the package domain or a subdomain, and every derived request is pinned to
+  that exact origin after interpolation**. `urlPatterns` select pages for tool
+  registration; they do not constrain `api.baseUrl` or need to cover it. (DOM execution was cut pre-launch — `docs/DECISIONS.md`
   2026-07-28.) Tiers 2–3 (scoped script slots, full `evaluate`) are designed
   but not shipped — see `docs/api-execution-model.md`.
 - **Validate before any side effect.** The executor re-validates input against the
@@ -228,14 +229,17 @@ Account-side `installs` rows still record pins made through the MCP server
 
 ## Package format
 
-A package is pure data — `{ domain, urlPatterns[], title, description, tools[], api?, changelog? }`,
+A package is pure data — `{ version, domain, urlPatterns[], title, description, tools[], api, minEngine, changelog? }`,
 validated by zod in `packages/schema`:
 
-- `urlPatterns` — Chrome `@match`-style; used for lookup, ranking
-  (`rankPackagesByUrl`), and same-origin enforcement of `api.baseUrl`.
-- `tools[]` — `{ name, description, inputSchema, annotations?, execution? }` with
+- `urlPatterns` — Chrome `@match`-style; used for lookup and ranking
+  (`rankPackagesByUrl`).
+- `tools[]` — `{ name, description, inputSchema, annotations?, execution }` with
   WebMCP metadata budgets enforced (500/description, 150/param, 30/name — tool output
   is uncapped in v1; `packages/schema/src/budgets.ts`).
+- `api` — required API execution surface. Its `baseUrl` host must be the package
+  domain or a subdomain; the executor rejects a derived URL whose origin differs
+  from the exact `baseUrl` origin after interpolation.
 - `minEngine` — positive-integer capability level per version; lets the format evolve
   without old executors silently mis-running new packages.
 - Placeholders (`{{param}}`, double-brace) may only name `inputSchema` properties —

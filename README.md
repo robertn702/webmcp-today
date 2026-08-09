@@ -26,7 +26,7 @@ bunx turbo run build --filter="@webmcp-today/mcp-bridge..."
 bun run typecheck && bun run lint && bun run test
 
 # web (needs apps/web/.env — see .env.example)
-cd packages/db && bun run db:migrate   # apply migrations to Neon
+cd packages/db && bun run db:migrate   # fresh local Neon only
 cd apps/web && bun run dev             # http://localhost:3000
 bun run scripts/seed.ts                # optional: seed the curated packages
 
@@ -54,6 +54,16 @@ bun run --filter @webmcp-today/db db:migrate   # or cd packages/db && bun run db
 
 bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:seed — runs scripts/seed.ts, seeds curated packages
 ```
+
+These are ordinary fresh-database setup commands. They do not reset an existing
+database.
+
+**Schema-hardening release operation:** the squashed
+`packages/db/migrations/0000_init.sql` migration will not replay against an
+existing deployed Neon database. For this pre-launch release, reset or recreate
+the deployed Neon database first, then run `db:migrate` against the empty
+database and run `db:seed`. Do not use this release operation for normal local
+setup.
 
 **Running locally:**
 
