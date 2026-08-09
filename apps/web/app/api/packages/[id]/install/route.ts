@@ -39,7 +39,7 @@ export async function PUT(
     !packageWithinDomainScope({
       domain: pkg.domain,
       urlPatterns: version.urlPatterns,
-      ...(version.api === null ? {} : { api: version.api }),
+      api: version.api,
     })
   ) {
     return jsonError(404, "Version not found for this package");

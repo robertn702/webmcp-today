@@ -25,8 +25,7 @@ erDiagram
 
     packages {
         uuid id PK
-        text domain "site key: registrable domain or specific host, idx"
-        text page_type
+        text domain "site key: registrable domain or specific host, idx — immutable after creation"
         text title
         text description
         text contributor_id FK "-> auth.users.id"
@@ -40,8 +39,7 @@ erDiagram
         int version "uq: package_id+version"
         jsonb url_patterns "string[] — Chrome @match style, e.g. *://*.wikipedia.org/wiki/*"
         jsonb tools "ToolDescriptor[] — matches zod schema"
-        jsonb api "ApiBlock, nullable — tier-1 API execution surface (docs/api-execution-model.md)"
-        text api_content_hash "sha256 of the JCS-canonical api block; null iff api is null — recognition key (bodies stored whole), verified at install"
+        jsonb api "ApiBlock — tier-1 API execution surface (docs/api-execution-model.md)"
         int min_engine "capability floor this version's content requires"
         text changelog "optional, shown to installed users deciding whether to update"
         timestamptz created_at "immutable: no updated_at"
@@ -154,10 +152,10 @@ erDiagram
   to `installs.version_id` until they explicitly move the pin (npm-style, no
   auto-update); rollback is just setting `version_id` back to an older version.
 - **Append-only versions:** publishing a new version never mutates or deletes an old one.
-  `packages` (title/description/domain) is the one mutable row per
-  package and is edited independently of publishing a version. `minEngine` lives on
-  `package_versions`, not the package, since it's a property of a version's
-  content.
+  `packages` (title/description) is the one mutable row per package and is edited
+  independently of publishing a version — `domain` is immutable after creation.
+  `minEngine` lives on `package_versions`, not the package, since it's a property of
+  a version's content.
 - **No `(domain, url_pattern)` uniqueness — by design.** Packages are opinions, not
   registrations: rival packages may target the same site. Pattern specificity ranks
   them at lookup time (`rankPackagesByUrl` in `@webmcp-today/schema`);

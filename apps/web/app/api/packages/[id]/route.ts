@@ -1,4 +1,4 @@
-import { packageWithinDomainScope, updatePackageMetaSchema } from "@webmcp-today/schema";
+import { updatePackageMetaSchema } from "@webmcp-today/schema";
 import { packages } from "@webmcp-today/db";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -6,7 +6,7 @@ import { getAuthUserId } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { jsonError, parseBody } from "@/lib/http";
 import { updatePackageMeta } from "@/lib/mutations";
-import { getLatestVersion, getPackageById } from "@/lib/packages-repo";
+import { getPackageById } from "@/lib/packages-repo";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -18,7 +18,11 @@ export async function GET(_request: Request, context: Context): Promise<NextResp
   return NextResponse.json(pkg);
 }
 
-/** PATCH /api/packages/:id — owner-only metadata edit (domain/title/description/pageType). */
+/**
+ * PATCH /api/packages/:id — owner-only metadata edit (title/description).
+ * `domain` is immutable after creation: it never moves, so it can never
+ * escape the scope its published versions' urlPatterns/api already declare.
+ */
 export async function PATCH(request: Request, context: Context): Promise<NextResponse> {
   const { id } = await context.params;
   const userId = await getAuthUserId(request);
@@ -31,25 +35,6 @@ export async function PATCH(request: Request, context: Context): Promise<NextRes
 
   const body = await parseBody(request, updatePackageMetaSchema);
   if (!body.ok) return body.response;
-
-  // `domain` is the visible scope but urlPatterns/api live on the version row,
-  // so a metadata PATCH must not move a package outside its existing content.
-  if (body.data.domain !== undefined) {
-    const latest = await getLatestVersion(id);
-    if (
-      latest &&
-      !packageWithinDomainScope({
-        domain: body.data.domain,
-        urlPatterns: latest.urlPatterns,
-        ...(latest.api === null ? {} : { api: latest.api }),
-      })
-    ) {
-      return jsonError(
-        422,
-        `domain "${body.data.domain}" does not scope this package's urlPatterns and api.baseUrl.`,
-      );
-    }
-  }
 
   await updatePackageMeta(id, body.data);
 

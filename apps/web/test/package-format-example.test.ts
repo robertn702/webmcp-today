@@ -26,7 +26,7 @@ describe("docs package-format example", () => {
     // A read tool and a write tool, the write one behind an auth source — the
     // shape the page's surrounding paragraph describes.
     expect(parsed.tools.length).toBeGreaterThanOrEqual(2);
-    expect(parsed.api?.auth).toBeDefined();
+    expect(parsed.api.auth).toBeDefined();
     for (const tool of parsed.tools) {
       expect(tool.execution?.mode).toBe("api");
     }
@@ -50,7 +50,6 @@ describe("docs package-format example", () => {
         "version",
         "domain",
         "urlPatterns",
-        "pageType",
         "title",
         "description",
         "tools",

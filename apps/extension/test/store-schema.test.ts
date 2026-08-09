@@ -35,7 +35,7 @@ describe("store-schema", () => {
 
   it("parses a minimal index entry and one with the optional fields", () => {
     expect(indexEntrySchema.parse(ENTRY)).toEqual(ENTRY);
-    const full = { ...ENTRY, minEngine: 2, apiContentHash: "a".repeat(64) };
+    const full = { ...ENTRY, minEngine: 2 };
     expect(indexEntrySchema.parse(full)).toEqual(full);
   });
 

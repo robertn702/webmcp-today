@@ -1,7 +1,6 @@
 import {
   BRIDGE_PROTOCOL_VERSION,
   ENGINE_VERSION,
-  apiContentHash,
   bridgeRequestSchema,
   webMcpPackageSchema,
   type BridgeInstallRequest,
@@ -123,11 +122,6 @@ export async function installPackage(
   if (pkg.id !== request.packageId || pkg.versionId !== request.versionId) {
     return { ok: false, reason: "id-mismatch" };
   }
-
-  // Recompute rather than trust (the store re-verifies at the write boundary
-  // too; here it gets its own refusal reason on the wire).
-  const computedHash = pkg.api === undefined ? undefined : apiContentHash(pkg.api);
-  if (pkg.apiContentHash !== computedHash) return { ok: false, reason: "hash-mismatch" };
 
   // Fail-closed bootstrap: the first install is what can bring the kill list
   // into existence. If it can't be fetched, nothing is written.

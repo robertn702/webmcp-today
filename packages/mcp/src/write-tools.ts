@@ -31,7 +31,7 @@ export function registerWriteTools(server: McpServer, client: RegistryClient): v
     "update_package_meta",
     {
       description:
-        "Update a package's metadata (domain, title, description, pageType) — owner only. Never touches urlPatterns/tools/minEngine; use publish_package_version for that. Requires an API key.",
+        "Update a package's metadata (title, description) — owner only. Domain is immutable and never touches urlPatterns/tools/minEngine; use publish_package_version for that. Requires an API key.",
       inputSchema: {
         id: z.string().describe("Package id"),
         meta: updatePackageMetaSchema.describe("Metadata fields to change"),

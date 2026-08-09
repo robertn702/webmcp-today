@@ -11,13 +11,11 @@ someone browsing the repository.
 
 ## Bundled
 
-| Package                        | Version                                | Licence    | Source                                                    |
-| ------------------------------ | -------------------------------------- | ---------- | --------------------------------------------------------- |
-| `zod`                          | `^4.0.0` (see `bun.lock` for resolved) | MIT        | https://github.com/colinhacks/zod                         |
-| `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0    | https://github.com/jmespath-community/typescript-jmespath |
-| `@noble/hashes`                | 2.2.0                                  | MIT        | https://github.com/paulmillr/noble-hashes                 |
-| `canonicalize`                 | 3.0.0                                  | Apache-2.0 | https://github.com/erdtman/canonicalize                   |
-| `tldts`                        | 7.4.10                                 | MIT        | https://github.com/remusao/tldts                          |
+| Package                        | Version                                | Licence | Source                                                    |
+| ------------------------------ | -------------------------------------- | ------- | --------------------------------------------------------- |
+| `zod`                          | `^4.0.0` (see `bun.lock` for resolved) | MIT     | https://github.com/colinhacks/zod                         |
+| `@jmespath-community/jmespath` | 1.3.0                                  | MPL-2.0 | https://github.com/jmespath-community/typescript-jmespath |
+| `tldts`                        | 7.4.10                                 | MIT     | https://github.com/remusao/tldts                          |
 
 ### MPL-2.0 notice
 
@@ -27,8 +25,3 @@ Software"), which remain under MPL-2.0. Its Source Code Form is available at the
 above and from npm (`npm pack @jmespath-community/jmespath@1.3.0`); a full copy of the
 licence ships in that package as `LICENSE`. The rest of this extension is MIT and is a
 Larger Work under §3.3, which MPL-2.0 permits us to license under our own terms.
-
-### Apache-2.0 notice
-
-`canonicalize` is covered by the Apache License 2.0. Its source and a copy of the
-licence are available at the URL above and from npm (`npm pack canonicalize@3.0.0`).

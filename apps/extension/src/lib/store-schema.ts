@@ -44,9 +44,6 @@ export const indexEntrySchema = z.object({
   urlPatterns: z.array(z.string()).min(1),
   title: z.string(),
   minEngine: z.number().int().positive().optional(),
-  /** Recognition only ("a surface I already hold") — never a storage key;
-   * bodies are stored whole under `pkg:<packageId>`. */
-  apiContentHash: z.string().optional(),
   installedAt: z.iso.datetime(),
   source: z.enum(["registry", "suggested"]),
   /** Registry origin the body came from — answers "where do updates for this

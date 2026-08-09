@@ -2,7 +2,6 @@
  * Seed the registry with the curated packages from @webmcp-today/curated-packages.
  * Usage: DATABASE_URL=... bun run scripts/seed.ts   (from apps/web)
  */
-import { apiContentHash } from "@webmcp-today/schema";
 import { createDb, packages, packageVersions, user } from "@webmcp-today/db";
 import { curatedPackages } from "@webmcp-today/curated-packages";
 import { and, eq } from "drizzle-orm";
@@ -37,7 +36,6 @@ for (const input of curatedPackages) {
     .insert(packages)
     .values({
       domain: input.domain,
-      pageType: input.pageType,
       title: input.title,
       description: input.description,
       contributorId: SEED_USER_ID,
@@ -53,7 +51,6 @@ for (const input of curatedPackages) {
     urlPatterns: input.urlPatterns,
     tools: input.tools,
     api: input.api,
-    apiContentHash: input.api ? apiContentHash(input.api) : null,
     minEngine: input.minEngine,
     changelog: input.changelog,
   });

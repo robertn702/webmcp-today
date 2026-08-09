@@ -6,21 +6,28 @@ import { DELETE, PUT } from "@/app/api/packages/[id]/install/route";
 // works — pass an older versionId). There is no test database here: the repo
 // and mutation layers are mocked so that create-or-move behaviour is what
 // gets exercised.
+const API_BLOCK = { baseUrl: "https://acme.com" };
+
 const state = vi.hoisted(
   (): {
     userId: string | null;
     packageExists: boolean;
-    latest: { id: string; version: number; urlPatterns: string[]; api: null } | null;
-    versionsById: Record<string, { id: string; version: number; urlPatterns: string[]; api: null }>;
+    latest: {
+      id: string;
+      version: number;
+      urlPatterns: string[];
+      api: { baseUrl: string };
+    } | null;
+    versionsById: Record<
+      string,
+      { id: string; version: number; urlPatterns: string[]; api: { baseUrl: string } }
+    >;
     installs: { userId: string; packageId: string; versionId: string }[];
   } => ({
     userId: "user-1",
     packageExists: true,
-    latest: { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null },
-    versionsById: {
-      "ver-1": { id: "ver-1", version: 1, urlPatterns: ["*://acme.com/*"], api: null },
-      "ver-2": { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null },
-    },
+    latest: { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: { baseUrl: "" } },
+    versionsById: {},
     installs: [],
   }),
 );
@@ -88,7 +95,11 @@ describe("PUT /api/packages/:id/install", () => {
   beforeEach(() => {
     state.userId = "user-1";
     state.packageExists = true;
-    state.latest = { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: null };
+    state.latest = { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: API_BLOCK };
+    state.versionsById = {
+      "ver-1": { id: "ver-1", version: 1, urlPatterns: ["*://acme.com/*"], api: API_BLOCK },
+      "ver-2": { id: "ver-2", version: 2, urlPatterns: ["*://acme.com/*"], api: API_BLOCK },
+    };
     state.installs = [];
   });
 
@@ -123,7 +134,7 @@ describe("PUT /api/packages/:id/install", () => {
       id: "ver-legacy",
       version: 3,
       urlPatterns: ["*://*/*"],
-      api: null,
+      api: API_BLOCK,
     };
     const response = await put("pkg-1", { versionId: "ver-legacy" });
     expect(response.status).toBe(404);

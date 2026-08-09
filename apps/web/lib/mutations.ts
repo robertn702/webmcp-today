@@ -1,8 +1,7 @@
-import {
-  apiContentHash,
-  type CreatePackageInput,
-  type PublishVersionInput,
-  type UpdatePackageMetaInput,
+import type {
+  CreatePackageInput,
+  PublishVersionInput,
+  UpdatePackageMetaInput,
 } from "@webmcp-today/schema";
 import { installs, packages, packageVersions } from "@webmcp-today/db";
 import { and, eq, sql } from "drizzle-orm";
@@ -24,7 +23,6 @@ export async function insertPackage(
     .insert(packages)
     .values({
       domain: input.domain,
-      pageType: input.pageType,
       title: input.title,
       description: input.description,
       contributorId,
@@ -40,7 +38,6 @@ export async function insertPackage(
       urlPatterns: input.urlPatterns,
       tools: input.tools,
       api: input.api,
-      apiContentHash: input.api ? apiContentHash(input.api) : null,
       minEngine: input.minEngine,
       changelog: input.changelog,
     })
@@ -71,8 +68,6 @@ export async function publishVersion(
   packageId: string,
   input: PublishVersionInput,
 ): Promise<{ versionId: string; version: number }> {
-  const contentHash = input.api ? apiContentHash(input.api) : null;
-
   const maxVersion = await readMaxVersion(packageId);
   const expectedVersion = maxVersion + 1;
   if (input.version !== expectedVersion) throw new VersionConflictError(expectedVersion);
@@ -87,7 +82,6 @@ export async function publishVersion(
         urlPatterns: input.urlPatterns,
         tools: input.tools,
         api: input.api,
-        apiContentHash: contentHash,
         minEngine: input.minEngine,
         changelog: input.changelog,
       })

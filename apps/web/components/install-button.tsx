@@ -29,7 +29,6 @@ const FAILURE_TEXT: Record<InstallFailure, string> = {
   "not-found": "The registry couldn't find this version.",
   "invalid-body": "The registry served a package the extension couldn't read.",
   "id-mismatch": "Install refused. The registry served the wrong package.",
-  "hash-mismatch": "Install refused. The package's content didn't match its fingerprint.",
   revoked: "This package was pulled from the registry.",
   "revocation-unavailable": "Couldn't reach the registry's safety list. Try again.",
   "engine-too-old": "Update the extension to install this package.",

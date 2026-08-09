@@ -5,6 +5,15 @@ const API_BLOCK = {
   endpoints: { me: { method: "GET", path: "/api/me.json" } },
 };
 
+const TOOLS = [
+  {
+    name: "get_me",
+    description: "Get the current user",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    execution: { mode: "api", endpoint: "me" },
+  },
+];
+
 const state = vi.hoisted(
   (): {
     versionRows: {
@@ -12,9 +21,8 @@ const state = vi.hoisted(
       packageId: string;
       version: number;
       urlPatterns: string[];
-      tools: [];
+      tools: unknown[];
       api: { baseUrl: string; endpoints: Record<string, unknown> };
-      apiContentHash: null;
       minEngine: number;
       changelog: null;
       createdAt: Date;
@@ -46,9 +54,8 @@ describe("hydratePackages", () => {
         version: 3,
         // A global wildcard is what makes this version unsafe, not its api block.
         urlPatterns: ["*://*/*"],
-        tools: [],
+        tools: TOOLS,
         api: API_BLOCK,
-        apiContentHash: null,
         minEngine: 1,
         changelog: null,
         createdAt: new Date("2026-07-03T00:00:00.000Z"),
@@ -58,9 +65,8 @@ describe("hydratePackages", () => {
         packageId: "pkg-1",
         version: 2,
         urlPatterns: ["*://*.reddit.com/*"],
-        tools: [],
+        tools: TOOLS,
         api: API_BLOCK,
-        apiContentHash: null,
         minEngine: 1,
         changelog: null,
         createdAt: new Date("2026-07-02T00:00:00.000Z"),
@@ -71,7 +77,6 @@ describe("hydratePackages", () => {
       {
         id: "pkg-1",
         domain: "reddit.com",
-        pageType: null,
         title: "Reddit",
         description: "Read Reddit",
         contributorId: "user-1",

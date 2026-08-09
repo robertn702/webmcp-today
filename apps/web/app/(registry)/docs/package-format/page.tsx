@@ -73,9 +73,6 @@ export default function PackageFormatPage() {
             own level is lower skips the package instead of half-running it. Current level is{" "}
             <Code>1</Code>.
           </Field>
-          <Field name="pageType" type="string, ≤100 · optional">
-            A free-text hint about which kind of page the tools belong to.
-          </Field>
           <Field name="changelog" type="string, ≤2000 · optional">
             What changed in this version. Shown to installed users deciding whether to move their
             pin.
@@ -262,8 +259,8 @@ export default function PackageFormatPage() {
           <Code>/api/packages/:id/versions</Code> with <Code>version</Code> set to one above the
           current highest, and only the owner may publish one. <Code>urlPatterns</Code>,{" "}
           <Code>tools</Code>, <Code>api</Code>, <Code>minEngine</Code> and <Code>changelog</Code>{" "}
-          are version-scoped and travel with the content. Title, description, domain and{" "}
-          <Code>pageType</Code> are package metadata and are edited in place.
+          are version-scoped and travel with the content. Title and description are package metadata
+          and are edited in place; <Code>domain</Code> is immutable once a package is created.
         </p>
         <p>
           Installs pin to a version, so publishing a new one never moves anybody. They update when

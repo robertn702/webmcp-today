@@ -200,7 +200,7 @@ sequenceDiagram
     P->>E: install bridge: { type:"install", packageId, versionId }
     E->>W: GET <origin>/api/packages/:id/versions/:versionId
     W-->>E: served body (webMcpPackageSchema)
-    E->>E: re-verify apiContentHash; bootstrap revocation list if absent
+    E->>E: validate against webMcpPackageSchema; bootstrap revocation list if absent
     E->>ST: atomic set({ pkg:<id>: body, index: next })
 
     E->>W: GET /api/revocations?since=cursor (alarms: 6h + startup)
@@ -210,8 +210,8 @@ sequenceDiagram
 ```
 
 The model in one breath: `packages` is the one mutable row per package
-(title/description/domain); `package_versions` is append-only and **is** the
-served truth (no snapshot table). Page-load resolution is purely local — the
+(title/description; `domain` is immutable after creation); `package_versions`
+is append-only and **is** the served truth (no snapshot table). Page-load resolution is purely local — the
 extension matches its install index against the URL and reads the bodies from
 `chrome.storage.local`, with no network hop. The registry retains exactly two
 levers after install: the revocation feed (enforced at registration time against

@@ -9,7 +9,6 @@ import {
 } from "../src/lib/store-schema.js";
 import { createFakeStorageArea, type FakeStorageArea } from "./fake-storage-area.js";
 import type { RevocationEntry } from "@webmcp-today/schema";
-import { apiContentHash } from "@webmcp-today/schema";
 
 const OPTS: InstallOptions = { source: "registry", origin: "https://webmcp.today" };
 const PAGE_URL = "https://en.wikipedia.org/wiki/Coffee";
@@ -42,7 +41,6 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
       },
     ],
     api: API_BLOCK,
-    apiContentHash: apiContentHash(API_BLOCK),
     ...overrides,
   };
 }

@@ -1,5 +1,4 @@
 import {
-  apiContentHash,
   packageWithinDomainScope,
   webMcpPackageSchema,
   type WebMcpPackage,
@@ -35,7 +34,7 @@ export interface InstallOptions {
 
 export type InstallResult =
   | { ok: true; entry: IndexEntry; replaced?: { versionId: string; version: number } }
-  | { ok: false; reason: "schema-unreadable" | "invalid-body" | "hash-mismatch" };
+  | { ok: false; reason: "schema-unreadable" | "invalid-body" };
 
 export type UninstallResult =
   { ok: true } | { ok: false; reason: "schema-unreadable" | "not-installed" };
@@ -125,11 +124,6 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
         const pkg = parsed.data;
         if (!packageWithinDomainScope(pkg)) return { ok: false, reason: "invalid-body" };
 
-        // Recompute rather than trust: the served hash must match the served
-        // api block, or the body isn't what its identifier claims.
-        const computedHash = pkg.api === undefined ? undefined : apiContentHash(pkg.api);
-        if (pkg.apiContentHash !== computedHash) return { ok: false, reason: "hash-mismatch" };
-
         const index = await readIndex();
         const previous = index[pkg.id];
         const entry: IndexEntry = {
@@ -140,7 +134,6 @@ export function createInstallsStore(area: StorageArea): InstallsStore {
           urlPatterns: pkg.urlPatterns,
           title: pkg.title,
           ...(pkg.minEngine !== undefined ? { minEngine: pkg.minEngine } : {}),
-          ...(computedHash !== undefined ? { apiContentHash: computedHash } : {}),
           installedAt: (options.now?.() ?? new Date()).toISOString(),
           source: options.source,
           origin: options.origin,
