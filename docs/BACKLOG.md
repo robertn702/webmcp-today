@@ -118,10 +118,10 @@ their own agent. Tier-1 packages only; extension installed unpacked or via CWS.
   function under MV3 on GitHub (strict CSP) + Reddit via `chrome.userScripts`
   vs a packaged runner; document permissions friction. Gates tiers 2–3.
   (docs/api-execution-model.md → "MV3 constraints + spike plan", build-order 4)
-- **APQ / `persistedQuery` support** — executor currently throws on it; needs
-  hash + retry + cross-call cache. Blocks any real GraphQL package (e.g. Reddit
-  shreddit search). (packages/engine/src/api-executor.ts TODO;
-  docs/api-execution-model.md → "GraphQL support")
+- **APQ support** — no accepted schema field for it today; adding it means a new
+  field (e.g. a `persistedQuery` endpoint flag) plus hash + retry + cross-call
+  cache in the executor. Blocks any real GraphQL package (e.g. Reddit shreddit
+  search). (docs/api-execution-model.md → "GraphQL support")
 
 ### Design questions (need a decision before building)
 

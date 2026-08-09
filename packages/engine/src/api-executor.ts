@@ -190,18 +190,6 @@ export function buildRequest(
   let body: string | undefined;
 
   if (endpoint.graphql) {
-    if (endpoint.persistedQuery) {
-      // TODO(APQ): Automatic Persisted Queries are not implemented. The flow is:
-      // send `{ extensions: { persistedQuery: { version: 1, sha256Hash } } }`
-      // (hash only) -> on `PersistedQueryNotFound` resend with the full `query`
-      // -> cache the hash for subsequent calls. That needs crypto.subtle
-      // hashing, retry-on-error detection, and cross-call hash caching — real
-      // complexity deferred per the step scope. Fail loud rather than silently
-      // sending a full query the package asked to persist.
-      throw new Error(
-        "persistedQuery (Automatic Persisted Queries) is not yet supported by this executor.",
-      );
-    }
     const document = resolveDocument(api, endpoint.graphql.document);
     const variables = interpolateDeep(endpoint.graphql.variables ?? {}, params);
     body = JSON.stringify({ query: document, variables });

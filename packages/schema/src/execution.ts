@@ -8,7 +8,7 @@ import { z } from "zod";
 // future execution mode can turn this back into a discriminated union
 // without migrating published package data.
 
-export const apiExecutionSchema = z.object({
+export const apiExecutionSchema = z.strictObject({
   mode: z.literal("api"),
   endpoint: z.string().min(1).max(64),
 });

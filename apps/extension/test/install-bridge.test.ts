@@ -25,11 +25,12 @@ function servedPackage(overrides: Record<string, unknown> = {}): Record<string, 
     contributor: "robert",
     createdAt: "2026-07-27T00:00:00.000Z",
     updatedAt: "2026-07-27T00:00:00.000Z",
+    minEngine: 1,
     tools: [
       {
         name: "wiki_summary",
         description: "wiki_summary fixture tool",
-        inputSchema: { type: "object", properties: {} },
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true },
         execution: { mode: "api", endpoint: "summary" },
       },

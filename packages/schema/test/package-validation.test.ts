@@ -13,7 +13,9 @@ const baseTool = {
     type: "object",
     properties: { query: { type: "string", description: "Search query" } },
     required: ["query"],
+    additionalProperties: false,
   },
+  execution: { mode: "api", endpoint: "search" },
 };
 
 const baseConfig = {
@@ -23,6 +25,13 @@ const baseConfig = {
   title: "Example search",
   description: "Search tools for acme.com",
   tools: [baseTool],
+  api: {
+    baseUrl: "https://acme.com",
+    endpoints: {
+      search: { method: "GET", path: "/search", query: { query: "{{query}}" } },
+    },
+  },
+  minEngine: 1,
 };
 
 describe("createPackageSchema", () => {
@@ -47,16 +56,23 @@ describe("createPackageSchema", () => {
         version: 2,
         urlPatterns: baseConfig.urlPatterns,
         tools: baseConfig.tools,
+        api: baseConfig.api,
+        minEngine: baseConfig.minEngine,
       }).success,
     ).toBe(true);
     expect(
       publishVersionSchema.safeParse({
         urlPatterns: baseConfig.urlPatterns,
         tools: baseConfig.tools,
+        api: baseConfig.api,
+        minEngine: baseConfig.minEngine,
       }).success,
     ).toBe(false);
-    // Meta edits never create versions, so a declared version is stripped, not kept.
-    const meta = updatePackageMetaSchema.parse({ title: "New title", version: 7 });
+    // Meta edits never create versions, so a declared version is not a recognized key.
+    expect(updatePackageMetaSchema.safeParse({ title: "New title", version: 7 }).success).toBe(
+      false,
+    );
+    const meta = updatePackageMetaSchema.parse({ title: "New title" });
     expect("version" in meta).toBe(false);
   });
 
@@ -162,7 +178,20 @@ describe("createPackageSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts optional minEngine integer level and rejects non-integer/non-positive", () => {
+  it("requires api and rejects a package that omits it", () => {
+    const noApi: Record<string, unknown> = { ...baseConfig };
+    delete noApi.api;
+    const result = createPackageSchema.safeParse(noApi);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.join(".") === "api")).toBe(true);
+    }
+  });
+
+  it("requires minEngine as a positive integer and rejects non-integer/non-positive", () => {
+    const noMinEngine: Record<string, unknown> = { ...baseConfig };
+    delete noMinEngine.minEngine;
+    expect(createPackageSchema.safeParse(noMinEngine).success).toBe(false);
     expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 1 }).success).toBe(true);
     expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 0 }).success).toBe(false);
     expect(createPackageSchema.safeParse({ ...baseConfig, minEngine: 1.5 }).success).toBe(false);
@@ -196,6 +225,7 @@ describe("createPackageSchema", () => {
       ...baseConfig,
       domain: "reddit.com",
       urlPatterns: ["*://*.reddit.com/*"],
+      api: { ...baseConfig.api, baseUrl: "https://reddit.com" },
     });
     expect(result.success).toBe(true);
   });
@@ -206,7 +236,11 @@ describe("createPackageSchema", () => {
       version: 2,
       urlPatterns: ["*://*.reddit.com/*"],
       tools: [baseTool],
-      api: { baseUrl: "https://www.reddit.com", endpoints: {} },
+      minEngine: 1,
+      api: {
+        baseUrl: "https://www.reddit.com",
+        endpoints: { search: { method: "GET", path: "/search", query: { query: "{{query}}" } } },
+      },
     };
     expect(schema.safeParse(version).success).toBe(true);
     expect(schema.safeParse({ ...version, urlPatterns: ["*://*/*"] }).success).toBe(false);
@@ -214,8 +248,10 @@ describe("createPackageSchema", () => {
       schema.safeParse({ ...version, urlPatterns: ["*://news.ycombinator.com/*"] }).success,
     ).toBe(false);
     expect(
-      schema.safeParse({ ...version, api: { baseUrl: "https://evil.example.com", endpoints: {} } })
-        .success,
+      schema.safeParse({
+        ...version,
+        api: { ...version.api, baseUrl: "https://evil.example.com" },
+      }).success,
     ).toBe(false);
   });
 

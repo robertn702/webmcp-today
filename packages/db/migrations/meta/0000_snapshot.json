@@ -520,7 +520,7 @@
           "name": "api",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "api_content_hash": {
           "name": "api_content_hash",
@@ -532,7 +532,7 @@
           "name": "min_engine",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "changelog": {
           "name": "changelog",

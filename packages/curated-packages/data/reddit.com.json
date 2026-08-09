@@ -64,7 +64,7 @@
     {
       "name": "reddit_me",
       "description": "Get the logged-in Reddit user's username and total karma. Proves the session works; write tools need a logged-in session.",
-      "inputSchema": { "type": "object", "properties": {} },
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "me" }
     },
@@ -77,7 +77,8 @@
           "subreddit": { "type": "string", "description": "Subreddit name, without the r/ prefix" },
           "limit": { "type": "integer", "description": "Max posts to return (1-25)" }
         },
-        "required": ["subreddit", "limit"]
+        "required": ["subreddit", "limit"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "subredditHot" }
@@ -91,7 +92,8 @@
           "query": { "type": "string", "description": "Search query" },
           "limit": { "type": "integer", "description": "Max posts to return (1-25)" }
         },
-        "required": ["query", "limit"]
+        "required": ["query", "limit"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "search" }
@@ -109,7 +111,8 @@
           "limit": { "type": "integer", "description": "Max top-level comments (1-25)" },
           "depth": { "type": "integer", "description": "Reply nesting depth to include (1-10)" }
         },
-        "required": ["postId", "limit", "depth"]
+        "required": ["postId", "limit", "depth"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "thread" }
@@ -126,7 +129,8 @@
           },
           "text": { "type": "string", "description": "Comment body (Reddit markdown)" }
         },
-        "required": ["thingId", "text"]
+        "required": ["thingId", "text"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false, "destructiveHint": true },
       "execution": { "mode": "api", "endpoint": "comment" }
@@ -147,7 +151,8 @@
             "enum": ["1", "0", "-1"]
           }
         },
-        "required": ["thingId", "direction"]
+        "required": ["thingId", "direction"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false },
       "execution": { "mode": "api", "endpoint": "vote" }

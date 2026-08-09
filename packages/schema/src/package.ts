@@ -63,7 +63,7 @@ const toolsArraySchema = z
  * schemas below can still `.pick`/`.omit`/`.partial`/`.extend` it.
  * `createPackageSchema` wraps it with the api cross-validation.
  */
-export const createPackageObjectSchema = z.object({
+export const createPackageObjectSchema = z.strictObject({
   /**
    * Author-declared positive-integer version: `1` on create, exactly
    * `max(version)+1` on publish, equality-checked server-side (409 on
@@ -81,8 +81,8 @@ export const createPackageObjectSchema = z.object({
   description: z.string().min(1).max(5000),
   tools: toolsArraySchema,
   /** Tier-1 API execution surface; tools bind to it via their `endpoint`. */
-  api: apiBlockSchema.optional(),
-  minEngine: engineLevelSchema.optional(),
+  api: apiBlockSchema,
+  minEngine: engineLevelSchema,
   /** What changed in this version; shown to installed users deciding whether to update. */
   changelog: z.string().max(2000).optional(),
 });

@@ -60,10 +60,16 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+const API_BLOCK = {
+  baseUrl: "https://acme.com",
+  endpoints: { search: { method: "GET", path: "/search" } },
+};
+
 const tool = {
   name: "search",
   description: "Search the site",
-  inputSchema: { type: "object", properties: {}, required: [] },
+  inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+  execution: { mode: "api", endpoint: "search" },
 };
 
 const createBody = {
@@ -73,6 +79,8 @@ const createBody = {
   title: "Example",
   description: "Example tools",
   tools: [tool],
+  api: API_BLOCK,
+  minEngine: 1,
 };
 
 function post(url: string, body: unknown): Request {
@@ -119,6 +127,8 @@ describe("author-declared versions", () => {
       version: 2,
       urlPatterns: ["*://acme.com/*"],
       tools: [tool],
+      api: API_BLOCK,
+      minEngine: 1,
     });
     expect(response.status).toBe(409);
     const body = await response.json();
@@ -131,6 +141,8 @@ describe("author-declared versions", () => {
       version: 3,
       urlPatterns: ["*://acme.com/*"],
       tools: [tool],
+      api: API_BLOCK,
+      minEngine: 1,
     });
     expect(response.status).toBe(201);
     const body = await response.json();
@@ -144,6 +156,8 @@ describe("author-declared versions", () => {
       version: 3,
       urlPatterns: ["*://*/*"],
       tools: [tool],
+      api: API_BLOCK,
+      minEngine: 1,
     });
     expect(response.status).toBe(400);
     expect(state.inserts).toEqual([]);
@@ -160,6 +174,8 @@ describe("author-declared versions", () => {
       version: 3,
       urlPatterns: ["*://acme.com/*"],
       tools: [tool],
+      api: API_BLOCK,
+      minEngine: 1,
     });
     expect(response.status).toBe(409);
     const body = await response.json();

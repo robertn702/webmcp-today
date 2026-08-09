@@ -98,7 +98,6 @@ Sketch of the schema additions (zod to come in `packages/schema`; JSON here for 
           "variables": { "query": "{{query}}", "first": "{{first}}" },
         },
         "errorPath": ["errors"],
-        "persistedQuery": true,
         "returns": "data.search.posts[].{id: id, title: title}",
       },
     },
@@ -179,7 +178,6 @@ Field semantics:
   reference user. A literal string rather than a boolean so the executor carries no
   site-specific constants, and stripped only when present so a site dropping its own
   prefix doesn't break a working package.
-- **`persistedQuery`** — enables APQ retry (see GraphQL section).
 - **`documents`** — package-level named static GraphQL documents; endpoints reference
   them as `@documents/name`. Keeps megabyte-adjacent captured queries out of the
   per-endpoint inline JSON and dedupes documents shared by several endpoints.
@@ -276,8 +274,9 @@ rather than merely possible:
    same `{{param}}` templates — and because a variable whose whole value is one
    placeholder keeps its type, a `first: Int` binds as an Int rather than a string.
 
-Third, **APQ (Automatic Persisted Queries)** behind `persistedQuery: true`, implemented
-_once_ in the executor so no package author ever thinks about it:
+Third, **APQ (Automatic Persisted Queries)**, not yet supported: adding it would mean a
+new schema field (there is no accepted field for it today) plus an executor
+implementation, _once_, so no package author ever thinks about it:
 
 ```
 send { extensions: { persistedQuery: { sha256Hash } } }
@@ -365,8 +364,9 @@ data — so it is buildable today and is not blocked on the spike.
    `{{param}}` check in `tool.ts`), same-origin `baseUrl`↔package-domain check.
 2. ~~**Executor derived-call engine** (extension).~~ **Done**, except APQ: request
    construction, token sources (with TTL), `returns` projection, `errorPath` failure.
-   `persistedQuery: true` still throws rather than silently sending a full query, and
-   output budgeting was dropped with `TOOL_OUTPUT_MAX`.
+   APQ has no accepted schema field yet — adding it means a new field plus an
+   executor implementation, not toggling an existing one. Output budgeting was
+   dropped with `TOOL_OUTPUT_MAX`.
 3. ~~**Reddit flagship package on tier 1 alone.**~~ **Done for REST** — reads plus
    `comment`/`vote` writes on the modhash token source. The planned GraphQL endpoint was
    **not** shipped: it needs APQ, which is step 2's remaining half.

@@ -52,7 +52,8 @@
             "description": "How many notes to return (1-50)"
           }
         },
-        "required": ["query"]
+        "required": ["query"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": true },
       "execution": { "mode": "api", "endpoint": "searchNotes" }
@@ -66,7 +67,8 @@
           "title": { "type": "string", "description": "Note title" },
           "body": { "type": "string", "description": "Note body (plain text)" }
         },
-        "required": ["title", "body"]
+        "required": ["title", "body"],
+        "additionalProperties": false
       },
       "annotations": { "readOnlyHint": false },
       "execution": { "mode": "api", "endpoint": "createNote" }

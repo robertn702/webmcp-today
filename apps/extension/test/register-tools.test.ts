@@ -20,10 +20,11 @@ function pkg(...toolNames: string[]): WebMcpPackage {
     urlPatterns: ["*://en.wikipedia.org/wiki/*"],
     title: "Wikipedia article",
     description: "Fixture package",
+    minEngine: 1,
     tools: toolNames.map((name) => ({
       name,
       description: `${name} fixture tool`,
-      inputSchema: { type: "object", properties: {} },
+      inputSchema: { type: "object", properties: {}, additionalProperties: false },
       annotations: { readOnlyHint: true },
       execution: { mode: "api", endpoint: "summary" },
     })),

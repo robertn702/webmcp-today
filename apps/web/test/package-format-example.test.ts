@@ -74,7 +74,6 @@ describe("docs package-format example", () => {
         "returns",
         "errorPath",
         "stripPrefix",
-        "persistedQuery",
         "graphql",
         "auth",
       ].sort(),

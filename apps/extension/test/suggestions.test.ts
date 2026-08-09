@@ -32,13 +32,19 @@ function pkg(
     urlPatterns,
     title: `Package ${id}`,
     description: "Fixture package",
+    minEngine: 1,
     tools: [
       {
         name: "fixture_tool",
         description: "Fixture tool",
-        inputSchema: { type: "object", properties: {} },
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
+        execution: { mode: "api", endpoint: "fixture" },
       },
     ],
+    api: {
+      baseUrl: `https://${domain}`,
+      endpoints: { fixture: { method: "GET", path: "/api/fixture" } },
+    },
   });
 }
 
