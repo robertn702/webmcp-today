@@ -60,7 +60,7 @@ if (!result.success) {
 }
 ```
 
-`domain` must be a concrete, registrable hostname. Each `urlPatterns` entry uses a Chrome-extension-style match pattern and must stay within that domain. An API `baseUrl` must use HTTPS and be on the package domain or one of its subdomains.
+`domain` must be a concrete, registrable hostname. Each `urlPatterns` entry uses a Chrome-extension-style match pattern and must stay within that domain. An API `baseUrl` must use HTTPS and be on the package domain or one of its subdomains. The only endpoint-level `baseUrl` exception is Hacker News's anonymous Firebase read API; it cannot use auth, and the executor omits cookies.
 
 ## API overview
 

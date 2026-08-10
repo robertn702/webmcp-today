@@ -1,8 +1,8 @@
 name: Publish npm packages
 
 # Tag-triggered, decoupled from the extension release tag. Publish one package:
-#   git tag schema-v0.2.0 && git push origin schema-v0.2.0
-#   git tag mcp-v0.2.0 && git push origin mcp-v0.2.0
+#   git tag schema-v0.3.0 && git push origin schema-v0.3.0
+#   git tag mcp-v0.3.0 && git push origin mcp-v0.3.0
 # check-npm-release.mjs validates the target selected by the checked-out tag.
 # Tags are protected by a tag ruleset, so they can only be cut from reviewed
 # commits.

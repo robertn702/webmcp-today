@@ -37,6 +37,8 @@ const httpsUrlSchema = z
     }
   }, "baseUrl must be a valid https:// URL");
 
+const HACKER_NEWS_PUBLIC_API_ORIGIN = "https://hacker-news.firebaseio.com";
+
 /** A **locator**: the object keys / array indices naming ONE place in a JSON
  * document, e.g. `["data", "modhash"]`. An array rather than a dot string so a
  * key that itself contains a dot is unambiguous, and so the two
@@ -473,10 +475,28 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
   // An endpoint may use a separate origin only for an anonymous public read.
   // Keep session cookies and extracted credentials on the visible package's
   // origin; otherwise an installed package could exfiltrate them.
-  const primaryOrigin = new URL(api.baseUrl).origin;
+  let primaryOrigin: string | null = null;
+  try {
+    primaryOrigin = new URL(api.baseUrl).origin;
+  } catch {
+    // The baseUrl field carries the validation error; do not turn safeParse
+    // into a thrown exception while checking dependent cross-field rules.
+  }
   for (const [name, endpoint] of Object.entries(api.endpoints)) {
-    if (endpoint.baseUrl === undefined || new URL(endpoint.baseUrl).origin === primaryOrigin)
+    if (endpoint.baseUrl === undefined || primaryOrigin === null) continue;
+    let endpointOrigin: string | null = null;
+    try {
+      endpointOrigin = new URL(endpoint.baseUrl).origin;
+    } catch {
       continue;
+    }
+    if (endpointOrigin === primaryOrigin) continue;
+    if (endpointOrigin !== HACKER_NEWS_PUBLIC_API_ORIGIN) {
+      issues.push({
+        message: `Cross-origin endpoint "${name}" must use ${HACKER_NEWS_PUBLIC_API_ORIGIN}.`,
+        path: ["api", "endpoints", name, "baseUrl"],
+      });
+    }
     if (endpoint.method !== "GET") {
       issues.push({
         message: `Cross-origin endpoint "${name}" must use GET.`,
@@ -501,10 +521,16 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
       continue;
     }
     const sourceEndpoint = api.endpoints[src.source.endpoint];
-    if (
-      sourceEndpoint?.baseUrl !== undefined &&
-      new URL(sourceEndpoint.baseUrl).origin !== primaryOrigin
-    ) {
+    let sourceOrigin: string | null = null;
+    try {
+      sourceOrigin =
+        sourceEndpoint?.baseUrl === undefined
+          ? primaryOrigin
+          : new URL(sourceEndpoint.baseUrl).origin;
+    } catch {
+      continue;
+    }
+    if (primaryOrigin !== null && sourceOrigin !== primaryOrigin) {
       issues.push({
         message: `Auth source "${name}" must fetch from the primary api.baseUrl origin.`,
         path: ["api", "auth", name, "source", "endpoint"],

@@ -137,24 +137,24 @@ describe("api block cross-validation", () => {
 
   it("allows anonymous GET endpoints at an explicitly declared public origin", () => {
     const c = structuredClone(base);
-    Object.assign(c.api.endpoints.subredditHot, { baseUrl: "https://public.example.com" });
+    Object.assign(c.api.endpoints.subredditHot, { baseUrl: "https://hacker-news.firebaseio.com" });
     expect(createPackageSchema.safeParse(c).success).toBe(true);
   });
 
   it("rejects cross-origin writes, authenticated reads, and cross-origin auth sources", () => {
     const write = structuredClone(base);
-    Object.assign(write.api.endpoints.comment, { baseUrl: "https://public.example.com" });
+    Object.assign(write.api.endpoints.comment, { baseUrl: "https://hacker-news.firebaseio.com" });
     expect(createPackageSchema.safeParse(write).success).toBe(false);
 
     const authenticatedRead = structuredClone(base);
     Object.assign(authenticatedRead.api.endpoints.subredditHot, {
-      baseUrl: "https://public.example.com",
+      baseUrl: "https://hacker-news.firebaseio.com",
       auth: ["csrf"],
     });
     expect(createPackageSchema.safeParse(authenticatedRead).success).toBe(false);
 
     const tokenSource = structuredClone(base);
-    Object.assign(tokenSource.api.endpoints.me, { baseUrl: "https://public.example.com" });
+    Object.assign(tokenSource.api.endpoints.me, { baseUrl: "https://hacker-news.firebaseio.com" });
     expect(createPackageSchema.safeParse(tokenSource).success).toBe(false);
   });
 
@@ -204,6 +204,19 @@ describe("api block cross-validation", () => {
     const c = structuredClone(base);
     c.api.baseUrl = "http://www.reddit.com";
     expect(createPackageSchema.safeParse(c).success).toBe(false);
+  });
+
+  it("returns validation issues for malformed primary and unapproved public-read origins", () => {
+    const malformed = structuredClone(base);
+    malformed.api.baseUrl = "not a URL";
+    expect(() => createPackageSchema.safeParse(malformed)).not.toThrow();
+    expect(createPackageSchema.safeParse(malformed).success).toBe(false);
+
+    const unapprovedOrigin = structuredClone(base);
+    Object.assign(unapprovedOrigin.api.endpoints.subredditHot, {
+      baseUrl: "https://api.github.com",
+    });
+    expect(createPackageSchema.safeParse(unapprovedOrigin).success).toBe(false);
   });
 
   it("rejects an auth source that fetches from an undefined endpoint", () => {

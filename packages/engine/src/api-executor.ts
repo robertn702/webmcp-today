@@ -36,6 +36,7 @@ const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
 /** A string that is EXACTLY one placeholder ("{{n}}", not "x{{n}}"). */
 const WHOLE_PLACEHOLDER_RE = /^\{\{(\w+)\}\}$/;
 const DOCUMENT_REF_RE = /^@documents\/(.+)$/;
+const HACKER_NEWS_PUBLIC_API_ORIGIN = "https://hacker-news.firebaseio.com";
 
 export interface DerivedRequest {
   url: string;
@@ -256,12 +257,14 @@ async function performFetch(
   request: DerivedRequest,
   headers: Record<string, string>,
   credentials: RequestCredentials,
+  redirect: RequestRedirect,
 ): Promise<FetchOutcome> {
   const response = await fetch(request.url, {
     method: request.method,
     headers,
     body: request.body,
     credentials,
+    redirect,
   });
   return { status: response.status, ok: response.ok, text: await response.text() };
 }
@@ -397,7 +400,7 @@ async function resolveAuthToken(
     }
   }
 
-  const outcome = await performFetch(request, request.headers, "include");
+  const outcome = await performFetch(request, request.headers, "include", "follow");
   if (!outcome.ok) {
     throw new Error(`Auth source "${name}" request failed: HTTP ${outcome.status}.`);
   }
@@ -492,6 +495,14 @@ async function executeApiToolInner(
   if (!endpointUsesPrimaryOrigin(api, endpoint) && endpoint.method !== "GET") {
     throw new Error(`Cross-origin endpoint "${endpointName}" must use GET.`);
   }
+  if (
+    !endpointUsesPrimaryOrigin(api, endpoint) &&
+    new URL(endpointBaseUrl(api, endpoint)).origin !== HACKER_NEWS_PUBLIC_API_ORIGIN
+  ) {
+    throw new Error(
+      `Cross-origin endpoint "${endpointName}" must use ${HACKER_NEWS_PUBLIC_API_ORIGIN}.`,
+    );
+  }
   if (!endpointUsesPrimaryOrigin(api, endpoint) && (endpoint.auth?.length ?? 0) > 0) {
     throw new Error(`Cross-origin endpoint "${endpointName}" must not use auth sources.`);
   }
@@ -535,6 +546,7 @@ async function executeApiToolInner(
   const credentials: RequestCredentials = endpointUsesPrimaryOrigin(api, endpoint)
     ? "include"
     : "omit";
+  const redirect: RequestRedirect = endpointUsesPrimaryOrigin(api, endpoint) ? "follow" : "error";
   // Inject each token where its source's sendAs points: header, query param,
   // or an extra urlencoded form field appended to the built body.
   let url = request.url;
@@ -568,6 +580,7 @@ async function executeApiToolInner(
     { url, method: request.method, headers, body },
     headers,
     credentials,
+    redirect,
   );
   return handleResponse(endpoint, outcome);
 }
