@@ -442,6 +442,66 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     );
   });
 
+  it("rejects unvalidated cross-origin writes and authenticated endpoints before fetching", async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const write: ApiBlock = {
+      baseUrl: "https://news.ycombinator.com",
+      endpoints: {
+        post: { method: "POST", baseUrl: "https://public.example.com", path: "/post" },
+      },
+    };
+    const authenticated: ApiBlock = {
+      baseUrl: "https://news.ycombinator.com",
+      auth: {
+        token: {
+          source: { endpoint: "token", extract: ["token"] },
+          sendAs: { in: "header", name: "Authorization" },
+        },
+      },
+      endpoints: {
+        token: { method: "GET", path: "/token" },
+        read: {
+          method: "GET",
+          baseUrl: "https://public.example.com",
+          path: "/read",
+          auth: ["token"],
+        },
+      },
+    };
+
+    const writeResult = await callApiTool("write", write, "post", {});
+    const authResult = await callApiTool("read", authenticated, "read", {});
+
+    expect(writeResult.content[0]?.text).toMatch(/must use GET/);
+    expect(authResult.content[0]?.text).toMatch(/must not use auth sources/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unvalidated auth source that fetches from a public-read origin before fetching", async () => {
+    const api: ApiBlock = {
+      baseUrl: "https://news.ycombinator.com",
+      auth: {
+        token: {
+          source: { endpoint: "token", extract: ["token"] },
+          sendAs: { in: "header", name: "Authorization" },
+        },
+      },
+      endpoints: {
+        token: { method: "GET", baseUrl: "https://public.example.com", path: "/token" },
+        read: { method: "GET", path: "/read", auth: ["token"] },
+      },
+    };
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await callApiTool("read", api, "read", {});
+
+    expect(result.content[0]?.text).toMatch(/must fetch from the primary api.baseUrl origin/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("resolves an auth token then attaches it to the write request (one fetch per source)", async () => {
     const calls: { url: string; headers: Record<string, string>; body?: string }[] = [];
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {

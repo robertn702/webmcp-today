@@ -12,6 +12,10 @@ const state = vi.hoisted(
       urlPatterns: string[];
       title: string;
       description: string;
+      api: {
+        baseUrl: string;
+        endpoints: Record<string, { baseUrl?: string }>;
+      };
       tools: [];
       contributor: string;
       createdAt: string;
@@ -30,6 +34,7 @@ vi.mock("@/lib/packages-repo", () => ({
       urlPatterns: ["*://*.reddit.com/*"],
       title: "Reddit",
       description: "Read Reddit",
+      api: { baseUrl: "https://www.reddit.com", endpoints: {} },
       tools: [],
       contributor: "robert",
       createdAt: "2026-07-01T00:00:00.000Z",
@@ -72,6 +77,10 @@ describe("package install handoff", () => {
       urlPatterns: ["*://old.reddit.com/*"],
       title: "Previous Reddit",
       description: "Read old Reddit",
+      api: {
+        baseUrl: "https://www.reddit.com",
+        endpoints: { read: { baseUrl: "https://api.reddit.example" } },
+      },
       tools: [],
       contributor: "robert",
       createdAt: "2026-07-01T00:00:00.000Z",
@@ -89,5 +98,7 @@ describe("package install handoff", () => {
     expect(markup).toContain('data-version-id="ver-previous"');
     expect(markup).toContain("Previous Reddit");
     expect(markup).not.toContain("Read Reddit");
+    expect(markup).toContain("https://api.reddit.example");
+    expect(markup).toContain("No cookies or site credentials are included.");
   });
 });
