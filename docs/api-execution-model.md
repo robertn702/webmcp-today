@@ -43,13 +43,17 @@ that expresses the tool; the registry's curation bar rises with the tier.
 | 2    | Scoped script slots — small stringified-JS hooks bound to narrow capabilities | Small string functions, pure compute | Never — slots cannot touch the network        | Elevated (code review) |
 | 3    | Full `evaluate` — stringified async JS escape hatch                           | Arbitrary async function             | Executor-mediated, pinned to `baseUrl` origin | Highest; flagged in UI |
 
-The unifying safety property: **the executor only ever sends requests to the declared
-`baseUrl` origin.** `baseUrl` must use the package domain or a subdomain, but does not
-need to equal the current page origin or be covered by `urlPatterns`. Tiers 1–2 cannot
-exfiltrate data at all (tier 2 has no network access; tier 1 has no code). Tier 3 has
-network access but only through the executor's origin-pinned fetch. Exfiltration from
-tiers 1–2 is structurally near-impossible — which
-is what makes human curation tractable. Reviewers check _what the tool does on the
+The unifying safety property: **the executor starts requests at the declared `baseUrl`
+origin**, except Hacker News's fixed anonymous Firebase read origin. The exception permits
+only `GET` requests to `https://hacker-news.firebaseio.com`, with no auth sources, omitted
+cookies, and rejected redirects. `baseUrl` must otherwise use the package domain or a
+subdomain, but does not need to equal the current page origin or be covered by
+`urlPatterns`; every request rejects redirects. Tier 2 cannot access the network.
+Tier 1 has no arbitrary code, and the Firebase exception cannot carry
+ambient site cookies or declared auth sources; it still sends the endpoint's declared
+path/query built from tool input to that origin. Tier 3 has network access but only through
+the executor's origin-pinned fetch. Keeping tiers 1–2 reviewable is what
+make human curation tractable. Reviewers check _what the tool does on the
 site_, not whether it leaks data off it.
 
 ## Tier 1 — the `api` block
@@ -320,8 +324,10 @@ The single load-bearing invariant, so it gets its own section:
 - Cookies/credentials are sent with the derived request (`credentials: "include"`
   equivalent), so tools act as the logged-in user only at the allowed `baseUrl` origin.
 
-APIs on a package-domain subdomain such as `api.example.com` are allowed. An unrelated
-host is not: it needs an explicit future design because the invariant would get looser.
+APIs on a package-domain subdomain such as `api.example.com` are allowed. The only
+unrelated host is Hacker News's `https://hacker-news.firebaseio.com` for anonymous
+`GET` reads with no auth, omitted cookies, and rejected redirects. Any additional
+unrelated host needs an explicit future design because the invariant would get looser.
 
 ## Trust model
 
@@ -400,19 +406,19 @@ data — so it is buildable today and is not blocked on the spike.
 - **How does `ctx` compose?** What tier-2 slots and tier-3 scripts receive (tokens from
   `auth` sources, prior step outputs, endpoint metadata) is under-specified; pin down
   when the executor is built.
-- **Unrelated API hosts.** A package-domain subdomain is supported; a separate host is
-  not. Real candidate sites with unrelated frontend/API hosts will pressure this —
-  what's the loosest invariant we can live with?
+- **Additional unrelated API hosts.** A package-domain subdomain is supported, and the
+  sole implemented exception is Hacker News's anonymous Firebase `GET` read API with no
+  auth, omitted cookies, and rejected redirects. Real candidate sites with unrelated
+  frontend/API hosts will pressure this — what's the loosest invariant we can live with?
 - **Health canary for API packages.** Loud failures are only useful if something listens.
   The canary (out of scope per SPEC but reserved-for in the schema) should replay
   tier-1 calls against live sites; what runs it, and how do auth'd writes get canaried
   safely (a write canary posts real comments)?
 - **`minEngine` bump policy — resolved.** Packages set `minEngine` to the engine level
-  whose shape they rely on. **Pre-release, `ENGINE_VERSION` is pegged at 1 and format
-  changes do not bump it** — there are no older extension builds and no published
-  packages, so a bump protects nobody and only strands the configs that must move with
-  it (`packages/schema/src/budgets.ts`). The extension refuses a too-new package _whole_
-  rather than
+  whose format they rely on. `ENGINE_VERSION` remains `1` for the initial format.
+  Bump the capability level only for an incompatible format change; compatible
+  additions and changes do not require a bump (`packages/schema/src/budgets.ts`). The
+  extension refuses a too-new package _whole_ rather than
   registering tools it cannot run — `supportsPackageEngine`
   (`packages/engine/src/engine-gate.ts`), applied per package in `register-tools.ts`.
   What remains is UX, not correctness: the gate fires at registration, so a user can

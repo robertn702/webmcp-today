@@ -3,19 +3,6 @@
 Community registry of third-party WebMCP packages injected into sites that haven't
 implemented WebMCP — "Greasyfork for the agentic web".
 
-## Status: PRE-PRODUCTION (delete this section on launch)
-
-- Deployed to prod (Vercel + `webmcp.today`) but pre-launch — no real users or
-  data. Skip production concerns (zero-downtime migrations, backfills, API
-  backwards compat).
-- DB wipes/resets are still acceptable — prefer clean migrations; seeds repopulate.
-- **`@webmcp-today/schema` and `@webmcp-today/mcp-bridge` are published**; the bridge
-  is public beta, the other workspace packages remain local, and changesets are not in use
-  pre-launch.
-- Schema changes are squashed into `packages/db/migrations/0000_init.sql`: edit it and
-  its meta snapshot in place rather than stacking a migration, then confirm drift-free
-  with `drizzle-kit generate` ("No schema changes, nothing to migrate").
-
 ## Layout
 
 ```
@@ -63,7 +50,7 @@ packages/mcp/               @webmcp-today/mcp-bridge — published public-beta M
 Bun + Turborepo, TypeScript strict ESM, Next.js + React 19 + Tailwind 4 + shadcn/ui,
 Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHub OAuth
 \+ API-key plugin), zod v4, @t3-oss/env, Vitest, ESLint + Prettier, Changesets
-(not in use pre-launch), @modelcontextprotocol/sdk.
+(currently not in use), @modelcontextprotocol/sdk.
 
 ## Conventions
 
@@ -105,11 +92,12 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
   (docs/DECISIONS.md 2026-07-29).
 - Tool `execution` is `api`-mode only: the tool binds to an entry in the
   package-level `api.endpoints` block by name. (DOM execution was cut
-  pre-launch — `docs/DECISIONS.md` 2026-07-28.)
+  before the initial release — `docs/DECISIONS.md` 2026-07-28.)
 - `minEngine`: positive-integer capability level (not semver), version-scoped.
 - Extension must skip + warn on tool-name collision with site-registered tools.
-- `ENGINE_VERSION` is **pegged at 1 until release** — change the format shape freely,
-  don't bump it (`packages/schema/src/budgets.ts` says why).
+- `ENGINE_VERSION` remains `1` for the initial package format. Bump the capability
+  level only for an incompatible format change; compatible format changes do not
+  require a bump (`packages/schema/src/budgets.ts` says why).
 - Tier-1 `api` block: `returns` is a JMESPath expression; `errorPath` and auth-source
   `extract` are locator arrays (`["json","errors"]`); an auth source declares exactly
   one of `extract` (JSON locator) or `pattern` (regex over the raw response text,
@@ -117,7 +105,10 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
   with `in` one of `header`/`form`/`query`; `stripPrefix` is a literal response
   prefix removed before JSON parsing (Google's anti-XSSI `)]}'` — Maps/Gmail); an
   endpoint declares at most one of `graphql`/`form`/`body`. A `body` or
-  `graphql.variables` leaf that is exactly one `{{param}}` keeps its type.
+  `graphql.variables` leaf that is exactly one `{{param}}` keeps its type. Endpoint
+  `baseUrl` normally stays on the package domain; the only cross-origin exception is
+  anonymous `GET` reads from `https://hacker-news.firebaseio.com`, with no auth,
+  omitted cookies, and rejected redirects.
 - **Never add `jsonpath-plus`, `jsonpath`, or anything depending on `static-eval`** —
   they call `new Function`, which MV3's CSP rejects in the content script, and both
   carry RCE CVEs. Response projection is `@jmespath-community/jmespath` (no `eval`).

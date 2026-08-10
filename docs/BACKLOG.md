@@ -1,47 +1,40 @@
 # Backlog
 
-Open follow-ups, grouped by launch scope then roughly next-first. One line per
+Open follow-ups, grouped by post-launch scope then roughly next-first. One line per
 item — detail lives at the linked doc, not here. Rules: an item with no pointer
 to detail gets deleted on sight; whoever completes an item deletes it in the
 same PR. Not a wishlist.
 
-**Launch (MVP) =** public announcement of `webmcp.today` to a developer audience
-— the extension's local bridge fallback works without the WebMCP testing flag;
-Chrome's native agent remains flag/origin-trial gated through Chrome 156. Tier-1
-packages only; extension installed unpacked or via CWS.
+**Initial release =** public `webmcp.today` beta for a developer audience — the
+extension's local bridge fallback works without the WebMCP testing flag; Chrome's
+native agent remains flag/origin-trial gated through Chrome 156. Tier-1 packages
+only; install the extension from the public release ZIP.
 
-## Before launch (MVP)
+## Post-launch follow-ups
 
-### Blocking
+### Distribution and account access
 
-- **Chrome Web Store submission — in review** (2026-07-29): went with CWS at
-  launch. v1.0.0 ZIP uploaded (prod-only `https://webmcp.today/*` host perms,
-  dev `key` stripped, all four icons), store icon + publisher contact email
-  verified. Hit the expected `<all_urls>` content-script warning → in-depth
-  review queue; submitted as-is with justification (greasyfork-model needs
-  arbitrary sites; Tampermonkey precedent). Research: in-depth reviews run
-  1–2 wks typical, 3–4 for new publisher accounts; escalate via One Stop
-  Support after 3 wks. Re-review fires on every update while `<all_urls>`
-  stays (4–5 days steady-state), one pending review at a time, and
-  cancel-and-resubmit resets queue position — so batch releases ~biweekly and
-  never cancel a pending review to sneak in a commit.
-  Zero-review fallback worth a compatibility check — Hub's popup accepts a
-  custom hub URL, so its store-approved build could be pointed at our
-  `GET /api/packages/lookup`. The tiers 2–3 "no remote code" answer can
-  follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
+- **Chrome Web Store distribution** — do not assume approval. The public release
+  ZIP remains the documented installation path. If pursuing Store distribution,
+  verify the current submission state with the owner before changing public copy.
+  The `<all_urls>` content script may trigger in-depth review. Hub's popup can
+  target `GET /api/packages/lookup`, which is a fallback worth a compatibility
+  check if Store distribution remains blocked. The tiers 2–3 "no remote code"
+  answer can follow later. (docs/DECISIONS.md 2026-07-24 Hub survey;
   docs/api-execution-model.md → Open questions)
-- **Email service** (password reset, verification) — pick a provider (needs
-  Robert: Resend/Postmark/SES + env creds), then set
+- **Email service** (password reset, verification) — email/password signup exists,
+  but no recovery or verification sender is configured; GitHub OAuth is available
+  alongside it. Pick a provider when email/password recovery or verification is needed
+  (needs Robert: Resend/Postmark/SES + env creds), then set
   `emailAndPassword.sendResetPassword` in apps/web/lib/auth.ts and flip
   `forgotPassword`/`requireEmailVerification` back on in
-  components/providers.tsx. Zero-work alternative for launch: disable
-  email+password and ship GitHub-OAuth-only. (apps/web/AGENTS.md → Auth)
+  components/providers.tsx. (apps/web/AGENTS.md → Auth)
 
-### Cheap now, expensive after launch
+### Cheap now, expensive later
 
 - **Idempotent, version-aware curated seed** — re-running `seed.ts` today
-  inserts duplicate `packages` rows (harmless while DB wipes are fine). Once
-  curated packages accrue real versions, seed must instead: look up the
+  inserts duplicate `packages` rows. Before using it against production data,
+  seed must instead: look up the
   seed-owned package by domain, content-hash the version-scoped payload
   (urlPatterns+tools+api+minEngine — a hash over `api` alone would miss
   tool-only changes), no-op on match, insert `max(version)+1` with the JSON's
@@ -71,8 +64,6 @@ packages only; extension installed unpacked or via CWS.
   (first exercise of the version-append path — worth proving before strangers
   hit it). (packages/curated-packages/data/reddit.com.json)
 
-## After launch
-
 ### Web app
 
 - **Google OAuth** — `socialProviders.google` in apps/web/lib/auth.ts +
@@ -98,12 +89,9 @@ packages only; extension installed unpacked or via CWS.
 - **Move `<all_urls>` to `optional_host_permissions`** — drop the static
   `<all_urls>` content script, request broad access at onboarding (or per-site
   from the popup), register content scripts dynamically via
-  `chrome.scripting.registerContentScripts`. One-time refactor that moves every
-  future CWS update off the in-depth review queue (fast queue often <1 day vs
-  4–5 days) — Google's own chromium-extensions guidance names this the single
-  biggest review-time lever. Do after v1 clears review.
-  (apps/extension/wxt.config.ts manifest; docs/BACKLOG.md CWS item for the
-  review-time research)
+  `chrome.scripting.registerContentScripts`. This reduces the known broad-host-
+  permission review trigger but does not guarantee a particular CWS queue outcome.
+  Do this only if pursuing Store distribution. (apps/extension/wxt.config.ts manifest)
 - **Chat UI** — embedded chat panel in the extension so users can drive the
   page's WebMCP tools without a terminal agent (today's manual loop uses OpenCode +
   the WebMCP Today MCP local bridge). Needs a design call: model/API-key story, panel

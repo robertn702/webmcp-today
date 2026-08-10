@@ -11,10 +11,8 @@ export const PARAM_DESCRIPTION_MAX = 150;
 /** Current package format engine version — a capability level compared with
  *  plain `>=` against a version's `minEngine` (docs/DECISIONS.md 2026-07-24).
  *
- *  PEGGED AT 1 FOR PRE-RELEASE. Do not bump it when the format changes shape.
- *  The number exists so an older extension build refuses content it cannot run,
- *  and pre-release there are no older builds and no published packages — so a
- *  bump protects nobody and just strands the one config that has to move with
- *  it. The format is still changing freely; that is the point. Start bumping at
- *  the first release, from 2. */
+ *  Keep level 1 valid for the initial package format. Bump the capability level
+ *  only when a format change is incompatible with an older engine; compatible
+ *  additions and changes do not require a bump. The extension refuses packages
+ *  whose minEngine exceeds its supported level. */
 export const ENGINE_VERSION = 1;

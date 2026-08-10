@@ -116,8 +116,7 @@ jobs:
             apps/extension/.output/webmcp-today-extension.zip
             apps/extension/.output/SHA256SUMS
           body: |
-            Self-hosted build of the WebMCP Today extension, for use while the
-            Chrome Web Store listing is in review.
+            Self-hosted build of the WebMCP Today extension.
 
             ## Install
 

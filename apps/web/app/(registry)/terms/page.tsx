@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "The terms for using WebMCP Today, including the license you grant when you publish a tool package and the CC0 license community-published packages are offered under.",
 };
 
-const LAST_UPDATED = "8 August 2026";
+const LAST_UPDATED = "10 August 2026";
 
 export default function TermsPage() {
   return (
@@ -207,7 +207,7 @@ export default function TermsPage() {
           limited, or does something you didn&apos;t expect, that is the risk you took by installing
           it.
         </p>
-        <p>Uptime is not promised. This project is pre-launch and could stop existing.</p>
+        <p>Uptime is not promised. This is a public beta and could stop existing.</p>
       </Section>
 
       <Section n={9} title="Liability">
@@ -221,9 +221,9 @@ export default function TermsPage() {
 
       <Section n={10} title="Changes to these terms">
         <p>
-          These terms will change, especially before launch. The date at the top is the version
-          you&apos;re reading, and every edit to it is visible in the repository&apos;s public
-          history. Using the site after a change means you accept the terms as they stand.
+          We may change these terms. The date at the top is the version you&apos;re reading, and
+          every edit to it is visible in the repository&apos;s public history. Using the site after
+          a change means you accept the terms as they stand.
         </p>
       </Section>
 
