@@ -14,6 +14,12 @@ packages only; extension installed unpacked or via CWS.
 
 ### Blocking
 
+- **Disclose cross-origin public API calls before installation** — derive each package's endpoint
+  `baseUrl` origins and show any origin outside the package domain on the install consent surface
+  and package details. Anonymous cross-origin GETs are permitted for public APIs such as HN's
+  Firebase endpoint; they omit credentials, but agent-supplied data can still reach the disclosed
+  origin. (docs/api-execution-model.md; packages/schema/src/api.ts)
+
 - **Chrome Web Store submission — in review** (2026-07-29): went with CWS at
   launch. v1.0.0 ZIP uploaded (prod-only `https://webmcp.today/*` host perms,
   dev `key` stripped, all four icons), store icon + publisher contact email

@@ -136,7 +136,10 @@ Field semantics:
 - **`baseUrl`** — must use the package's declared domain or one of its subdomains.
   It need not equal the current page origin or be covered by `urlPatterns`; after
   interpolation, the executor refuses every derived URL whose origin differs from
-  this exact `baseUrl` origin.
+  this exact `baseUrl` origin. An endpoint may declare its own `baseUrl` only
+  for an unauthenticated `GET` to a public API; the executor pins that request
+  to the endpoint origin and omits cookies. Cross-origin endpoints cannot use
+  auth sources, and auth sources must fetch from the primary `api.baseUrl`.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
   GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
   `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along

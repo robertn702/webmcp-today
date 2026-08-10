@@ -135,6 +135,29 @@ describe("api block cross-validation", () => {
     expect(createPackageSchema.safeParse(c).success).toBe(false);
   });
 
+  it("allows anonymous GET endpoints at an explicitly declared public origin", () => {
+    const c = structuredClone(base);
+    Object.assign(c.api.endpoints.subredditHot, { baseUrl: "https://public.example.com" });
+    expect(createPackageSchema.safeParse(c).success).toBe(true);
+  });
+
+  it("rejects cross-origin writes, authenticated reads, and cross-origin auth sources", () => {
+    const write = structuredClone(base);
+    Object.assign(write.api.endpoints.comment, { baseUrl: "https://public.example.com" });
+    expect(createPackageSchema.safeParse(write).success).toBe(false);
+
+    const authenticatedRead = structuredClone(base);
+    Object.assign(authenticatedRead.api.endpoints.subredditHot, {
+      baseUrl: "https://public.example.com",
+      auth: ["csrf"],
+    });
+    expect(createPackageSchema.safeParse(authenticatedRead).success).toBe(false);
+
+    const tokenSource = structuredClone(base);
+    Object.assign(tokenSource.api.endpoints.me, { baseUrl: "https://public.example.com" });
+    expect(createPackageSchema.safeParse(tokenSource).success).toBe(false);
+  });
+
   it("does not flag {{placeholders}} inside the opaque documents block", () => {
     const c = structuredClone(base);
     c.api.documents.search = "query { {{notAProp}} }";

@@ -66,6 +66,7 @@ describe("docs package-format example", () => {
     expect(Object.keys(apiEndpointSchema.shape).sort()).toEqual(
       [
         "method",
+        "baseUrl",
         "path",
         "query",
         "body",

@@ -154,6 +154,11 @@ export default function PackageFormatPage() {
             exactly one <Code>/</Code> and cannot contain <Code>//</Code>, backslashes, queries,
             fragments, or <Code>.</Code>/<Code>..</Code> segments.
           </Field>
+          <Field name="baseUrl" type="https:// URL · optional">
+            Overrides the package API origin only for an anonymous public <Code>GET</Code>. It
+            cannot use <Code>auth</Code>, and the executor omits cookies from the request. Use it
+            only when a site&apos;s official public API lives at a separate origin.
+          </Field>
           <Field name="query" type="Record<string, string> · optional">
             Query parameters. Values may carry <Code>{"{{param}}"}</Code>.
           </Field>
