@@ -74,8 +74,8 @@ export default async function PackagePage({
       )}
       {publicReadOrigins.length > 0 && (
         <p className="mt-3 rounded-lg border border-brand/30 bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-          This package also sends anonymous public read requests to {publicReadOrigins.join(", ")}.
-          No cookies or site credentials are included.
+          This package also reads from {publicReadOrigins.join(", ")}. No cookies or site
+          credentials are included.
         </p>
       )}
       <div className="mt-4">

@@ -2,7 +2,7 @@ name: Release extension
 
 # Tag-triggered, decoupled from the web app's Vercel deploys. Cut a release
 # with:
-#   git tag extension-v1.2.0 && git push origin extension-v1.2.0
+#   git tag extension-v1.2.1 && git push origin extension-v1.2.1
 # The tag version must equal apps/extension/package.json's version — the guard
 # below fails the run rather than publishing a mislabeled ZIP.
 on:

@@ -200,6 +200,44 @@ describe("fetchSuggestions", () => {
     });
   });
 
+  it("accepts packages with an endpoint-specific API origin and discloses it", async () => {
+    const publicRead = pkg("public-read", {
+      domain: "news.ycombinator.com",
+      urlPatterns: ["*://news.ycombinator.com/*"],
+      api: {
+        baseUrl: "https://news.ycombinator.com",
+        endpoints: {
+          fixture: {
+            method: "GET",
+            baseUrl: "https://hacker-news.firebaseio.com",
+            path: "/v0/maxitem.json",
+          },
+        },
+      },
+    });
+    const { fetchFn } = fetchStub({ packages: [publicRead] });
+
+    await expect(
+      fetchSuggestions({
+        fetchFn,
+        origin: ORIGIN,
+        url: "https://news.ycombinator.com/news",
+      }),
+    ).resolves.toEqual({
+      ok: true,
+      packages: [
+        {
+          packageId: "public-read",
+          versionId: "public-read-v1",
+          version: 1,
+          title: "Package public-read",
+          domain: "news.ycombinator.com",
+          publicReadOrigins: ["https://hacker-news.firebaseio.com"],
+        },
+      ],
+    });
+  });
+
   it("does not fetch suggestions for an unsupported or missing tab URL", async () => {
     const { fetchFn, calls } = fetchStub({ packages: [] });
 

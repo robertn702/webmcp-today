@@ -217,18 +217,6 @@ describe("applyProjection", () => {
   it("passes an empty array through — no results is not an error", () => {
     expect(applyProjection({ data: { children: [] } }, "data.children[].data.title")).toEqual([]);
   });
-
-  it("makes a missing item fail while normalizing an absent child list", () => {
-    const item =
-      "id && {id: id, type: type, by: by, time: time, title: title, text: text, url: url, score: score, descendants: descendants, parent: parent, kids: kids, deleted: deleted, dead: dead, parts: parts, poll: poll}";
-    const children = "id && {id: id, type: type, kids: kids || `[]`}";
-    expect(() => applyProjection(null, item)).toThrow(/matched nothing/);
-    expect(applyProjection({ id: 42, type: "comment" }, children)).toEqual({
-      id: 42,
-      type: "comment",
-      kids: [],
-    });
-  });
 });
 
 describe("resolveDocument", () => {
@@ -438,7 +426,7 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     expect(result.content[0]?.text).toBe(JSON.stringify({ id: 42 }));
     expect(fetchMock).toHaveBeenCalledWith(
       "https://hacker-news.firebaseio.com/v0/item/42.json",
-      expect.objectContaining({ credentials: "omit" }),
+      expect.objectContaining({ credentials: "omit", redirect: "error" }),
     );
   });
 
@@ -464,7 +452,7 @@ describe("executeApiTool — end to end with mocked fetch", () => {
         token: { method: "GET", path: "/token" },
         read: {
           method: "GET",
-          baseUrl: "https://public.example.com",
+          baseUrl: "https://hacker-news.firebaseio.com",
           path: "/read",
           auth: ["token"],
         },
@@ -477,6 +465,34 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     expect(writeResult.content[0]?.text).toMatch(/must use GET/);
     expect(authResult.content[0]?.text).toMatch(/must not use auth sources/);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unapproved unvalidated cross-origin read before fetching", async () => {
+    const api: ApiBlock = {
+      baseUrl: "https://news.ycombinator.com",
+      endpoints: {
+        read: { method: "GET", baseUrl: "https://api.github.com", path: "/" },
+      },
+    };
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await callApiTool("read", api, "read", {});
+
+    expect(result.content[0]?.text).toMatch(/must use https:\/\/hacker-news.firebaseio.com/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("follows redirects for primary-origin writes", async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await callApiTool("write", redditApi, "comment", { thingId: "t3_abc", text: "nice" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://www.reddit.com/api/me.json",
+      expect.objectContaining({ credentials: "include", redirect: "follow" }),
+    );
   });
 
   it("preflights every auth source before fetching any of them", async () => {

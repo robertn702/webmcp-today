@@ -18,7 +18,7 @@ package with `npx`:
   "mcpServers": {
     "webmcp-today": {
       "command": "npx",
-      "args": ["--yes", "@webmcp-today/mcp-bridge@0.2.0"]
+      "args": ["--yes", "@webmcp-today/mcp-bridge@0.3.0"]
     }
   }
 }
@@ -40,7 +40,7 @@ in prompts, package definitions, or source control.
   "mcpServers": {
     "webmcp-today": {
       "command": "npx",
-      "args": ["--yes", "@webmcp-today/mcp-bridge@0.2.0"],
+      "args": ["--yes", "@webmcp-today/mcp-bridge@0.3.0"],
       "env": {
         "WEBMCP_TODAY_API_KEY": "<your-api-key>"
       }

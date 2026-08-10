@@ -209,7 +209,7 @@ function suggestionsNodes(state: PopupState, callbacks: ViewCallbacks): Node[] {
     if (suggestion.publicReadOrigins.length > 0) {
       detail.append(
         document.createElement("br"),
-        `Also contacts ${suggestion.publicReadOrigins.join(", ")} without cookies.`,
+        `Also reads from ${suggestion.publicReadOrigins.join(", ")} without cookies.`,
       );
     }
 
