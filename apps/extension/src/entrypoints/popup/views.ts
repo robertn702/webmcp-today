@@ -206,6 +206,12 @@ function suggestionsNodes(state: PopupState, callbacks: ViewCallbacks): Node[] {
     const detail = document.createElement("div");
     detail.className = "row-detail";
     detail.append(suggestion.domain);
+    if (suggestion.publicReadOrigins.length > 0) {
+      detail.append(
+        document.createElement("br"),
+        `Also contacts ${suggestion.publicReadOrigins.join(", ")} without cookies.`,
+      );
+    }
 
     const button = document.createElement("button");
     button.type = "button";

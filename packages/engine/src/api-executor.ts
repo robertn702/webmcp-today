@@ -183,6 +183,22 @@ function endpointUsesPrimaryOrigin(api: ApiBlock, endpoint: ApiEndpoint): boolea
   return new URL(endpointBaseUrl(api, endpoint)).origin === new URL(api.baseUrl).origin;
 }
 
+function assertAuthSourcesUsePrimaryOrigin(api: ApiBlock, endpoint: ApiEndpoint): void {
+  for (const authName of endpoint.auth ?? []) {
+    const source = api.auth?.[authName];
+    if (!source) throw new Error(`Auth source "${authName}" is not defined in api.auth.`);
+    const sourceEndpoint = api.endpoints[source.source.endpoint];
+    if (!sourceEndpoint) {
+      throw new Error(
+        `Auth source "${authName}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
+      );
+    }
+    if (!endpointUsesPrimaryOrigin(api, sourceEndpoint)) {
+      throw new Error(`Auth source "${authName}" must fetch from the primary api.baseUrl origin.`);
+    }
+  }
+}
+
 /** Construct the HTTP request for an endpoint from validated tool input. Pure
  *  and synchronous so it is unit-testable; performs the load-bearing
  *  same-origin re-check AFTER binding params. */
@@ -479,6 +495,7 @@ async function executeApiToolInner(
   if (!endpointUsesPrimaryOrigin(api, endpoint) && (endpoint.auth?.length ?? 0) > 0) {
     throw new Error(`Cross-origin endpoint "${endpointName}" must not use auth sources.`);
   }
+  assertAuthSourcesUsePrimaryOrigin(api, endpoint);
 
   // Validate BEFORE any side effect below (confirm dialog, auth-source fetch,
   // request interpolation, the tool's own fetch) — an agent that sends bad

@@ -11,6 +11,7 @@ export interface Suggestion {
   version: number;
   title: string;
   domain: string;
+  publicReadOrigins: string[];
 }
 
 export interface SuggestionsDeps {
@@ -63,6 +64,15 @@ export async function fetchSuggestions(deps: SuggestionsDeps): Promise<Suggestio
         version: pkg.version,
         title: pkg.title,
         domain: pkg.domain,
+        publicReadOrigins: [
+          ...new Set(
+            Object.values(pkg.api.endpoints).flatMap((endpoint) => {
+              if (endpoint.baseUrl === undefined) return [];
+              const origin = new URL(endpoint.baseUrl).origin;
+              return origin === new URL(pkg.api.baseUrl).origin ? [] : [origin];
+            }),
+          ),
+        ],
       })),
   };
 }
