@@ -19,7 +19,7 @@ function fetchStub(response: unknown | "network-error" | number) {
 
 function pkg(
   id: string,
-  { domain = "acme.com", urlPatterns = [`*://${domain}/*`] }: Partial<WebMcpPackage> = {},
+  { domain = "acme.com", urlPatterns = [`*://${domain}/*`], api }: Partial<WebMcpPackage> = {},
 ): WebMcpPackage {
   return webMcpPackageSchema.parse({
     id,
@@ -41,7 +41,7 @@ function pkg(
         execution: { mode: "api", endpoint: "fixture" },
       },
     ],
-    api: {
+    api: api ?? {
       baseUrl: `https://${domain}`,
       endpoints: { fixture: { method: "GET", path: "/api/fixture" } },
     },
@@ -91,6 +91,45 @@ describe("fetchSuggestions", () => {
           version: 1,
           title: "Package matching",
           domain: "reddit.com",
+          publicReadOrigins: [],
+        },
+      ],
+    });
+  });
+
+  it("includes explicitly declared public-read origins in a suggestion", async () => {
+    const suggested = pkg("public-read", {
+      domain: "news.ycombinator.com",
+      api: {
+        baseUrl: "https://news.ycombinator.com",
+        endpoints: {
+          fixture: { method: "GET", path: "/fixture" },
+          item: {
+            method: "GET",
+            baseUrl: "https://hacker-news.firebaseio.com",
+            path: "/v0/item/1.json",
+          },
+        },
+      },
+    });
+    const { fetchFn } = fetchStub({ packages: [suggested] });
+
+    const result = await fetchSuggestions({
+      fetchFn,
+      origin: ORIGIN,
+      url: "https://news.ycombinator.com/",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      packages: [
+        {
+          packageId: "public-read",
+          versionId: "public-read-v1",
+          version: 1,
+          title: "Package public-read",
+          domain: "news.ycombinator.com",
+          publicReadOrigins: ["https://hacker-news.firebaseio.com"],
         },
       ],
     });

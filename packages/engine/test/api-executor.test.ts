@@ -479,18 +479,23 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("rejects an unvalidated auth source that fetches from a public-read origin before fetching", async () => {
+  it("preflights every auth source before fetching any of them", async () => {
     const api: ApiBlock = {
       baseUrl: "https://news.ycombinator.com",
       auth: {
+        valid: {
+          source: { endpoint: "validToken", extract: ["token"] },
+          sendAs: { in: "header", name: "X-Valid" },
+        },
         token: {
           source: { endpoint: "token", extract: ["token"] },
           sendAs: { in: "header", name: "Authorization" },
         },
       },
       endpoints: {
+        validToken: { method: "GET", path: "/valid-token" },
         token: { method: "GET", baseUrl: "https://public.example.com", path: "/token" },
-        read: { method: "GET", path: "/read", auth: ["token"] },
+        read: { method: "GET", path: "/read", auth: ["valid", "token"] },
       },
     };
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
