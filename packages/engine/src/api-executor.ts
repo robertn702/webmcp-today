@@ -15,7 +15,8 @@ import type { McpResult } from "./result.js";
 // only operates on validated package data. See docs/api-execution-model.md.
 //
 // FETCH CONTEXT: these requests run in the CONTENT SCRIPT (page) context, NOT
-// the background service worker. That is deliberate and load-bearing:
+// the background service worker. That is deliberate and load-bearing for calls
+// to api.baseUrl:
 //   - The page-context fetch is a *first-party same-site* request to the site's
 //     own origin, so it carries ALL of the user's cookies — including
 //     `SameSite=Strict`/`Lax` session cookies. That is what lets a tool act as
@@ -25,9 +26,11 @@ import type { McpResult } from "./result.js";
 //     writes would silently fail.
 //   - The registry-lookup relay lives in the background because the registry is
 //     a *different* origin from the page (page CSP `connect-src` would block
-//     it). That reasoning is the opposite of API execution: here the target IS
+//     it). That reasoning is the opposite of primary-origin API execution: here the target IS
 //     the page's origin, which `connect-src 'self'` and the site's own frontend
-//     already permit — so there is no CSP problem to route around.
+//     already permit — so there is no CSP problem to route around. An endpoint
+//     may opt into a public cross-origin GET; that can still be blocked by the
+//     page's connect-src/CORS, and always omits cookies.
 
 const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
 /** A string that is EXACTLY one placeholder ("{{n}}", not "x{{n}}"). */
@@ -172,6 +175,14 @@ function assertSameOrigin(url: URL, baseOrigin: string): void {
   }
 }
 
+function endpointBaseUrl(api: ApiBlock, endpoint: ApiEndpoint): string {
+  return endpoint.baseUrl ?? api.baseUrl;
+}
+
+function endpointUsesPrimaryOrigin(api: ApiBlock, endpoint: ApiEndpoint): boolean {
+  return new URL(endpointBaseUrl(api, endpoint)).origin === new URL(api.baseUrl).origin;
+}
+
 /** Construct the HTTP request for an endpoint from validated tool input. Pure
  *  and synchronous so it is unit-testable; performs the load-bearing
  *  same-origin re-check AFTER binding params. */
@@ -180,8 +191,9 @@ export function buildRequest(
   endpoint: ApiEndpoint,
   params: Record<string, unknown>,
 ): DerivedRequest {
-  const baseOrigin = new URL(api.baseUrl).origin;
-  const url = new URL(interpolatePath(endpoint.path, params), api.baseUrl);
+  const baseUrl = endpointBaseUrl(api, endpoint);
+  const baseOrigin = new URL(baseUrl).origin;
+  const url = new URL(interpolatePath(endpoint.path, params), baseUrl);
   if (endpoint.query) {
     for (const [key, template] of Object.entries(endpoint.query)) {
       url.searchParams.set(key, interpolateString(template, params));
@@ -227,14 +239,13 @@ interface FetchOutcome {
 async function performFetch(
   request: DerivedRequest,
   headers: Record<string, string>,
+  credentials: RequestCredentials,
 ): Promise<FetchOutcome> {
   const response = await fetch(request.url, {
     method: request.method,
     headers,
     body: request.body,
-    // First-party same-origin request (enforced in buildRequest): send the
-    // user's own cookies so the tool acts as the logged-in user.
-    credentials: "include",
+    credentials,
   });
   return { status: response.status, ok: response.ok, text: await response.text() };
 }
@@ -351,6 +362,9 @@ async function resolveAuthToken(
       `Auth source "${name}" fetches from endpoint "${source.source.endpoint}", which is not defined.`,
     );
   }
+  if (!endpointUsesPrimaryOrigin(api, sourceEndpoint)) {
+    throw new Error(`Auth source "${name}" must fetch from the primary api.baseUrl origin.`);
+  }
 
   const ttlMs = source.ttlSeconds === undefined ? 0 : source.ttlSeconds * 1000;
   const request = buildRequest(api, sourceEndpoint, params);
@@ -367,7 +381,7 @@ async function resolveAuthToken(
     }
   }
 
-  const outcome = await performFetch(request, request.headers);
+  const outcome = await performFetch(request, request.headers, "include");
   if (!outcome.ok) {
     throw new Error(`Auth source "${name}" request failed: HTTP ${outcome.status}.`);
   }
@@ -459,6 +473,12 @@ async function executeApiToolInner(
   const endpointName = tool.execution.endpoint;
   const endpoint = api.endpoints[endpointName];
   if (!endpoint) throw new Error(`Endpoint "${endpointName}" is not defined in api.endpoints.`);
+  if (!endpointUsesPrimaryOrigin(api, endpoint) && endpoint.method !== "GET") {
+    throw new Error(`Cross-origin endpoint "${endpointName}" must use GET.`);
+  }
+  if (!endpointUsesPrimaryOrigin(api, endpoint) && (endpoint.auth?.length ?? 0) > 0) {
+    throw new Error(`Cross-origin endpoint "${endpointName}" must not use auth sources.`);
+  }
 
   // Validate BEFORE any side effect below (confirm dialog, auth-source fetch,
   // request interpolation, the tool's own fetch) — an agent that sends bad
@@ -495,6 +515,9 @@ async function executeApiToolInner(
   }
 
   const request = buildRequest(api, endpoint, validParams);
+  const credentials: RequestCredentials = endpointUsesPrimaryOrigin(api, endpoint)
+    ? "include"
+    : "omit";
   // Inject each token where its source's sendAs points: header, query param,
   // or an extra urlencoded form field appended to the built body.
   let url = request.url;
@@ -524,6 +547,10 @@ async function executeApiToolInner(
     }
   }
 
-  const outcome = await performFetch({ url, method: request.method, headers, body }, headers);
+  const outcome = await performFetch(
+    { url, method: request.method, headers, body },
+    headers,
+    credentials,
+  );
   return handleResponse(endpoint, outcome);
 }

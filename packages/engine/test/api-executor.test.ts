@@ -217,6 +217,18 @@ describe("applyProjection", () => {
   it("passes an empty array through — no results is not an error", () => {
     expect(applyProjection({ data: { children: [] } }, "data.children[].data.title")).toEqual([]);
   });
+
+  it("makes a missing item fail while normalizing an absent child list", () => {
+    const item =
+      "id && {id: id, type: type, by: by, time: time, title: title, text: text, url: url, score: score, descendants: descendants, parent: parent, kids: kids, deleted: deleted, dead: dead, parts: parts, poll: poll}";
+    const children = "id && {id: id, type: type, kids: kids || `[]`}";
+    expect(() => applyProjection(null, item)).toThrow(/matched nothing/);
+    expect(applyProjection({ id: 42, type: "comment" }, children)).toEqual({
+      id: 42,
+      type: "comment",
+      kids: [],
+    });
+  });
 });
 
 describe("resolveDocument", () => {
@@ -248,6 +260,21 @@ describe("buildRequest — construction + interpolation", () => {
     });
     expect(req.url).toBe("https://www.reddit.com/r/a%2Fb%3Fc%20d%0D%0A/hot.json?limit=1");
     expect(new URL(req.url).origin).toBe("https://www.reddit.com");
+  });
+
+  it("uses an endpoint's explicitly declared public-read origin", () => {
+    const api = apiBlockSchema.parse({
+      baseUrl: "https://news.ycombinator.com",
+      endpoints: {
+        item: {
+          method: "GET",
+          baseUrl: "https://hacker-news.firebaseio.com",
+          path: "/v0/item/{{itemId}}.json",
+        },
+      },
+    });
+    const req = buildRequest(api, api.endpoints.item!, { itemId: "42" });
+    expect(req.url).toBe("https://hacker-news.firebaseio.com/v0/item/42.json");
   });
 
   it("builds a urlencoded form body", () => {
@@ -392,6 +419,29 @@ describe("handleResponse — errorPath + projection", () => {
 });
 
 describe("executeApiTool — end to end with mocked fetch", () => {
+  it("omits cookies for an explicitly declared public-read origin", async () => {
+    const api = apiBlockSchema.parse({
+      baseUrl: "https://news.ycombinator.com",
+      endpoints: {
+        item: {
+          method: "GET",
+          baseUrl: "https://hacker-news.firebaseio.com",
+          path: "/v0/item/{{itemId}}.json",
+        },
+      },
+    });
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({ id: 42 })));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await callApiTool("hn_get_item", api, "item", { itemId: "42" });
+
+    expect(result.content[0]?.text).toBe(JSON.stringify({ id: 42 }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://hacker-news.firebaseio.com/v0/item/42.json",
+      expect.objectContaining({ credentials: "omit" }),
+    );
+  });
+
   it("resolves an auth token then attaches it to the write request (one fetch per source)", async () => {
     const calls: { url: string; headers: Record<string, string>; body?: string }[] = [];
     const fetchMock = vi.fn((url: string, init?: RequestInit) => {

@@ -5,6 +5,14 @@ Inclusion bar and entry format: root `AGENTS.md` → "Decision log". This is del
 **not** a changelog or a complete history — entries are pruned once their reasoning
 lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
 
+- 2026-08-09 — **Endpoints may override `api.baseUrl` only for anonymous public
+  GETs.** Hacker News's official read API lives at Firebase rather than the
+  visible `news.ycombinator.com` origin. Rejected: a package-wide extra-origin
+  allowlist, which would duplicate endpoint declarations without adding a
+  security boundary. The override is constrained where it is used: no writes,
+  no auth sources, and cookies omitted; credentials and authenticated actions
+  remain pinned to the package's primary origin.
+
 - 2026-08-07 — **An agent with local socket access may focus any tab matching an
   installed package, replacing the manual-focus consent gate.** Focusing raises the
   tab and its window, preserving the user-sees-what's-driven property while making

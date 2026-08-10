@@ -25,6 +25,18 @@ const DOCUMENT_MAX = 100_000;
 
 const endpointName = z.string().min(1).max(NAME_MAX);
 
+const httpsUrlSchema = z
+  .string()
+  .min(1)
+  .max(2048)
+  .refine((value) => {
+    try {
+      return new URL(value).protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, "baseUrl must be a valid https:// URL");
+
 /** A **locator**: the object keys / array indices naming ONE place in a JSON
  * document, e.g. `["data", "modhash"]`. An array rather than a dot string so a
  * key that itself contains a dot is unambiguous, and so the two
@@ -228,6 +240,9 @@ const BODY_KINDS = ["graphql", "form", "body"] as const;
 export const apiEndpointSchema = z
   .strictObject({
     method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+    /** An anonymous public-read origin. Cross-origin calls are limited to GET
+     * without auth by package-level validation. */
+    baseUrl: httpsUrlSchema.optional(),
     path: z
       .string()
       .min(1)
@@ -301,17 +316,7 @@ export const apiEndpointSchema = z
   });
 
 export const apiBlockSchema = z.strictObject({
-  baseUrl: z
-    .string()
-    .min(1)
-    .max(2048)
-    .refine((v) => {
-      try {
-        return new URL(v).protocol === "https:";
-      } catch {
-        return false;
-      }
-    }, "baseUrl must be a valid https:// URL"),
+  baseUrl: httpsUrlSchema,
   auth: z.record(z.string(), apiAuthSourceSchema).optional(),
   endpoints: z
     .record(z.string(), apiEndpointSchema)
@@ -465,11 +470,43 @@ export function collectApiIssues(target: ApiValidationTarget): ApiValidationIssu
     }
   }
 
+  // An endpoint may use a separate origin only for an anonymous public read.
+  // Keep session cookies and extracted credentials on the visible package's
+  // origin; otherwise an installed package could exfiltrate them.
+  const primaryOrigin = new URL(api.baseUrl).origin;
+  for (const [name, endpoint] of Object.entries(api.endpoints)) {
+    if (endpoint.baseUrl === undefined || new URL(endpoint.baseUrl).origin === primaryOrigin)
+      continue;
+    if (endpoint.method !== "GET") {
+      issues.push({
+        message: `Cross-origin endpoint "${name}" must use GET.`,
+        path: ["api", "endpoints", name, "method"],
+      });
+    }
+    if (endpoint.auth !== undefined && endpoint.auth.length > 0) {
+      issues.push({
+        message: `Cross-origin endpoint "${name}" must not use auth sources.`,
+        path: ["api", "endpoints", name, "auth"],
+      });
+    }
+  }
+
   // 5. Auth sources fetch from a defined endpoint (reference integrity).
   for (const [name, src] of Object.entries(api.auth ?? {})) {
     if (!endpointNames.has(src.source.endpoint)) {
       issues.push({
         message: `Auth source "${name}" fetches from endpoint "${src.source.endpoint}", which is not defined in api.endpoints.`,
+        path: ["api", "auth", name, "source", "endpoint"],
+      });
+      continue;
+    }
+    const sourceEndpoint = api.endpoints[src.source.endpoint];
+    if (
+      sourceEndpoint?.baseUrl !== undefined &&
+      new URL(sourceEndpoint.baseUrl).origin !== primaryOrigin
+    ) {
+      issues.push({
+        message: `Auth source "${name}" must fetch from the primary api.baseUrl origin.`,
         path: ["api", "auth", name, "source", "endpoint"],
       });
     }
