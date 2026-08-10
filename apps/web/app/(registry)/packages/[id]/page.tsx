@@ -39,6 +39,16 @@ export default async function PackagePage({
   const displayedPackage = installTarget ?? pkg;
   const targetVersionId = installTarget?.versionId ?? pkg.versionId;
   const targetVersion = installTarget?.version ?? pkg.version;
+  const primaryOrigin = new URL(displayedPackage.api.baseUrl).origin;
+  const publicReadOrigins = [
+    ...new Set(
+      Object.values(displayedPackage.api.endpoints).flatMap((endpoint) => {
+        if (endpoint.baseUrl === undefined) return [];
+        const origin = new URL(endpoint.baseUrl).origin;
+        return origin === primaryOrigin ? [] : [origin];
+      }),
+    ),
+  ];
 
   return (
     <div className="max-w-2xl">
@@ -60,6 +70,12 @@ export default async function PackagePage({
         <p className="mt-2 text-xs text-muted-foreground">
           <span className="font-semibold">What changed in v{displayedPackage.version}:</span>{" "}
           {displayedPackage.changelog}
+        </p>
+      )}
+      {publicReadOrigins.length > 0 && (
+        <p className="mt-3 rounded-lg border border-brand/30 bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+          This package also sends anonymous public read requests to {publicReadOrigins.join(", ")}.
+          No cookies or site credentials are included.
         </p>
       )}
       <div className="mt-4">
