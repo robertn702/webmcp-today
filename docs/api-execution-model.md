@@ -133,13 +133,13 @@ And a tool binds to an endpoint:
 
 Field semantics:
 
-- **`baseUrl`** — must use the package's declared domain or one of its subdomains.
-  It need not equal the current page origin or be covered by `urlPatterns`; after
-  interpolation, the executor refuses every derived URL whose origin differs from
-  this exact `baseUrl` origin. An endpoint may declare its own `baseUrl` only
-  for an unauthenticated `GET` to a public API; the executor pins that request
-  to the endpoint origin and omits cookies. Cross-origin endpoints cannot use
-  auth sources, and auth sources must fetch from the primary `api.baseUrl`.
+- **`api.baseUrl`** — must use the package's declared domain or one of its subdomains.
+  It need not equal the current page origin or be covered by `urlPatterns`; it is
+  the primary authenticated origin and every auth source must fetch from it. An
+  endpoint without its own `baseUrl` is pinned to this origin after interpolation.
+  An endpoint may override it only for an unauthenticated `GET` to a public API;
+  that request is pinned to the endpoint origin and omits cookies. Cross-origin
+  endpoints cannot use auth sources.
 - **`auth` / token sources** — named credential acquisition flows. The CSRF example:
   GET `/api/me.json`, extract `["data", "modhash"]` from the JSON, send as the
   `X-Modhash` header on endpoints listing `auth: ["csrf"]`. Cookies ride along

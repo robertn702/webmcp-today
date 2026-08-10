@@ -135,6 +135,32 @@ describe("fetchSuggestions", () => {
     });
   });
 
+  it("preserves every declared public-read origin for install disclosure", async () => {
+    const endpoints: Record<string, { method: "GET"; baseUrl: string; path: string }> = {
+      fixture: { method: "GET", baseUrl: "https://news.ycombinator.com", path: "/fixture" },
+    };
+    for (let index = 0; index < 21; index += 1) {
+      endpoints[`read${index}`] = {
+        method: "GET",
+        baseUrl: `https://api${index}.example.com`,
+        path: "/read",
+      };
+    }
+    const suggested = pkg("many-public-reads", {
+      domain: "news.ycombinator.com",
+      api: { baseUrl: "https://news.ycombinator.com", endpoints },
+    });
+    const { fetchFn } = fetchStub({ packages: [suggested] });
+
+    const result = await fetchSuggestions({
+      fetchFn,
+      origin: ORIGIN,
+      url: "https://news.ycombinator.com/",
+    });
+
+    expect(result.ok && result.packages[0]?.publicReadOrigins).toHaveLength(21);
+  });
+
   // Distinct from "the registry has nothing to suggest" — that case returns
   // `{ ok: true, packages: [] }` via the empty-list branch below.
   it("reports failure distinctly when offline, never a silent empty list", async () => {
