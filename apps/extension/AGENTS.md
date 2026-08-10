@@ -33,7 +33,7 @@ is needed. Release CI uses it for the separate release key. Changing the
 development key would change the local extension ID and require updating the
 native host and registry bridge allowlist.
 
-## Self-hosted GitHub releases (while CWS is in review)
+## Self-hosted GitHub releases
 
 `.github/workflows/release-extension.yml` builds and publishes the ZIP; CI
 uploads an unsigned ZIP artifact per commit for eyeballing a build only.

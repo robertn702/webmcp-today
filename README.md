@@ -12,7 +12,7 @@ The registry is live at [webmcp.today](https://webmcp.today).
 | Path              | What                                                                                                        |
 | ----------------- | ----------------------------------------------------------------------------------------------------------- |
 | `packages/schema` | `@webmcp-today/schema` — published zod package format                                                       |
-| `packages/engine` | `@webmcp-today/engine` — API execution engine (local pre-launch)                                            |
+| `packages/engine` | `@webmcp-today/engine` — API execution engine                                                               |
 | `packages/db`     | Drizzle + Neon schema and client                                                                            |
 | `packages/mcp`    | `@webmcp-today/mcp-bridge` — published public-beta registry MCP server + local bridge for live WebMCP tools |
 | `apps/web`        | Next.js registry UI + public REST API                                                                       |
@@ -61,12 +61,13 @@ bun run --filter @webmcp-today/web db:seed     # or cd apps/web && bun run db:se
 These are ordinary fresh-database setup commands. They do not reset an existing
 database.
 
-**Schema-hardening release operation:** the squashed
-`packages/db/migrations/0000_init.sql` migration will not replay against an
-existing deployed Neon database. For this pre-launch release, reset or recreate
-the deployed Neon database first, then run `db:migrate` against the empty
-database and run `db:seed`. Do not use this release operation for normal local
-setup.
+**Historical migration baseline:**
+`packages/db/migrations/0000_init.sql` is the initial schema baseline and will
+not replay against an existing deployed Neon database. Never reset or recreate
+production data to apply it. For schema changes, generate and review a new
+Drizzle migration and apply it with `db:migrate`. Run `db:seed` only for fresh
+or local databases until it is idempotent and version-aware; use a reviewed
+production procedure for curated seed changes.
 
 **Running locally:**
 

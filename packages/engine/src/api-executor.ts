@@ -400,7 +400,7 @@ async function resolveAuthToken(
     }
   }
 
-  const outcome = await performFetch(request, request.headers, "include", "follow");
+  const outcome = await performFetch(request, request.headers, "include", "error");
   if (!outcome.ok) {
     throw new Error(`Auth source "${name}" request failed: HTTP ${outcome.status}.`);
   }
@@ -546,7 +546,7 @@ async function executeApiToolInner(
   const credentials: RequestCredentials = endpointUsesPrimaryOrigin(api, endpoint)
     ? "include"
     : "omit";
-  const redirect: RequestRedirect = endpointUsesPrimaryOrigin(api, endpoint) ? "follow" : "error";
+  const redirect: RequestRedirect = "error";
   // Inject each token where its source's sendAs points: header, query param,
   // or an extra urlencoded form field appended to the built body.
   let url = request.url;

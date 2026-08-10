@@ -130,8 +130,8 @@ export default function PackageFormatPage() {
           <Field name="baseUrl" type="https:// URL · required">
             Its host must be your package <Code>domain</Code> or a subdomain. It need not be covered
             by <Code>urlPatterns</Code> or equal the current page origin. After interpolation, every
-            derived request must still match this exact origin; requests to any other host are
-            refused.
+            derived request must still match this exact origin. The sole endpoint-level exception is
+            Hacker News&apos;s Firebase read API.
           </Field>
           <Field name="endpoints" type="Record<string, ApiEndpoint> · required">
             Named requests. Tools bind to these keys.
@@ -155,8 +155,10 @@ export default function PackageFormatPage() {
             fragments, or <Code>.</Code>/<Code>..</Code> segments.
           </Field>
           <Field name="baseUrl" type="https:// URL · optional">
-            Available only for Hacker News&apos;s anonymous Firebase read API. It cannot use
-            <Code>auth</Code>, and the executor omits cookies from the request.
+            May stay on the primary origin. Its only cross-origin use is the
+            <Code>https://hacker-news.firebaseio.com</Code> origin for Hacker News&apos;s anonymous
+            <Code>GET</Code> reads. It cannot use <Code>auth</Code>, the executor omits cookies, and
+            redirects are rejected.
           </Field>
           <Field name="query" type="Record<string, string> · optional">
             Query parameters. Values may carry <Code>{"{{param}}"}</Code>.

@@ -483,15 +483,22 @@ describe("executeApiTool — end to end with mocked fetch", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("follows redirects for primary-origin writes", async () => {
-    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({})));
+  it("rejects redirects for primary-origin authenticated writes", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ data: { modhash: "token" } }))
+      .mockResolvedValueOnce(jsonResponse({ json: { errors: [] } }));
     vi.stubGlobal("fetch", fetchMock);
 
     await callApiTool("write", redditApi, "comment", { thingId: "t3_abc", text: "nice" });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://www.reddit.com/api/me.json",
-      expect.objectContaining({ credentials: "include", redirect: "follow" }),
+      expect.objectContaining({ credentials: "include", redirect: "error" }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://www.reddit.com/api/comment",
+      expect.objectContaining({ credentials: "include", redirect: "error" }),
     );
   });
 

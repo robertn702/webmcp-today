@@ -12,8 +12,8 @@ Registry web app + REST API. Repo-wide guidance: root `AGENTS.md` (read it first
 - `app/auth/[path]` (sign-in/sign-up) sits **outside** the registry group like the
   landing page, so its atmosphere/grid background is full-bleed instead of clipped
   by the `max-w-5xl` container.
-- `/extension` is the source-install leaf until the extension is published; the landing CTAs point
-  directly at `/docs/quickstart`, the task-oriented first-tool-call flow.
+- `/extension` distributes the public release ZIP; the landing CTAs point directly at
+  `/docs/quickstart`, the task-oriented first-tool-call flow.
 - `components/site-footer.tsx` renders once from the **root** layout (not the registry
   group), so `/terms` and the AGPL §13 source offer appear on the landing page too.
 - `/terms` is the submission grant + the corpus's CC0 offer. Both publish routes echo it

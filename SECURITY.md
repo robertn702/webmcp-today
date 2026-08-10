@@ -3,11 +3,11 @@
 ## Supported versions
 
 Security fixes are made on the latest commit of the `main` branch and the latest
-extension release. This pre-release project does not maintain older versions.
+extension release. Older versions are not maintained.
 
 ## Reporting a vulnerability
 
-After [private vulnerability reporting is enabled](https://github.com/robertn702/webmcp-today/security/advisories/new), use GitHub's private reporting form for this repository. Do not disclose exploitable details in a public issue, discussion, pull request, or package submission.
+Use [GitHub's private reporting form](https://github.com/robertn702/webmcp-today/security/advisories/new) for this repository. Do not disclose exploitable details in a public issue, discussion, pull request, or package submission.
 
 Include a clear description, reproduction steps or proof of concept, affected
 component or release, impact, and any suggested mitigation. Do not access other

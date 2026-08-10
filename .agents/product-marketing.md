@@ -1,13 +1,14 @@
 # Product Marketing Context
 
-**Document version:** v9
-**Last updated:** 2026-08-09
+**Document version:** v10
+**Last updated:** 2026-08-10
 
 Source of truth for positioning, audience, and voice. Every marketing skill
 (copywriting, cro, copy-editing, …) reads this before drafting. Product facts
 live in `AGENTS.md` / `ARCHITECTURE.md`; when they disagree, the code wins.
 
-> **Public beta launch.** No users, no revenue, no testimonials, no metrics.
+> **Public beta.** No users, no revenue, no testimonials, and no product or business
+> metrics. Small registry counters are operational state, not proof points.
 > Sections that would require them are marked `None yet` rather than filled with
 > plausible-sounding invention. Do not write proof points this document can't back.
 
@@ -145,9 +146,9 @@ hasn't shipped them, and the cost of trying is one install.
 | "WebMCP could change under you."                       | Tracked openly: `docs/platform-risks.md`, incl. the `tools=()` kill switch and unsanctioned-registration risk.                        |
 | "Is this ready for production use?"                    | It is a public beta. The registry, extension, bridge, and package format can change before a stable release. Report failures in GitHub issues. |
 
-**Anti-persona:** Anyone wanting a zero-setup consumer product today (the
-extension isn't in the Web Store and installation is explicit), and anyone wanting
-a curated, vetted, guaranteed-safe catalogue — there is no approval queue by design.
+**Anti-persona:** Anyone wanting a zero-setup consumer product today (installation
+uses the public release ZIP and is explicit), and anyone wanting a curated, vetted,
+guaranteed-safe catalogue — there is no approval queue by design.
 
 ## Switching Dynamics
 
@@ -259,8 +260,9 @@ line per page and prefers a paragraph that merely informs.
 
 ## Proof Points
 
-**Metrics:** None yet (pre-launch; registry counters on the landing page are live
-but small — just the curated seed packages from `@webmcp-today/curated-packages`).
+**Product/business metrics:** None yet. Registry counters on the landing page are
+operational state, not a usage metric or proof point, and currently show only the curated
+seed packages from `@webmcp-today/curated-packages`.
 **Customers:** None.
 **Testimonials:** None. Do not invent.
 **Value themes:**
@@ -278,16 +280,18 @@ but small — just the curated seed packages from `@webmcp-today/curated-package
 **Business goal:** Seed a registry with enough real packages that the next person
 finds one for their site — supply before demand.
 
-**Conversion action:** Install the extension (primary; currently `/extension`, a
-run-from-source stub until the Web Store listing exists). Secondary: publish a
-package.
+**Conversion action:** Install the extension from the public release ZIP
+(primary; `/extension`). Secondary: publish a package.
 
-**Current metrics:** None tracked yet.
+**Current product/business metrics:** None tracked yet.
 
 ## Changelog
 
 _Newest first. One line per revision: what changed and why._
 
+- v10 (2026-08-10) — Updated launch-state copy after the owner-reported clean
+  public-artifact E2E; installation now points to the public release ZIP, and
+  current-status language no longer calls the beta pre-launch.
 - v9 (2026-08-09) — Corrected the remaining blanket flag language: the flag is for Chrome's native agent, while the built-in fallback serves the local bridge without it.
 - v8 (2026-08-09) — Aligned active facts with the schema-hardening release: packages are API-only data with required `api` and `minEngine`; installs are explicit and local, not a trust or ranking count; the built-in fallback makes the Chrome flag native-agent-only; DOM mode is historical.
 - v7 (2026-08-07) — Licensing landed in code, so the v3 "undecided" note was
