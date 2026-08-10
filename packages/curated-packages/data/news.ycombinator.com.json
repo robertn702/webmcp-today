@@ -2,10 +2,10 @@
   "version": 1,
   "domain": "news.ycombinator.com",
   "urlPatterns": ["*://news.ycombinator.com/*"],
-  "title": "Hacker News (write tools)",
-  "description": "Comment, vote, and submit on Hacker News as the logged-in user — the write side HN's official read-only API has never offered. Tokens (hmac, vote auth, fnid) are extracted from HN's own HTML pages; a page-shape change fails loudly. Requires an active news.ycombinator.com login session.",
+  "title": "Hacker News",
+  "description": "Read Hacker News through its official public API, plus comment, vote, and submit as the logged-in user. Write tokens (hmac, vote auth, fnid) are extracted from HN's own HTML pages; a page-shape change fails loudly. Write tools require an active news.ycombinator.com login session.",
   "minEngine": 1,
-  "changelog": "Initial version: hn_comment, hn_vote, hn_submit. First package to use HTML `pattern` token extraction and `form`/`query` sendAs targets.",
+  "changelog": "Adds official public API read tools: hn_get_item and hn_list_children. Existing writes use HTML token extraction and form/query targets.",
   "api": {
     "baseUrl": "https://news.ycombinator.com",
     "auth": {
@@ -55,10 +55,56 @@
         "path": "/r",
         "form": { "title": "{{title}}", "url": "{{url}}", "text": "{{text}}" },
         "auth": ["fnid"]
+      },
+      "item": {
+        "method": "GET",
+        "baseUrl": "https://hacker-news.firebaseio.com",
+        "path": "/v0/item/{{itemId}}.json",
+        "returns": "id && {id: id, type: type, by: by, time: time, title: title, text: text, url: url, score: score, descendants: descendants, parent: parent, kids: kids, deleted: deleted, dead: dead, parts: parts, poll: poll}"
+      },
+      "children": {
+        "method": "GET",
+        "baseUrl": "https://hacker-news.firebaseio.com",
+        "path": "/v0/item/{{itemId}}.json",
+        "returns": "id && {id: id, type: type, kids: kids || `[]`}"
       }
     }
   },
   "tools": [
+    {
+      "name": "hn_get_item",
+      "description": "Get a Hacker News story, comment, job, poll, or poll option by numeric ID through HN's official public API. Returns metadata, HTML text, direct child-comment IDs, and poll relationships when present.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Numeric HN item ID, from an /item?id=... URL or another HN tool result"
+          }
+        },
+        "required": ["itemId"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "item" }
+    },
+    {
+      "name": "hn_list_children",
+      "description": "List the direct child comment IDs of a Hacker News story or comment, in HN display order. Call hn_get_item for each child to read it; an empty kids list means no direct replies.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "Numeric ID of the story or comment whose direct replies to list"
+          }
+        },
+        "required": ["itemId"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true },
+      "execution": { "mode": "api", "endpoint": "children" }
+    },
     {
       "name": "hn_comment",
       "description": "Post a comment on a Hacker News story, or reply to a comment, as the logged-in user. The item ID is the number in /item?id=... URLs. A successful post returns the thread page HTML.",
