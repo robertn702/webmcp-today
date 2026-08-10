@@ -63,7 +63,7 @@ export const popupSuggestionSchema = z.object({
   title: z.string(),
   domain: z.string(),
   /** Explicit secondary public-read origins shown before an install. */
-  publicReadOrigins: z.array(z.string()).max(20),
+  publicReadOrigins: z.array(z.string()),
 });
 export type PopupSuggestion = z.infer<typeof popupSuggestionSchema>;
 
