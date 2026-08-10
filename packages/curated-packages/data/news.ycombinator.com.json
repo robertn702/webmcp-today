@@ -85,7 +85,7 @@
         "required": ["itemId"],
         "additionalProperties": false
       },
-      "annotations": { "readOnlyHint": true },
+      "annotations": { "readOnlyHint": true, "untrustedContentHint": true },
       "execution": { "mode": "api", "endpoint": "item" }
     },
     {

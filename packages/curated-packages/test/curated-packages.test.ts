@@ -22,5 +22,13 @@ describe("curated packages", () => {
     expect(hackerNews?.tools.map((tool) => tool.name)).toContain("hn_get_item");
     expect(hackerNews?.tools.map((tool) => tool.name)).toContain("hn_list_children");
     expect(hackerNews?.api.endpoints.item?.baseUrl).toBe("https://hacker-news.firebaseio.com");
+    expect(hackerNews?.api.endpoints.item?.path).toBe("/v0/item/{{itemId}}.json");
+    expect(hackerNews?.api.endpoints.children?.returns).toBe(
+      "id && {id: id, type: type, kids: kids || `[]`}",
+    );
+    expect(hackerNews?.tools.find((tool) => tool.name === "hn_get_item")?.annotations).toEqual({
+      readOnlyHint: true,
+      untrustedContentHint: true,
+    });
   });
 });
