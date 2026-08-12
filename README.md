@@ -13,7 +13,7 @@ Install the public skill for researching, creating, validating, and safely testi
 WebMCP Today package:
 
 ```bash
-npx skills add robertn702/webmcp-today --skill create-webmcp-package
+npx skills@1.5.22 add robertn702/webmcp-today --skill create-webmcp-package
 ```
 
 The skill creates `webmcp-package.json` and stops before registry publication.
