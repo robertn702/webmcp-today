@@ -79,7 +79,7 @@ lives in code or another doc, and **code + `AGENTS.md` win on disagreement**.
   Chrome's 1.5K is guidance, not enforcement, and the right budget is model-dependent
   (a 1M-context model should be far less conservative than a 256K one), so a single
   hard cap was the wrong default. Publish-time metadata caps (name 30, tool description
-  500, param description 1000) are untouched and stay hard. The `returns` projection is
+  500, param description 150) are untouched and stay hard. The `returns` projection is
   still valuable for output density, just not for fitting a fixed budget. The budget
   question is **deferred, not answered** (`docs/BACKLOG.md`).
 
