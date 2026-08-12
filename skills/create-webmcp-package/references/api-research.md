@@ -20,7 +20,7 @@ Read this reference when the target API is undocumented, browser network inspect
 
 ## Authentication And CSRF
 
-- Cookies are ambient browser credentials. Primary-origin endpoint and auth-source requests always include them; the Hacker News Firebase exception omits them. Describe when a logged-in session is required, but never read, print, store, or paste cookie values.
+- Primary-origin endpoint and auth-source requests use `credentials: "include"`, but browser policy may still prevent cookie delivery; the Hacker News Firebase exception omits credentials. Require observed authenticated behavior before certifying a replay, and never read, print, store, or paste cookie values.
 - Model a token source in `api.auth`: the source names a declared endpoint, uses exactly one of JSON `extract` or raw-text regex `pattern`, and declares `sendAs` as a header, form field, or query parameter.
 - Keep `extract` and `errorPath` as locator arrays. They are not JMESPath expressions.
 - A form token may attach only to an endpoint with a `form` body.
