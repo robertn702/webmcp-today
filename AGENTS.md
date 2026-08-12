@@ -128,6 +128,11 @@ Next route handlers + zod (no tRPC), Neon Postgres + Drizzle, better-auth (GitHu
 
 ## Gotchas
 
+- In managed agent runs, keep temporary logs, response bodies, headers, and scripts
+  under the repo-local `.scratch/` directory, never `/tmp` or another external path.
+  Remove those artifacts before staging. Run verification in the foreground and fail
+  immediately if a command requests interactive permission; waiting silently will
+  trigger the runtime idle watchdog.
 - drizzle-kit `generate` prompts interactively on renames (needs a TTY) — use
   `generate --custom`, hand-fill SQL + meta snapshot, verify with plain `generate`.
 - `packages/schema` resolves via `dist/` — rebuild it after schema changes or consumers
