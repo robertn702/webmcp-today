@@ -7,6 +7,17 @@ registers their tools on matching pages.
 
 The registry is live at [webmcp.today](https://webmcp.today).
 
+## Agent Skill
+
+Install the public skill for researching, creating, validating, and safely testing a
+WebMCP Today package:
+
+```bash
+npx skills add robertn702/webmcp-today --skill create-webmcp-package
+```
+
+The skill creates `webmcp-package.json` and stops before registry publication.
+
 ## Packages
 
 | Path              | What                                                                                                        |

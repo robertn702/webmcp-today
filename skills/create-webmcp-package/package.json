@@ -1,0 +1,14 @@
+{
+  "name": "create-webmcp-package-skill",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test scripts/validate.test.mjs"
+  },
+  "dependencies": {
+    "@webmcp-today/schema": "0.3.0"
+  }
+}
