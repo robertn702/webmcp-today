@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import type { ZodType } from "zod";
 import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
 
+const LLMS_LINK = '</llms.txt>; rel="describedby"';
+
+export function withLlmsLink(response: NextResponse): NextResponse {
+  const link = response.headers.get("Link");
+  response.headers.set("Link", link ? `${LLMS_LINK}, ${link}` : LLMS_LINK);
+  return response;
+}
+
 export function jsonError(status: number, message: string): NextResponse {
   return NextResponse.json({ error: message }, { status });
 }
@@ -17,7 +25,10 @@ export function requireSubmissionTerms(request: Request): NextResponse | null {
       termsVersion: SUBMISSION_TERMS_VERSION,
       terms,
     },
-    { status: 428, headers: { Link: `<${terms}>; rel="terms-of-service"` } },
+    {
+      status: 428,
+      headers: { Link: `<${terms}>; rel="terms-of-service"` },
+    },
   );
 }
 

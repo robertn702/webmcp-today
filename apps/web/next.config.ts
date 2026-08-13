@@ -1,8 +1,16 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+export const nextConfig: NextConfig = {
   transpilePackages: ["@webmcp-today/db"],
+  async headers() {
+    return [
+      {
+        source: "/((?!api/packages(?:/[^/]+/versions)?/?$).*)",
+        headers: [{ key: "Link", value: '</llms.txt>; rel="describedby"' }],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
