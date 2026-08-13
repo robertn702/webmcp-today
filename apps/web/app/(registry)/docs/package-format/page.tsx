@@ -224,11 +224,14 @@ export default function PackageFormatPage() {
           package is rejected, which also means a typo can&apos;t reach a user as an empty string.
           The same check covers an auth source&apos;s fetch endpoint (<Code>path</Code>/
           <Code>query</Code> only) and its <Code>pattern</Code>; an endpoint no tool binds to is
-          never scanned at all. A <Code>query</Code>/<Code>form</Code>/<Code>path</Code> placeholder
-          for a param the agent didn&apos;t supply interpolates to an empty string, while a{" "}
+          never scanned at all. Paths and mixed templates always interpolate an absent param as an
+          empty string. A query or form field is omitted only when its template is exactly{" "}
+          <Code>{"{{param}}"}</Code> and that property is absent from the validated input; an
+          explicitly supplied empty string, <Code>0</Code>, or <Code>false</Code> stays present. A{" "}
           <Code>body</Code>/<Code>graphql.variables</Code> leaf that is exactly one{" "}
-          <Code>{"{{param}}"}</Code> yields <Code>undefined</Code> and drops out of the JSON
-          entirely. There is no escape hatch for a literal <Code>{"{{"}</Code> yet.
+          <Code>{"{{param}}"}</Code> keeps its raw type and yields <Code>undefined</Code> when
+          absent, so JSON drops that object property. There is no escape hatch for a literal{" "}
+          <Code>{"{{"}</Code> yet.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           At invocation, input must be a plain object containing only declared primitive fields and
