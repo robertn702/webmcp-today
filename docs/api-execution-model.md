@@ -160,10 +160,15 @@ Field semantics:
   and was the only behaviour before the field existed.
 - **`path` / `query` / `body` / `form`** — `{{param}}` templates bound from the
   validated tool input (cross-validated at the schema level;
-  placeholders may only name `inputSchema` properties). In a `body` or in
-  `graphql.variables`, a string that is **exactly** one placeholder emits the raw typed
-  value — `"{{n}}"` sends `10`, not `"10"` — while `"page {{n}}"` concatenates. `query`
-  and `form` are always strings on the wire, so the distinction doesn't arise there.
+  placeholders may only name `inputSchema` properties). Paths always interpolate, so an
+  absent param and mixed templates produce an empty string at that position. A query or
+  form field is omitted only when its template is **exactly** one placeholder and that
+  property is absent from the validated input; mixed templates still interpolate. An
+  explicitly supplied empty string, `0`, or `false` remains present (query/form values
+  are strings on the wire). In a `body` or in `graphql.variables`, a string that is
+  **exactly** one placeholder emits the raw typed value — `"{{n}}"` sends `10`, not
+  `"10"` — while `"page {{n}}"` concatenates; absent exact leaves become `undefined`
+  and JSON drops object properties.
 - **Tool input** — must be a plain object with only declared primitive fields and a
   serialized size of at most 64 KiB. Invalid input returns validation issues before a
   destructive confirmation or network request.

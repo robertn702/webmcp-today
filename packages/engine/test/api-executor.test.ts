@@ -278,6 +278,53 @@ describe("buildRequest — construction + interpolation", () => {
     expect(parsed.get("api_type")).toBe("json");
   });
 
+  it("omits only absent exact query/form placeholders", () => {
+    const api = apiBlockSchema.parse({
+      baseUrl: "https://example.com",
+      endpoints: {
+        submit: {
+          method: "POST",
+          path: "/items/{{id}}/{{missing}}",
+          query: {
+            optional: "{{optional}}",
+            mixed: "before-{{optional}}",
+            empty: "{{empty}}",
+            zero: "{{zero}}",
+            false: "{{false}}",
+          },
+          form: {
+            optional: "{{optional}}",
+            mixed: "before-{{optional}}",
+            empty: "{{empty}}",
+            zero: "{{zero}}",
+            false: "{{false}}",
+          },
+        },
+      },
+    });
+
+    const req = buildRequest(api, api.endpoints.submit!, {
+      id: "42",
+      empty: "",
+      zero: 0,
+      false: false,
+    });
+    const url = new URL(req.url);
+    const form = new URLSearchParams(req.body);
+
+    expect(url.pathname).toBe("/items/42/");
+    expect(url.searchParams.has("optional")).toBe(false);
+    expect(url.searchParams.get("mixed")).toBe("before-");
+    expect(url.searchParams.get("empty")).toBe("");
+    expect(url.searchParams.get("zero")).toBe("0");
+    expect(url.searchParams.get("false")).toBe("false");
+    expect(form.has("optional")).toBe(false);
+    expect(form.get("mixed")).toBe("before-");
+    expect(form.get("empty")).toBe("");
+    expect(form.get("zero")).toBe("0");
+    expect(form.get("false")).toBe("false");
+  });
+
   it("builds a graphql POST with resolved document + interpolated variables", () => {
     const req = buildRequest(redditApi, redditApi.endpoints.search!, { query: "cats" });
     expect(req.headers["content-type"]).toBe("application/json");
@@ -407,6 +454,40 @@ describe("handleResponse — errorPath + projection", () => {
 });
 
 describe("executeApiTool — end to end with mocked fetch", () => {
+  it("omits an initial pagination cursor and includes a continuation cursor", async () => {
+    const api = apiBlockSchema.parse({
+      baseUrl: "https://example.com",
+      endpoints: {
+        page: {
+          method: "GET",
+          path: "/items",
+          query: { cursor: "{{pagination_cursor}}" },
+        },
+      },
+    });
+    const tool: ApiToolDescriptor = {
+      name: "list_items",
+      inputSchema: {
+        type: "object",
+        properties: { pagination_cursor: { type: "string" } },
+        additionalProperties: false,
+      },
+      execution: { mode: "api", endpoint: "page" },
+    };
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse({ items: [] })));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await executeApiTool(tool, api, {});
+    await executeApiTool(tool, api, { pagination_cursor: "next-page" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "https://example.com/items", expect.any(Object));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://example.com/items?cursor=next-page",
+      expect.any(Object),
+    );
+  });
+
   it("omits cookies for an explicitly declared public-read origin", async () => {
     const api = apiBlockSchema.parse({
       baseUrl: "https://news.ycombinator.com",
