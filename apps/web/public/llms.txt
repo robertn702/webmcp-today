@@ -1,0 +1,27 @@
+# WebMCP Today
+
+> WebMCP Today is a public-beta registry of inspectable, declarative packages that add named WebMCP tools to sites that do not expose them. Its browser extension installs package versions the user approves locally and registers origin-pinned API tools on matching pages.
+
+WebMCP Today packages are data, not remote code. Installation and destructive confirmations remain browser-owned, and installed package versions stay pinned until the user explicitly updates them.
+
+## Get Started
+
+- [Documentation](https://webmcp.today/docs): Overview of the registry, extension, local bridge, and package-authoring paths.
+- [Bridge quickstart](https://webmcp.today/docs/quickstart): Install the extension and bridge, then make a verified read-only tool call.
+- [Extension](https://webmcp.today/extension): Download, install, verify, and update the public-beta browser extension.
+
+## Build and Publish
+
+- [Package format](https://webmcp.today/docs/package-format): Complete declarative package schema, execution model, validation rules, and worked example.
+- [Submit a package](https://webmcp.today/submit): Publish a validated package to the registry.
+- [Browse packages](https://webmcp.today/packages): Inspect currently published packages and tools.
+
+## Project
+
+- [Source repository](https://github.com/robertn702/webmcp-today): Source code, development setup, architecture, contribution guidance, and releases.
+- [Issues](https://github.com/robertn702/webmcp-today/issues): Report bugs and request features.
+
+## Optional
+
+- [Terms](https://webmcp.today/terms): Publishing and redistribution terms.
+- [Privacy](https://webmcp.today/privacy): Privacy practices for the website and extension.

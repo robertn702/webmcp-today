@@ -11,6 +11,7 @@ import {
   requireSubmissionTerms,
   VersionConflictError,
   versionConflict,
+  withLlmsLink,
 } from "@/lib/http";
 import { publishVersion } from "@/lib/mutations";
 import { listVersions } from "@/lib/packages-repo";
@@ -29,8 +30,8 @@ export async function GET(
 ): Promise<NextResponse> {
   const { id } = await context.params;
   const versions = await listVersions(id);
-  if (versions.length === 0) return jsonError(404, "Package not found");
-  return NextResponse.json({ versions });
+  if (versions.length === 0) return withLlmsLink(jsonError(404, "Package not found"));
+  return withLlmsLink(NextResponse.json({ versions }));
 }
 
 /**
@@ -47,31 +48,33 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const termsResponse = requireSubmissionTerms(request);
-  if (termsResponse) return termsResponse;
+  if (termsResponse) return withLlmsLink(termsResponse);
 
   const { id } = await context.params;
   const userId = await getAuthUserId(request);
-  if (!userId) return jsonError(401, "Authentication required");
+  if (!userId) return withLlmsLink(jsonError(401, "Authentication required"));
 
   const rows = await db.select().from(packages).where(eq(packages.id, id)).limit(1);
   const existing = rows[0];
-  if (!existing) return jsonError(404, "Package not found");
+  if (!existing) return withLlmsLink(jsonError(404, "Package not found"));
   if (existing.contributorId !== userId) {
-    return jsonError(403, "Only the contributor may publish new versions");
+    return withLlmsLink(jsonError(403, "Only the contributor may publish new versions"));
   }
 
   const body = await parseBody(request, publishVersionSchemaForDomain(existing.domain));
-  if (!body.ok) return body.response;
+  if (!body.ok) return withLlmsLink(body.response);
 
   try {
     const { versionId, version } = await publishVersion(id, body.data);
-    return acceptedSubmission(
-      request,
-      { versionId, version },
-      `/api/packages/${id}/versions/${versionId}`,
+    return withLlmsLink(
+      acceptedSubmission(
+        request,
+        { versionId, version },
+        `/api/packages/${id}/versions/${versionId}`,
+      ),
     );
   } catch (err) {
-    if (err instanceof VersionConflictError) return versionConflict(err);
+    if (err instanceof VersionConflictError) return withLlmsLink(versionConflict(err));
     throw err;
   }
 }
