@@ -55,6 +55,14 @@ function interpolateString(template: string, params: Record<string, unknown>): s
   return template.replace(PLACEHOLDER_RE, (_, key: string) => stringifyParam(params[key]));
 }
 
+/** Exact query/form placeholders whose params were omitted do not produce a
+ * field. `params` is null-prototype after validation, so call the intrinsic
+ * rather than reading a method from it. */
+function omitsExactPlaceholder(template: string, params: Record<string, unknown>): boolean {
+  const whole = WHOLE_PLACEHOLDER_RE.exec(template);
+  return whole !== null && !Object.prototype.hasOwnProperty.call(params, whole[1] ?? "");
+}
+
 /** Interpolate {{param}} into a regex pattern. Param values are quoted as
  * literal text; the package-authored template remains a raw JS regex. */
 function interpolatePattern(template: string, params: Record<string, unknown>): string {
@@ -213,6 +221,7 @@ export function buildRequest(
   const url = new URL(interpolatePath(endpoint.path, params), baseUrl);
   if (endpoint.query) {
     for (const [key, template] of Object.entries(endpoint.query)) {
+      if (omitsExactPlaceholder(template, params)) continue;
       url.searchParams.set(key, interpolateString(template, params));
     }
   }
@@ -232,6 +241,7 @@ export function buildRequest(
   } else if (endpoint.form) {
     const form = new URLSearchParams();
     for (const [key, template] of Object.entries(endpoint.form)) {
+      if (omitsExactPlaceholder(template, params)) continue;
       form.set(key, interpolateString(template, params));
     }
     body = form.toString();

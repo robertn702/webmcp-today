@@ -1,6 +1,7 @@
 import { createPackageSchema } from "@webmcp-today/schema";
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/lib/api-auth";
+import { listPackages } from "@/lib/packages-repo";
 import {
   acceptedSubmission,
   jsonError,
@@ -8,9 +9,9 @@ import {
   requireSubmissionTerms,
   VersionConflictError,
   versionConflict,
+  withLlmsLink,
 } from "@/lib/http";
 import { insertPackage } from "@/lib/mutations";
-import { listPackages } from "@/lib/packages-repo";
 
 /** GET /api/packages?domain=&page=&pageSize= — browse the registry (latest version of each). */
 export async function GET(request: Request): Promise<NextResponse> {
@@ -20,7 +21,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const domain = searchParams.get("domain") ?? undefined;
 
   const { packages, total } = await listPackages({ domain, page, pageSize });
-  return NextResponse.json({ packages, total, page, pageSize });
+  return withLlmsLink(NextResponse.json({ packages, total, page, pageSize }));
 }
 
 /**
@@ -31,19 +32,21 @@ export async function GET(request: Request): Promise<NextResponse> {
  */
 export async function POST(request: Request): Promise<NextResponse> {
   const termsResponse = requireSubmissionTerms(request);
-  if (termsResponse) return termsResponse;
+  if (termsResponse) return withLlmsLink(termsResponse);
 
   const userId = await getAuthUserId(request);
-  if (!userId) return jsonError(401, "Authentication required (session or API key)");
+  if (!userId) return withLlmsLink(jsonError(401, "Authentication required (session or API key)"));
 
   const body = await parseBody(request, createPackageSchema);
-  if (!body.ok) return body.response;
+  if (!body.ok) return withLlmsLink(body.response);
 
   try {
     const { packageId } = await insertPackage(body.data, userId);
-    return acceptedSubmission(request, { id: packageId }, `/api/packages/${packageId}`);
+    return withLlmsLink(
+      acceptedSubmission(request, { id: packageId }, `/api/packages/${packageId}`),
+    );
   } catch (err) {
-    if (err instanceof VersionConflictError) return versionConflict(err);
+    if (err instanceof VersionConflictError) return withLlmsLink(versionConflict(err));
     throw err;
   }
 }

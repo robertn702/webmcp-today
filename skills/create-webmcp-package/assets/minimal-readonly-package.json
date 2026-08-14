@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "domain": "jsonplaceholder.typicode.com",
+  "urlPatterns": ["*://jsonplaceholder.typicode.com/*"],
+  "title": "JSONPlaceholder Posts",
+  "description": "List example posts from JSONPlaceholder's public read-only JSON API.",
+  "minEngine": 1,
+  "api": {
+    "baseUrl": "https://jsonplaceholder.typicode.com",
+    "endpoints": {
+      "posts": {
+        "method": "GET",
+        "path": "/posts",
+        "query": {
+          "userId": "{{userId}}",
+          "_limit": "{{limit}}"
+        },
+        "returns": "[].{id: id, user_id: userId, title: title, body: body}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "jsonplaceholder_posts",
+      "description": "List example JSONPlaceholder posts for one user. Returns each post's id, user id, title, and body.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "description": "Example author id from 1 to 10",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum posts to return from 1 to 10",
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": ["userId", "limit"],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "untrustedContentHint": true
+      },
+      "execution": {
+        "mode": "api",
+        "endpoint": "posts"
+      }
+    }
+  ]
+}

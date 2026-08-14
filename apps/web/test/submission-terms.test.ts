@@ -1,8 +1,12 @@
 import { curatedPackages } from "@webmcp-today/curated-packages";
+import { NextResponse } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as postVersion } from "@/app/api/packages/[id]/versions/route";
 import { POST as postPackage } from "@/app/api/packages/route";
+import { withLlmsLink } from "@/lib/http";
 import { SUBMISSION_TERMS_HEADER, SUBMISSION_TERMS_VERSION } from "@/lib/submission-terms";
+
+const LLMS_LINK = '</llms.txt>; rel="describedby"';
 
 // Publishing is where the submission grant attaches, and an agent POSTing to
 // the API never sees the notice on /submit. So both publish routes have to hand
@@ -70,6 +74,18 @@ describe("publish routes — submission terms", () => {
     state.publishCalls = 0;
   });
 
+  it("adds discovery metadata without replacing an existing Link relation", () => {
+    const response = NextResponse.json(
+      {},
+      {
+        headers: { Link: '<https://webmcp.today/other>; rel="alternate"' },
+      },
+    );
+    expect(withLlmsLink(response).headers.get("Link")).toBe(
+      `${LLMS_LINK}, <https://webmcp.today/other>; rel="alternate"`,
+    );
+  });
+
   it.each([
     ["a missing", undefined],
     ["a stale", "2026-08-07"],
@@ -79,7 +95,7 @@ describe("publish routes — submission terms", () => {
     );
     expect(response.status).toBe(428);
     expect(response.headers.get("Link")).toBe(
-      '<https://webmcp.today/terms>; rel="terms-of-service"',
+      '</llms.txt>; rel="describedby", <https://webmcp.today/terms>; rel="terms-of-service"',
     );
     await expect(response.json()).resolves.toEqual({
       error: `Accept the current terms by sending ${SUBMISSION_TERMS_HEADER}: ${SUBMISSION_TERMS_VERSION}`,
@@ -96,7 +112,7 @@ describe("publish routes — submission terms", () => {
     );
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
-      '<https://webmcp.today/terms>; rel="terms-of-service"',
+      '</llms.txt>; rel="describedby", <https://webmcp.today/terms>; rel="terms-of-service"',
     );
     expect(response.headers.get("Location")).toBe("https://webmcp.today/api/packages/pkg-1");
     await expect(response.json()).resolves.toEqual({
@@ -126,6 +142,9 @@ describe("publish routes — submission terms", () => {
       { params: Promise.resolve({ id: "pkg-1" }) },
     );
     expect(response.status).toBe(428);
+    expect(response.headers.get("Link")).toBe(
+      '</llms.txt>; rel="describedby", <https://webmcp.today/terms>; rel="terms-of-service"',
+    );
     expect(state.authCalls).toBe(0);
     expect(state.publishCalls).toBe(0);
   });
@@ -147,7 +166,7 @@ describe("publish routes — submission terms", () => {
     );
     expect(response.status).toBe(201);
     expect(response.headers.get("Link")).toBe(
-      '<https://webmcp.today/terms>; rel="terms-of-service"',
+      '</llms.txt>; rel="describedby", <https://webmcp.today/terms>; rel="terms-of-service"',
     );
     expect(response.headers.get("Location")).toBe(
       "https://webmcp.today/api/packages/pkg-1/versions/ver-2",
@@ -166,7 +185,7 @@ describe("publish routes — submission terms", () => {
       post("http://localhost:3000/api/packages", pkg, SUBMISSION_TERMS_VERSION),
     );
     expect(response.headers.get("Link")).toBe(
-      '<http://localhost:3000/terms>; rel="terms-of-service"',
+      '</llms.txt>; rel="describedby", <http://localhost:3000/terms>; rel="terms-of-service"',
     );
   });
 });
